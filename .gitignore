@@ -1,4 +1,17 @@
 mert@MacBook-Air-2 phd-p1-darus-uncertainty % nano .gitignore
+# macOS junk
+.DS_Store
+
+# Dataset folders
+data/
+!data/README.md
+
+# Model outputs
+experiments/results/
+!experiments/results/README.md
+
+# Virtual environment
+venv/
 
 
 

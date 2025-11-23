@@ -1,0 +1,22 @@
+data:
+  base_path: "data/processed/darus"
+  history: 30
+  horizon: 30
+  batch_size: 64
+  num_workers: 0  # set >0 on Linux/Colab
+
+model:
+  type: "lstm_seq2seq"
+  hidden_dim: 128
+  num_layers: 2
+  dropout: 0.1
+
+training:
+  epochs: 20
+  lr: 0.001
+  weight_decay: 0.0
+  device: "cuda"  # or "cpu"
+
+logging:
+  save_dir: "experiments/results"
+  run_name: "p1_lstm_seq2seq_baseline"

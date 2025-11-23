@@ -1,0 +1,6 @@
+model: linear
+history: 60
+horizon: 60
+batch_size: 256
+hidden_dim: 128
+num_layers: 2

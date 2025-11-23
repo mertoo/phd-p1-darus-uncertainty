@@ -1,30 +1,52 @@
 import pandas as pd
-import glob
 import os
+import glob
 
-def load_darus_raw(folder_path):
+def load_split(split_path):
     """
-    Loads all .tab files from the DaRUS dataset folder.
-    Returns a list of pandas DataFrames.
+    Loads all CSV or TAB files from a split directory.
+    Returns a concatenated pandas DataFrame or None.
     """
-    files = sorted(glob.glob(os.path.join(folder_path, "*.tab")))
-    dataframes = []
+    files = sorted(
+        glob.glob(os.path.join(split_path, "*.csv")) +
+        glob.glob(os.path.join(split_path, "*.tab"))
+    )
 
+    if len(files) == 0:
+        print(f"⚠️ No files found in: {split_path}")
+        return None
+
+    dfs = []
     for f in files:
-        df = pd.read_csv(f, sep="\t")
+        sep = "," if f.endswith(".csv") else "\t"
+        df = pd.read_csv(f, sep=sep)
         df["source_file"] = os.path.basename(f)
-        dataframes.append(df)
+        dfs.append(df)
 
-    return dataframes
+    return pd.concat(dfs, ignore_index=True)
 
 
-def concatenate_darus_runs(dfs):
+def load_darus_dataset(base_path):
     """
-    Combine multiple runs into single DataFrame with run ID.
+    Loads the PROCESSED DaRUS dataset.
+    Folder structure must be:
+
+    base_path/
+        patrol_ship_routine/
+            train/
+            validation/
+            test/
+        patrol_ship_ood/
+            test/
     """
-    combined = []
-    for idx, df in enumerate(dfs):
-        df = df.copy()
-        df["run_id"] = idx
-        combined.append(df)
-    return pd.concat(combined, ignore_index=True)
+    routine = os.path.join(base_path, "patrol_ship_routine")
+    ood = os.path.join(base_path, "patrol_ship_ood")
+
+    dataset = {
+        "train": load_split(os.path.join(routine, "train")),
+        "val": load_split(os.path.join(routine, "validation")),
+        "test": load_split(os.path.join(routine, "test")),
+        "ood_test": load_split(os.path.join(ood, "test")),
+    }
+
+    return dataset
