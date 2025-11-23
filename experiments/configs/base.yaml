@@ -1,0 +1,21 @@
+data:
+  history: 20
+  horizon: 10
+  batch_size: 64
+  val_split: 0.1
+
+training:
+  lr: 0.001
+  epochs: 50
+  optimizer: adam
+
+model:
+  type: lstm
+  hidden_size: 128
+  num_layers: 2
+  dropout: 0.1
+
+uq:
+  ensemble_members: 5
+  conformal: true
+  confidence_levels: [0.9, 0.95]
