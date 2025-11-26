@@ -1,6 +1,17 @@
-model: linear
-history: 60
-horizon: 60
-batch_size: 256
-hidden_dim: 128
-num_layers: 2
+data:
+  base_path: "data/processed/darus"
+  history: 60    
+  horizon: 60
+  batch_size: 256
+
+model:
+  type: "linear"
+
+training:
+  epochs: 20
+  lr: 0.001
+  device: "cpu"
+
+logging:
+  save_dir: "experiments/results"
+  run_name: "p1_linear_baseline"

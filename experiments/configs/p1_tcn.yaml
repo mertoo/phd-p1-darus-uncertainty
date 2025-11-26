@@ -2,20 +2,18 @@ data:
   base_path: "data/processed/darus"
   history: 30
   horizon: 30
-  batch_size: 64
-  num_workers: 0
+  batch_size: 256
 
 model:
   type: "tcn"
-  num_channels: [64, 64, 64]
-  kernel_size: 3
+  hidden_dim: 128        
+  num_layers: 4          
   dropout: 0.1
 
 training:
   epochs: 20
   lr: 0.001
-  weight_decay: 0.0
-  device: "cpu"  # change to cuda in Colab
+  device: "cpu"
 
 logging:
   save_dir: "experiments/results"
