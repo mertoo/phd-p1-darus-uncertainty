@@ -1,14 +1,15 @@
 data:
-  base_path: "data/processed/darus"
   history: 30
   horizon: 30
+  input_dim: 12
+  output_dim: 5
   batch_size: 256
 
 model:
-  type: "lstm"
   hidden_dim: 128
   num_layers: 2
   dropout: 0.0
+
 
 ensemble:
   n_models: 5
