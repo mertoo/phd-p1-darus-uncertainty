@@ -24,8 +24,9 @@ phd-p1-darus-uncertainty/
 ├── src/
 │   ├── data_loading/     # DaRUS dataset preprocessing and loaders
 │   ├── models/           # Implementations of baseline architectures
-│   ├── training/         # Training utilities and main training script
-│   └── evaluation/       # Evaluation routines and plotting utilities
+│   ├── training/         # Training utilities for baseline models
+│   ├── evaluation/       # Evaluation routines and plotting utilities
+│   └── uncertainty/      # Scripts for UQ methods (ensembles, MC dropout)
 │
 ├── train_all.sh          # Batch launcher for training all baselines
 └── README.md
@@ -102,18 +103,48 @@ The evaluation stage:
 | Linear | 12.608                | 3.554     | 4.239    |
 | Naive  | —                     | 0.300     | 0.585    |
 
-These values serve as deterministic reference points for later uncertainty-aware modeling.
+These values serve as deterministic reference points for the uncertainty-aware models.
 
-## Next Research Phase: Uncertainty Quantification
+## Phase 2: Uncertainty-Aware Models
 
-The forthcoming work (P2) will incorporate uncertainty quantification into the forecasting pipeline. Planned approaches include:
+This repository has been updated to include methods for uncertainty quantification (UQ). The following UQ techniques are implemented.
 
-- Deep ensembles  
-- Monte Carlo dropout  
-- Gaussian and probabilistic sequence models  
-- Conformal prediction for distribution-free uncertainty sets  
+### Deep Ensembles
 
-The baselines in this repository provide the empirical foundation for evaluating these methods in terms of calibration, reliability, and robustness to OOD conditions.
+A deep ensemble is a collection of independently trained models. The variance of their predictions serves as a measure of uncertainty.
+
+**Training:**
+
+To train a 5-member LSTM ensemble:
+```bash
+python3 -m src.uncertainty.train_ensemble \
+    --config experiments/configs/uncertainty/p2_lstm_ensemble.yaml \
+    --num_models 5
+```
+This script will train and save 5 independent models to `experiments/results/uncertainty/ensemble_lstm/`.
+
+**Evaluation:**
+
+To evaluate the trained ensemble and generate prediction plots with uncertainty intervals:
+```bash
+python3 -m src.uncertainty.eval_ensemble \
+    --ensemble_dir experiments/results/uncertainty/ensemble_lstm \
+    --config experiments/configs/uncertainty/p2_lstm_ensemble.yaml \
+    --split ood  # or "test"
+```
+Plots will be saved to `experiments/results/uncertainty/ensemble_lstm/plots/`.
+
+### Monte Carlo Dropout (MC Dropout)
+
+MC Dropout is a technique where dropout layers are kept active during inference. Making multiple stochastic forward passes provides a distribution of predictions, from which uncertainty can be estimated.
+
+**Training:**
+
+No special training script is needed. Simply train a baseline model (e.g., LSTM) with a dropout rate greater than 0. This is configured in the corresponding `.yaml` file (e.g., `model.dropout: 0.2`).
+
+**Evaluation:**
+
+MC Dropout is an evaluation-time technique. The functions in `src/uncertainty/mc_dropout.py` can be integrated into an evaluation script. At evaluation time, call `enable_mc_dropout(model)` and then use `mc_dropout_predict(model, x, n_samples)` to get a mean and standard deviation for the model's predictions.
 
 ## Contact
 
