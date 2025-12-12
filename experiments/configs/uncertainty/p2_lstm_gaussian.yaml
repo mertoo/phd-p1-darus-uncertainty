@@ -1,0 +1,30 @@
+data:
+  # keep consistent with your existing configs that already work with create_dataloaders
+  base_path: "data/processed/darus"
+  history: 30
+  horizon: 30
+
+model:
+  type: "lstm_gaussian"
+  hidden_dim: 128
+  num_layers: 2
+  dropout: 0.1
+
+training:
+  batch_size: 256
+  epochs: 20
+  lr: 0.001
+  device: "cpu"
+
+logging:
+  save_dir: "experiments/results"
+  run_name: "p2_lstm_gaussian"
+
+uq:
+  sigma_floor: 1.0e-3
+  sigma_cap: 5.0
+  calibrate_sigma: true
+  sigma_temp_grid:
+    t_min: 0.5
+    t_max: 5.0
+    n: 60
