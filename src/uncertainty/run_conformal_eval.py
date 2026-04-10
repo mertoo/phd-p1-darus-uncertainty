@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 from src.models.lstm import LSTMSeq2Seq
 from src.data_loading.darus_dataset import create_dataloaders
 
-TARGET_NAMES = ["phi", "p", "r", "u", "v"]
+TARGET_NAMES = ["u", "v", "p", "r", "phi"]
 
 
 def conformal_scores(model, loader, device):

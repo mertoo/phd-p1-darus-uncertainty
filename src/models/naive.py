@@ -12,5 +12,7 @@ class NaiveBaseline(nn.Module):
         self.output_dim = output_dim
 
     def forward(self, x):
-        last = x[:, -1, -self.output_dim:]  # last available DoF values
+        # FEATURE_COLUMNS ends with the 5 output DoFs [u, v, p, r, phi],
+        # so the last output_dim columns of x are exactly the targets.
+        last = x[:, -1, -self.output_dim:]
         return last.unsqueeze(1).repeat(1, self.horizon, 1)
