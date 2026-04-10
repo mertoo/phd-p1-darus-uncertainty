@@ -26,24 +26,25 @@ def train_lstm_gaussian(config: dict):
     horizon = int(config["data"]["horizon"])
     batch_size = _get_batch_size(config)
 
-    print("🔧 create_dataloaders called!")
-    train_loader, val_loader, _, _ = create_dataloaders(config, horizon, batch_size)
+    history = int(config["data"]["history"])
+    train_loader, val_loader, _, _ = create_dataloaders(history, horizon, batch_size)
 
-    # Infer input_dim from one batch
-    x_example, _ = next(iter(train_loader))
+    # Infer input_dim / target_dim from the first batch
+    x_example, y_example = next(iter(train_loader))
     input_dim = x_example.shape[-1]
-    target_dim = 5
+    target_dim = y_example.shape[-1]
 
     hidden_dim = int(config["model"]["hidden_dim"])
     num_layers = int(config["model"]["num_layers"])
     dropout = float(config["model"].get("dropout", 0.1))
 
-    model = LSTMGaussian(
-        input_dim=config["model"]["input_dim"],
-        hidden_dim=config["model"]["hidden_dim"],
-        target_dim=config["model"]["target_dim"],
-        num_layers=config["model"].get("num_layers", 2),
-        dropout=config["model"].get("dropout", 0.0),
+    model = LSTMGaussianSeq2Seq(
+        input_dim=input_dim,
+        hidden_dim=hidden_dim,
+        num_layers=num_layers,
+        dropout=dropout,
+        horizon=horizon,
+        target_dim=target_dim,
     ).to(device)
 
 

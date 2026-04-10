@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 
 from src.data_loading.darus_dataset import create_dataloaders
 # IMPORTANT: adjust this import if your Gaussian model lives elsewhere
-from src.uncertainty.models.lstm_gaussian import LSTMGaussian
+from src.models.lstm_gaussian import LSTMGaussianSeq2Seq
 
 
 TARGET_NAMES = ["u", "v", "p", "r", "phi"]
@@ -223,7 +223,8 @@ def main():
     batch_size = int(config.get("training", {}).get("batch_size", config.get("training", {}).get("batch", 256)))
 
     # create_dataloaders returns (train, val, test, ood) in your repo
-    train_loader, val_loader, test_loader, ood_loader = create_dataloaders(config, horizon, batch_size)
+    history = int(config["data"]["history"])
+    train_loader, val_loader, test_loader, ood_loader = create_dataloaders(history, horizon, batch_size)
 
     loader = test_loader if args.split == "test" else ood_loader
 
@@ -236,13 +237,13 @@ def main():
     input_dim = x0.shape[-1]
     target_dim = y0.shape[-1]
 
-    model = LSTMGaussian(
+    model = LSTMGaussianSeq2Seq(
         input_dim=input_dim,
         hidden_dim=int(config["model"]["hidden_dim"]),
-        target_dim=target_dim,
         num_layers=int(config["model"]["num_layers"]),
         dropout=float(config["model"].get("dropout", 0.0)),
         horizon=horizon,
+        target_dim=target_dim,
     ).to(device)
     model.eval()
 

@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 import yaml
 
 from src.data_loading.darus_dataset import create_dataloaders
-from src.uncertainty.models.lstm_gaussian import LSTMGaussian
+from src.models.lstm_gaussian import LSTMGaussianSeq2Seq
 
 
 TARGET_NAMES = ["u", "v", "p", "r", "phi"]
@@ -87,12 +87,14 @@ def _build_model_from_data(config: Dict, input_dim: int, target_dim: int, device
     hidden_dim = int(config.get("model", {}).get("hidden_dim", 128))
     num_layers = int(config.get("model", {}).get("num_layers", 2))
     dropout = float(config.get("model", {}).get("dropout", 0.0))
-    model = LSTMGaussian(
+    horizon = int(config.get("data", {}).get("horizon", 30))
+    model = LSTMGaussianSeq2Seq(
         input_dim=input_dim,
         hidden_dim=hidden_dim,
-        target_dim=target_dim,
         num_layers=num_layers,
         dropout=dropout,
+        horizon=horizon,
+        target_dim=target_dim,
     ).to(device)
     return model
 
@@ -364,8 +366,8 @@ def main():
     horizon = config["data"]["horizon"]
     batch_size = config.get("training", {}).get("batch_size", config.get("data", {}).get("batch_size", 256))
 
-    print("🔧 create_dataloaders called!")
-    train_loader, val_loader, test_loader, ood_loader = create_dataloaders(config, horizon, batch_size)
+    history = int(config["data"]["history"])
+    train_loader, val_loader, test_loader, ood_loader = create_dataloaders(history, horizon, batch_size)
 
     # infer dims from VAL loader (most stable)
     input_dim, target_dim = _infer_dims_from_loader(val_loader)

@@ -154,7 +154,7 @@ def main():
         raise ValueError(f"Unknown model type: {mtype}")
 
     # Load weights
-    model.load_state_dict(ckpt["model_state_dict"])
+    model.load_state_dict(ckpt["model_state"])
     model.eval()
 
     # ---------------------------

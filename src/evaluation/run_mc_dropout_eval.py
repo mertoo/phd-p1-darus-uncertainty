@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import os
 
 from src.uncertainty.mc_dropout import mc_dropout_predict
-from src.training.train_baseline import create_dataloaders
+from src.data_loading.darus_dataset import create_dataloaders
 from src.models.lstm import LSTMSeq2Seq
 
 
@@ -115,7 +115,7 @@ def main():
         horizon=horizon
     )
 
-    model.load_state_dict(ckpt["model_state_dict"])
+    model.load_state_dict(ckpt["model_state"])
     model.train()  # ✅ ACTIVATE DROPOUT FOR MC
 
     horizon = config["data"]["horizon"]
