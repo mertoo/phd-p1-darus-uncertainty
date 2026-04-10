@@ -1,0 +1,12 @@
+Job: darus_gaussian_lstm  ID: 918305
+Node: ada1  GPU: 1
+Started: Sat Apr 11 00:59:15 EEST 2026
+🔧 create_dataloaders called!
+📁 Model will be saved to: experiments/results/p2_lstm_gaussian/best_model.pt
+Using device: cpu
+Epoch 1/20 | Train NLL: -1.897061 | Val NLL: -2.125967
+✅ Saved new best model to experiments/results/p2_lstm_gaussian/best_model.pt
+Epoch 2/20 | Train NLL: -2.274628 | Val NLL: -2.456830
+✅ Saved new best model to experiments/results/p2_lstm_gaussian/best_model.pt
+Epoch 3/20 | Train NLL: -2.439347 | Val NLL: -2.720296
+✅ Saved new best model to experiments/results/p2_lstm_gaussian/best_model.pt

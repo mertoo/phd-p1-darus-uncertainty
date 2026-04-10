@@ -1,0 +1,8 @@
+Lmod has detected the following error: These module(s) or extension(s) exist
+but cannot be loaded as requested: "cuda/12.2.2-gcc-10.3.0-5rec"
+   Try: "module spider cuda/12.2.2-gcc-10.3.0-5rec" to see how to load the
+module(s).
+
+
+
+slurmstepd: error: *** JOB 918303 ON ada1 CANCELLED AT 2026-04-11T00:59:11 ***

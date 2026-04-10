@@ -1,0 +1,12 @@
+Traceback (most recent call last):
+  File "/gpfs/mariana/software/Debian-spack/0.19.2/opt/spack/linux-debian10-ivybridge/gcc-10.3.0/python-3.10.8-56wj47q3lbtjumqff3bh7g7ertdlx2n6/lib/python3.10/runpy.py", line 196, in _run_module_as_main
+    return _run_code(code, main_globals, None,
+  File "/gpfs/mariana/software/Debian-spack/0.19.2/opt/spack/linux-debian10-ivybridge/gcc-10.3.0/python-3.10.8-56wj47q3lbtjumqff3bh7g7ertdlx2n6/lib/python3.10/runpy.py", line 86, in _run_code
+    exec(code, run_globals)
+  File "/gpfs/mariana/home/vedata/phd-p1-darus-uncertainty/src/uncertainty/train_lstm_gaussian.py", line 138, in <module>
+    main()
+  File "/gpfs/mariana/home/vedata/phd-p1-darus-uncertainty/src/uncertainty/train_lstm_gaussian.py", line 134, in main
+    train_lstm_gaussian(config)
+  File "/gpfs/mariana/home/vedata/phd-p1-darus-uncertainty/src/uncertainty/train_lstm_gaussian.py", line 42, in train_lstm_gaussian
+    model = LSTMGaussian(
+NameError: name 'LSTMGaussian' is not defined

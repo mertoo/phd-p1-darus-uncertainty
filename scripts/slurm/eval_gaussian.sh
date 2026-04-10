@@ -1,8 +1,8 @@
 #!/bin/bash
-#SBATCH --job-name=darus_gaussian_lstm
+#SBATCH --job-name=darus_eval_gaussian
 #SBATCH --output=logs/slurm/%x_%j.out
 #SBATCH --error=logs/slurm/%x_%j.err
-#SBATCH --time=02:00:00
+#SBATCH --time=01:00:00
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=8
@@ -23,5 +23,16 @@ echo "Job: $SLURM_JOB_NAME  ID: $SLURM_JOB_ID"
 echo "Node: $SLURMD_NODENAME  GPU: $SLURM_GPUS_ON_NODE"
 echo "Started: $(date)"
 
-python -u -m src.uncertainty.train_lstm_gaussian \
-    --config experiments/configs/uncertainty/p2_lstm_gaussian.yaml
+echo "=== TEST split ==="
+python -u -m src.uncertainty.eval_lstm_gaussian \
+    --model_dir experiments/results/p2_lstm_gaussian \
+    --config experiments/configs/uncertainty/p2_lstm_gaussian.yaml \
+    --split test
+
+echo "=== OOD split ==="
+python -u -m src.uncertainty.eval_lstm_gaussian \
+    --model_dir experiments/results/p2_lstm_gaussian \
+    --config experiments/configs/uncertainty/p2_lstm_gaussian.yaml \
+    --split ood
+
+echo "Done: $(date)"

@@ -1,0 +1,22 @@
+Traceback (most recent call last):
+  File "/gpfs/mariana/software/Debian-spack/0.19.2/opt/spack/linux-debian10-ivybridge/gcc-10.3.0/python-3.10.8-56wj47q3lbtjumqff3bh7g7ertdlx2n6/lib/python3.10/runpy.py", line 196, in _run_module_as_main
+    return _run_code(code, main_globals, None,
+  File "/gpfs/mariana/software/Debian-spack/0.19.2/opt/spack/linux-debian10-ivybridge/gcc-10.3.0/python-3.10.8-56wj47q3lbtjumqff3bh7g7ertdlx2n6/lib/python3.10/runpy.py", line 86, in _run_code
+    exec(code, run_globals)
+  File "/gpfs/mariana/home/vedata/phd-p1-darus-uncertainty/src/uncertainty/train_lstm_gaussian.py", line 137, in <module>
+    main()
+  File "/gpfs/mariana/home/vedata/phd-p1-darus-uncertainty/src/uncertainty/train_lstm_gaussian.py", line 133, in main
+    train_lstm_gaussian(config)
+  File "/gpfs/mariana/home/vedata/phd-p1-darus-uncertainty/src/uncertainty/train_lstm_gaussian.py", line 30, in train_lstm_gaussian
+    train_loader, val_loader, _, _ = create_dataloaders(config, horizon, batch_size)
+  File "/gpfs/mariana/home/vedata/phd-p1-darus-uncertainty/src/data_loading/darus_dataset.py", line 61, in create_dataloaders
+    DataLoader(train_ds, batch_size=batch_size, shuffle=True),
+  File "/gpfs/mariana/home/vedata/phd-p1-darus-uncertainty/venv/lib/python3.10/site-packages/torch/utils/data/dataloader.py", line 376, in __init__
+    sampler = RandomSampler(dataset, generator=generator)  # type: ignore[arg-type]
+  File "/gpfs/mariana/home/vedata/phd-p1-darus-uncertainty/venv/lib/python3.10/site-packages/torch/utils/data/sampler.py", line 163, in __init__
+    if not isinstance(self.num_samples, int) or self.num_samples <= 0:
+  File "/gpfs/mariana/home/vedata/phd-p1-darus-uncertainty/venv/lib/python3.10/site-packages/torch/utils/data/sampler.py", line 172, in num_samples
+    return len(self.data_source)
+  File "/gpfs/mariana/home/vedata/phd-p1-darus-uncertainty/src/data_loading/darus_dataset.py", line 37, in __len__
+    return len(self.X) - self.history - self.horizon
+TypeError: unsupported operand type(s) for -: 'int' and 'dict'

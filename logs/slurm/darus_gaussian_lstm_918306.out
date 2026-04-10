@@ -1,0 +1,41 @@
+Job: darus_gaussian_lstm  ID: 918306
+Node: ada1  GPU: 1
+Started: Sat Apr 11 01:05:37 EEST 2026
+🔧 create_dataloaders called!
+📁 Model will be saved to: experiments/results/p2_lstm_gaussian/best_model.pt
+Using device: cuda
+Epoch 1/20 | Train NLL: -1.898097 | Val NLL: -2.071027
+✅ Saved new best model to experiments/results/p2_lstm_gaussian/best_model.pt
+Epoch 2/20 | Train NLL: -2.137816 | Val NLL: -2.108912
+✅ Saved new best model to experiments/results/p2_lstm_gaussian/best_model.pt
+Epoch 3/20 | Train NLL: -2.487461 | Val NLL: -2.784840
+✅ Saved new best model to experiments/results/p2_lstm_gaussian/best_model.pt
+Epoch 4/20 | Train NLL: -2.732129 | Val NLL: -2.830615
+✅ Saved new best model to experiments/results/p2_lstm_gaussian/best_model.pt
+Epoch 5/20 | Train NLL: -2.790615 | Val NLL: -2.892911
+✅ Saved new best model to experiments/results/p2_lstm_gaussian/best_model.pt
+Epoch 6/20 | Train NLL: -2.840611 | Val NLL: -2.858057
+Epoch 7/20 | Train NLL: -2.862226 | Val NLL: -2.960958
+✅ Saved new best model to experiments/results/p2_lstm_gaussian/best_model.pt
+Epoch 8/20 | Train NLL: -2.894548 | Val NLL: -2.968306
+✅ Saved new best model to experiments/results/p2_lstm_gaussian/best_model.pt
+Epoch 9/20 | Train NLL: -2.959037 | Val NLL: -3.050626
+✅ Saved new best model to experiments/results/p2_lstm_gaussian/best_model.pt
+Epoch 10/20 | Train NLL: -2.995007 | Val NLL: -3.032669
+Epoch 11/20 | Train NLL: -3.029899 | Val NLL: -2.983837
+Epoch 12/20 | Train NLL: -3.055506 | Val NLL: -3.035268
+Epoch 13/20 | Train NLL: -3.072843 | Val NLL: -3.105212
+✅ Saved new best model to experiments/results/p2_lstm_gaussian/best_model.pt
+Epoch 14/20 | Train NLL: -3.088596 | Val NLL: -3.098553
+Epoch 15/20 | Train NLL: -3.092374 | Val NLL: -3.130070
+✅ Saved new best model to experiments/results/p2_lstm_gaussian/best_model.pt
+Epoch 16/20 | Train NLL: -3.115688 | Val NLL: -3.115906
+Epoch 17/20 | Train NLL: -3.133103 | Val NLL: -3.161931
+✅ Saved new best model to experiments/results/p2_lstm_gaussian/best_model.pt
+Epoch 18/20 | Train NLL: -3.136347 | Val NLL: -3.181413
+✅ Saved new best model to experiments/results/p2_lstm_gaussian/best_model.pt
+Epoch 19/20 | Train NLL: -3.168093 | Val NLL: -3.192767
+✅ Saved new best model to experiments/results/p2_lstm_gaussian/best_model.pt
+Epoch 20/20 | Train NLL: -3.145627 | Val NLL: -3.219736
+✅ Saved new best model to experiments/results/p2_lstm_gaussian/best_model.pt
+✅ Training complete. Best val NLL: -3.219736

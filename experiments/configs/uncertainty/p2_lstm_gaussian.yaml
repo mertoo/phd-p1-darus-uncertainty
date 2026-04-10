@@ -14,7 +14,7 @@ training:
   batch_size: 256
   epochs: 20
   lr: 0.001
-  device: "cpu"
+  device: "cuda"
 
 logging:
   save_dir: "experiments/results"
@@ -28,3 +28,4 @@ uq:
     t_min: 0.5
     t_max: 5.0
     n: 60
+  device: "cuda"

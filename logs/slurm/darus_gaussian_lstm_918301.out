@@ -1,0 +1,7 @@
+Job: darus_gaussian_lstm  ID: 918301
+Node: ada1  GPU: 0
+Config: experiments/configs/uncertainty/p2_lstm_gaussian.yaml
+Started: Sat Apr 11 00:52:49 EEST 2026
+🔧 create_dataloaders called!
+📁 Model will be saved to: experiments/results/p2_lstm_gaussian/best_model.pt
+Using device: cpu

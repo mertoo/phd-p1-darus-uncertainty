@@ -1,0 +1,36 @@
+Job: darus_eval_gaussian  ID: 918309
+Node: ada1  GPU: 1
+Started: Sat Apr 11 01:39:27 EEST 2026
+=== TEST split ===
+Using device: cuda
+🔧 create_dataloaders called!
+Loading checkpoint: experiments/results/p2_lstm_gaussian/best_model.pt
+✅ Sigma temperature fitted on VAL: T_sigma=0.958 (val NLL=-2.3023)
+
+==========================================
+Gaussian LSTM metrics (TEST split)
+------------------------------------------
+RMSE:       0.133014
+Avg NLL:    -2.349966
+T_sigma:    0.958
+sigma_floor:0.001   sigma_cap:5
+==========================================
+
+✅ Saved Gaussian φ plot to: experiments/results/p2_lstm_gaussian/plots/gaussian_phi_test.png
+=== OOD split ===
+Using device: cuda
+🔧 create_dataloaders called!
+Loading checkpoint: experiments/results/p2_lstm_gaussian/best_model.pt
+✅ Sigma temperature fitted on VAL: T_sigma=0.958 (val NLL=-2.3023)
+
+==========================================
+Gaussian LSTM metrics (OOD split)
+------------------------------------------
+RMSE:       0.549802
+Avg NLL:    6.397517
+T_sigma:    0.958
+sigma_floor:0.001   sigma_cap:5
+==========================================
+
+✅ Saved Gaussian φ plot to: experiments/results/p2_lstm_gaussian/plots/gaussian_phi_ood.png
+Done: Sat Apr 11 01:39:45 EEST 2026
