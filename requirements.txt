@@ -1,0 +1,20 @@
+# Core deep learning
+# Install torch separately with the CUDA variant matching your cluster:
+#   pip install torch --index-url https://download.pytorch.org/whl/cu121
+torch>=2.0.0
+
+# Data handling
+numpy==2.3.5
+pandas==2.3.3
+
+# Config and utilities
+PyYAML==6.0.3
+tqdm==4.67.1
+
+# Visualisation
+matplotlib==3.10.7
+seaborn==0.13.2
+
+# Metrics / uncertainty utilities (conformal, calibration)
+scikit-learn==1.7.2
+scipy==1.16.3

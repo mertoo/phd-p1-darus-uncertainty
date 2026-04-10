@@ -18,16 +18,22 @@ This repository provides:
 phd-p1-darus-uncertainty/
 │
 ├── experiments/
-│   ├── configs/          # YAML configuration files
-│   └── results/          # Saved checkpoints, logs, evaluation plots
+│   ├── configs/              # YAML configuration files
+│   │   └── uncertainty/      # P2 uncertainty method configs
+│   └── results/              # Saved checkpoints and evaluation plots
+│
+├── scripts/
+│   └── slurm/                # SLURM job scripts for HPC cluster
 │
 ├── src/
-│   ├── data_loading/     # DaRUS dataset preprocessing and loaders
-│   ├── models/           # Implementations of baseline architectures
-│   ├── training/         # Training utilities and main training script
-│   └── evaluation/       # Evaluation routines and plotting utilities
+│   ├── data_loading/         # DaRUS dataset loader and parser
+│   ├── models/               # Baseline and probabilistic model architectures
+│   ├── training/             # Training script for deterministic baselines
+│   ├── evaluation/           # Evaluation, metrics, and plotting utilities
+│   └── uncertainty/          # P2: UQ training and evaluation pipelines
 │
-├── train_all.sh          # Batch launcher for training all baselines
+├── requirements.txt
+├── train_all.sh              # Sequential launcher for all P1 baselines
 └── README.md
 ```
 
@@ -104,16 +110,129 @@ The evaluation stage:
 
 These values serve as deterministic reference points for later uncertainty-aware modeling.
 
-## Next Research Phase: Uncertainty Quantification
+## Phase 2: Uncertainty Quantification
 
-The forthcoming work (P2) will incorporate uncertainty quantification into the forecasting pipeline. Planned approaches include:
+P2 extends the deterministic baselines with four uncertainty quantification methods, all using the LSTM backbone:
 
-- Deep ensembles  
-- Monte Carlo dropout  
-- Gaussian and probabilistic sequence models  
-- Conformal prediction for distribution-free uncertainty sets  
+| Method | Script | Config |
+|---|---|---|
+| Gaussian LSTM | `src/uncertainty/train_lstm_gaussian.py` | `p2_lstm_gaussian.yaml` |
+| Deep Ensemble (5×) | `src/uncertainty/train_ensemble.py` | `p2_lstm_ensemble.yaml` |
+| MC Dropout | `src/evaluation/run_mc_dropout_eval.py` | `p1_lstm_seq2seq.yaml` |
+| Conformal Prediction | `src/uncertainty/run_conformal_eval.py` | any baseline config |
 
-The baselines in this repository provide the empirical foundation for evaluating these methods in terms of calibration, reliability, and robustness to OOD conditions.
+Train the Gaussian LSTM:
+
+```bash
+python -m src.uncertainty.train_lstm_gaussian \
+    --config experiments/configs/uncertainty/p2_lstm_gaussian.yaml
+```
+
+Train the deep ensemble (5 members sequentially):
+
+```bash
+python -m src.uncertainty.train_ensemble \
+    --config experiments/configs/uncertainty/p2_lstm_ensemble.yaml \
+    --num_models 5
+```
+
+Evaluate with calibrated uncertainty intervals:
+
+```bash
+# Gaussian LSTM — NLL, RMSE, coverage/width per DoF
+python -m src.uncertainty.eval_gaussian_diagnostics \
+    --model_dir experiments/results/p2_lstm_gaussian \
+    --config experiments/configs/uncertainty/p2_lstm_gaussian.yaml \
+    --split test --calibrate_sigma_temp
+
+# Deep ensemble
+python -m src.uncertainty.eval_ensemble \
+    --ensemble_dir experiments/results/uncertainty/ensemble_lstm \
+    --config experiments/configs/uncertainty/p2_lstm_ensemble.yaml \
+    --split test
+
+# Conformal prediction
+python -m src.uncertainty.run_conformal_eval \
+    --model_dir experiments/results/p1_lstm_baseline \
+    --config experiments/configs/p1_lstm_seq2seq.yaml
+```
+
+## Running on an HPC Cluster (SLURM)
+
+### 1. Environment setup
+
+```bash
+# Clone and enter the repo
+git clone <repo-url>
+cd phd-p1-darus-uncertainty
+
+# Create a virtualenv (or use your site's conda/module environment)
+python -m venv venv
+source venv/bin/activate
+
+# Install PyTorch with the CUDA version matching your cluster, e.g. CUDA 12.1:
+pip install torch --index-url https://download.pytorch.org/whl/cu121
+
+# Install remaining dependencies
+pip install -r requirements.txt
+```
+
+> **Note:** If your cluster uses `module` commands, load Python and CUDA before creating the venv, e.g. `module load python/3.11 cuda/12.1`. Add the relevant `module load` lines inside the SLURM scripts under the `# Load any cluster modules` comment.
+
+### 2. Data
+
+Copy the processed DaRUS data to the cluster so the following structure is present:
+
+```
+data/processed/darus/
+    patrol_ship_routine/train/        # 57 CSV files
+    patrol_ship_routine/validation/   # 9 CSV files
+    patrol_ship_routine/test/         # 30 CSV files
+    patrol_ship_ood/test/             # 29 CSV files
+```
+
+### 3. Submit jobs
+
+All SLURM scripts live in `scripts/slurm/`. Edit the `--partition` line to match your cluster's GPU partition name before submitting.
+
+**Train the Gaussian LSTM (single GPU job):**
+
+```bash
+sbatch scripts/slurm/train_gaussian_lstm.sh
+```
+
+**Train all P1 baselines in parallel (job array, one GPU per model):**
+
+```bash
+sbatch --array=0-5 scripts/slurm/train_baselines.sh
+```
+
+**Train the deep ensemble in parallel (5 members simultaneously):**
+
+```bash
+sbatch --array=0-4 scripts/slurm/train_ensemble.sh
+```
+
+### 4. Monitor and retrieve results
+
+```bash
+# Watch queue
+squeue -u $USER
+
+# Tail a running job's log
+tail -f logs/slurm/darus_gaussian_lstm_<JOBID>.out
+
+# Checkpoints are written to:
+#   experiments/results/<run_name>/best_model.pt
+```
+
+### Resource requirements
+
+| Job | GPUs | RAM | Typical wall time |
+|---|---|---|---|
+| Gaussian LSTM (20 epochs) | 1 | 16 GB | ~30 min |
+| Single baseline (20 epochs) | 1 | 16 GB | ~20 min |
+| Ensemble member | 1 | 16 GB | ~20 min |
 
 ## Contact
 
