@@ -1,0 +1,50 @@
+Job: darus_eval_conformal  ID: 918407
+Node: ada1  GPU: 1
+Started: Sat Apr 11 18:04:40 EEST 2026
+Model dir: experiments/results/uncertainty/ensemble_lstm/model_3
+Alpha: 0.10
+=== Conformal prediction: TEST split ===
+🔧 create_dataloaders called!
+🔧 create_dataloaders called!
+📏 Collecting calibration residuals from validation set...
+
+==========================================
+Conformal metrics for split: TEST
+------------------------------------------
+Alpha:            0.100
+Nominal coverage: 0.900
+
+Overall coverage: 0.901
+Overall width:    0.210
+------------------------------------------
+Per-DoF coverage and width:
+  u     coverage: 0.914   width: 0.485
+  v     coverage: 0.879   width: 0.234
+  p     coverage: 0.920   width: 0.021
+  r     coverage: 0.903   width: 0.028
+  phi   coverage: 0.910   width: 0.068
+==========================================
+
+=== Conformal prediction: OOD split ===
+🔧 create_dataloaders called!
+🔧 create_dataloaders called!
+📏 Collecting calibration residuals from validation set...
+
+==========================================
+Conformal metrics for split: OOD
+------------------------------------------
+Alpha:            0.100
+Nominal coverage: 0.900
+
+Overall coverage: 0.659
+Overall width:    0.210
+------------------------------------------
+Per-DoF coverage and width:
+  u     coverage: 0.233   width: 0.485
+  v     coverage: 0.265   width: 0.234
+  p     coverage: 0.801   width: 0.021
+  r     coverage: 0.498   width: 0.028
+  phi   coverage: 0.489   width: 0.068
+==========================================
+
+Done: Sat Apr 11 18:04:51 EEST 2026

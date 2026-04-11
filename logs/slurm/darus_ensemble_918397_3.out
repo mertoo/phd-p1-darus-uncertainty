@@ -1,0 +1,61 @@
+Job: darus_ensemble  Array: 918397  Member: 3
+Node: ada1  GPU: 1
+Started: Sat Apr 11 17:54:14 EEST 2026
+🔧 Training script started!
+🔧 create_dataloaders called!
+📁 Model will be saved to: experiments/results/uncertainty/ensemble_lstm/model_3/best_model.pt
+Model: LSTM
+Using device: cuda
+Epoch 1/20
+Train loss: 0.282508 | Val loss: 0.076273
+✅ Saved new best model to experiments/results/uncertainty/ensemble_lstm/model_3/best_model.pt
+Epoch 2/20
+Train loss: 0.068950 | Val loss: 0.062846
+✅ Saved new best model to experiments/results/uncertainty/ensemble_lstm/model_3/best_model.pt
+Epoch 3/20
+Train loss: 0.047768 | Val loss: 0.024634
+✅ Saved new best model to experiments/results/uncertainty/ensemble_lstm/model_3/best_model.pt
+Epoch 4/20
+Train loss: 0.026512 | Val loss: 0.021114
+✅ Saved new best model to experiments/results/uncertainty/ensemble_lstm/model_3/best_model.pt
+Epoch 5/20
+Train loss: 0.023369 | Val loss: 0.018260
+✅ Saved new best model to experiments/results/uncertainty/ensemble_lstm/model_3/best_model.pt
+Epoch 6/20
+Train loss: 0.022688 | Val loss: 0.018186
+✅ Saved new best model to experiments/results/uncertainty/ensemble_lstm/model_3/best_model.pt
+Epoch 7/20
+Train loss: 0.021989 | Val loss: 0.017914
+✅ Saved new best model to experiments/results/uncertainty/ensemble_lstm/model_3/best_model.pt
+Epoch 8/20
+Train loss: 0.020929 | Val loss: 0.018155
+Epoch 9/20
+Train loss: 0.021336 | Val loss: 0.016788
+✅ Saved new best model to experiments/results/uncertainty/ensemble_lstm/model_3/best_model.pt
+Epoch 10/20
+Train loss: 0.020488 | Val loss: 0.016139
+✅ Saved new best model to experiments/results/uncertainty/ensemble_lstm/model_3/best_model.pt
+Epoch 11/20
+Train loss: 0.021388 | Val loss: 0.016324
+Epoch 12/20
+Train loss: 0.020400 | Val loss: 0.017305
+Epoch 13/20
+Train loss: 0.020425 | Val loss: 0.016676
+Epoch 14/20
+Train loss: 0.021791 | Val loss: 0.023881
+Epoch 15/20
+Train loss: 0.019416 | Val loss: 0.014701
+✅ Saved new best model to experiments/results/uncertainty/ensemble_lstm/model_3/best_model.pt
+Epoch 16/20
+Train loss: 0.020677 | Val loss: 0.018495
+Epoch 17/20
+Train loss: 0.023777 | Val loss: 0.019960
+Epoch 18/20
+Train loss: 0.018974 | Val loss: 0.014492
+✅ Saved new best model to experiments/results/uncertainty/ensemble_lstm/model_3/best_model.pt
+Epoch 19/20
+Train loss: 0.018759 | Val loss: 0.015127
+Epoch 20/20
+Train loss: 0.020537 | Val loss: 0.014521
+✅ Training complete. Best val loss: 0.014492
+Done member 3: Sat Apr 11 17:55:46 EEST 2026

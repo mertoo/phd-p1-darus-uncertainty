@@ -1,0 +1,45 @@
+Job: darus_eval_ensemble  ID: 918406
+Node: ada1  GPU: 1
+Started: Sat Apr 11 18:00:27 EEST 2026
+=== Ensemble eval: TEST split ===
+🔧 create_dataloaders called!
+Loaded 5 ensemble members
+Evaluating ensemble over full test set…
+
+==================================================
+Deep Ensemble metrics – TEST
+==================================================
+RMSE (overall):    0.110564
+Coverage ±2σ:      0.758  (nominal 0.954)
+──────────────────────────────────────────────────
+DoF           RMSE    Coverage ±2σ
+u         0.228956           0.771
+v         0.088734           0.758
+p         0.006084           0.769
+r         0.007721           0.799
+phi       0.018638           0.692
+==================================================
+
+Ensemble plots saved to: experiments/results/uncertainty/ensemble_lstm/plots/test
+=== Ensemble eval: OOD split ===
+🔧 create_dataloaders called!
+⚠️ Skipping missing: experiments/results/uncertainty/ensemble_lstm/plots/best_model.pt
+Loaded 5 ensemble members
+Evaluating ensemble over full ood set…
+
+==================================================
+Deep Ensemble metrics – OOD
+==================================================
+RMSE (overall):    0.492436
+Coverage ±2σ:      0.490  (nominal 0.954)
+──────────────────────────────────────────────────
+DoF           RMSE    Coverage ±2σ
+u         1.006631           0.321
+v         0.437362           0.478
+p         0.008038           0.678
+r         0.022729           0.498
+phi       0.051171           0.476
+==================================================
+
+Ensemble plots saved to: experiments/results/uncertainty/ensemble_lstm/plots/ood
+Done: Sat Apr 11 18:00:45 EEST 2026

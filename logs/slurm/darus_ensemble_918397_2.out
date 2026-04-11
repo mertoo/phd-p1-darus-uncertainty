@@ -1,0 +1,57 @@
+Job: darus_ensemble  Array: 918397  Member: 2
+Node: ada1  GPU: 1
+Started: Sat Apr 11 17:54:14 EEST 2026
+🔧 Training script started!
+🔧 create_dataloaders called!
+📁 Model will be saved to: experiments/results/uncertainty/ensemble_lstm/model_2/best_model.pt
+Model: LSTM
+Using device: cuda
+Epoch 1/20
+Train loss: 0.292436 | Val loss: 0.063013
+✅ Saved new best model to experiments/results/uncertainty/ensemble_lstm/model_2/best_model.pt
+Epoch 2/20
+Train loss: 0.064545 | Val loss: 0.055096
+✅ Saved new best model to experiments/results/uncertainty/ensemble_lstm/model_2/best_model.pt
+Epoch 3/20
+Train loss: 0.043129 | Val loss: 0.033600
+✅ Saved new best model to experiments/results/uncertainty/ensemble_lstm/model_2/best_model.pt
+Epoch 4/20
+Train loss: 0.027243 | Val loss: 0.031356
+✅ Saved new best model to experiments/results/uncertainty/ensemble_lstm/model_2/best_model.pt
+Epoch 5/20
+Train loss: 0.024988 | Val loss: 0.018978
+✅ Saved new best model to experiments/results/uncertainty/ensemble_lstm/model_2/best_model.pt
+Epoch 6/20
+Train loss: 0.023704 | Val loss: 0.024078
+Epoch 7/20
+Train loss: 0.023398 | Val loss: 0.019261
+Epoch 8/20
+Train loss: 0.023672 | Val loss: 0.025337
+Epoch 9/20
+Train loss: 0.024450 | Val loss: 0.017836
+✅ Saved new best model to experiments/results/uncertainty/ensemble_lstm/model_2/best_model.pt
+Epoch 10/20
+Train loss: 0.022427 | Val loss: 0.020474
+Epoch 11/20
+Train loss: 0.021500 | Val loss: 0.019384
+Epoch 12/20
+Train loss: 0.021712 | Val loss: 0.025026
+Epoch 13/20
+Train loss: 0.021187 | Val loss: 0.020166
+Epoch 14/20
+Train loss: 0.021048 | Val loss: 0.019140
+Epoch 15/20
+Train loss: 0.020627 | Val loss: 0.017990
+Epoch 16/20
+Train loss: 0.020510 | Val loss: 0.018284
+Epoch 17/20
+Train loss: 0.020164 | Val loss: 0.015786
+✅ Saved new best model to experiments/results/uncertainty/ensemble_lstm/model_2/best_model.pt
+Epoch 18/20
+Train loss: 0.020512 | Val loss: 0.017229
+Epoch 19/20
+Train loss: 0.019574 | Val loss: 0.018169
+Epoch 20/20
+Train loss: 0.020047 | Val loss: 0.017299
+✅ Training complete. Best val loss: 0.015786
+Done member 2: Sat Apr 11 17:55:46 EEST 2026

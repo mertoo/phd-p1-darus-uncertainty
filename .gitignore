@@ -2,6 +2,10 @@ mert@MacBook-Air-2 phd-p1-darus-uncertainty % nano .gitignore
 # macOS junk
 .DS_Store
 
+# SLURM/DCGM runtime files
+dcgm-gpu-stats-*.out
+slurm-*.stat
+
 # Dataset folders
 data/
 !data/README.md

@@ -1,0 +1,59 @@
+Job: darus_ensemble  Array: 918397  Member: 1
+Node: ada1  GPU: 1
+Started: Sat Apr 11 17:52:36 EEST 2026
+🔧 Training script started!
+🔧 create_dataloaders called!
+📁 Model will be saved to: experiments/results/uncertainty/ensemble_lstm/model_1/best_model.pt
+Model: LSTM
+Using device: cuda
+Epoch 1/20
+Train loss: 0.239155 | Val loss: 0.060511
+✅ Saved new best model to experiments/results/uncertainty/ensemble_lstm/model_1/best_model.pt
+Epoch 2/20
+Train loss: 0.068834 | Val loss: 0.052533
+✅ Saved new best model to experiments/results/uncertainty/ensemble_lstm/model_1/best_model.pt
+Epoch 3/20
+Train loss: 0.037709 | Val loss: 0.027205
+✅ Saved new best model to experiments/results/uncertainty/ensemble_lstm/model_1/best_model.pt
+Epoch 4/20
+Train loss: 0.026411 | Val loss: 0.030573
+Epoch 5/20
+Train loss: 0.025891 | Val loss: 0.020481
+✅ Saved new best model to experiments/results/uncertainty/ensemble_lstm/model_1/best_model.pt
+Epoch 6/20
+Train loss: 0.023553 | Val loss: 0.019627
+✅ Saved new best model to experiments/results/uncertainty/ensemble_lstm/model_1/best_model.pt
+Epoch 7/20
+Train loss: 0.022991 | Val loss: 0.019616
+✅ Saved new best model to experiments/results/uncertainty/ensemble_lstm/model_1/best_model.pt
+Epoch 8/20
+Train loss: 0.021495 | Val loss: 0.020108
+Epoch 9/20
+Train loss: 0.021685 | Val loss: 0.016869
+✅ Saved new best model to experiments/results/uncertainty/ensemble_lstm/model_1/best_model.pt
+Epoch 10/20
+Train loss: 0.022176 | Val loss: 0.031336
+Epoch 11/20
+Train loss: 0.021143 | Val loss: 0.017920
+Epoch 12/20
+Train loss: 0.021111 | Val loss: 0.018097
+Epoch 13/20
+Train loss: 0.020471 | Val loss: 0.017099
+Epoch 14/20
+Train loss: 0.020639 | Val loss: 0.019220
+Epoch 15/20
+Train loss: 0.020600 | Val loss: 0.016489
+✅ Saved new best model to experiments/results/uncertainty/ensemble_lstm/model_1/best_model.pt
+Epoch 16/20
+Train loss: 0.019672 | Val loss: 0.015722
+✅ Saved new best model to experiments/results/uncertainty/ensemble_lstm/model_1/best_model.pt
+Epoch 17/20
+Train loss: 0.020064 | Val loss: 0.018317
+Epoch 18/20
+Train loss: 0.018895 | Val loss: 0.016056
+Epoch 19/20
+Train loss: 0.020027 | Val loss: 0.016003
+Epoch 20/20
+Train loss: 0.021408 | Val loss: 0.029829
+✅ Training complete. Best val loss: 0.015722
+Done member 1: Sat Apr 11 17:54:12 EEST 2026
