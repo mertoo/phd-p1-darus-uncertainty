@@ -1,0 +1,162 @@
+Job: darus_paper_plots  ID: 918414
+Node: ada1  GPU: 1
+Started: Sat Apr 11 18:50:08 EEST 2026
+=== Baseline LSTM: prediction plots ===
+
+Loading checkpoint: experiments/results/uncertainty/ensemble_lstm/model_3/best_model.pt
+Using config: experiments/configs/p1_lstm_seq2seq.yaml
+🔧 create_dataloaders called!
+Evaluating on test set...
+Evaluating on OOD set...
+
+=== SUMMARY ===
+Test RMSE: 0.115009
+OOD RMSE:  0.505018
+Plots saved to: experiments/results/uncertainty/ensemble_lstm/model_3/plots
+✅ Evaluation complete.
+=== Gaussian LSTM: test ===
+Using device: cuda
+🔧 create_dataloaders called!
+Loading checkpoint: experiments/results/p2_lstm_gaussian/best_model.pt
+✅ Sigma temperature fitted on VAL: T_sigma=0.958 (val NLL=-2.3023)
+
+==========================================
+Gaussian LSTM metrics (TEST split)
+------------------------------------------
+RMSE:       0.133014
+Avg NLL:    -2.349966
+T_sigma:    0.958
+sigma_floor:0.001   sigma_cap:5
+==========================================
+
+✅ Saved Gaussian φ plot to: experiments/results/p2_lstm_gaussian/plots/gaussian_phi_test.png
+=== Gaussian LSTM: OOD ===
+Using device: cuda
+🔧 create_dataloaders called!
+Loading checkpoint: experiments/results/p2_lstm_gaussian/best_model.pt
+✅ Sigma temperature fitted on VAL: T_sigma=0.958 (val NLL=-2.3023)
+
+==========================================
+Gaussian LSTM metrics (OOD split)
+------------------------------------------
+RMSE:       0.549802
+Avg NLL:    6.397517
+T_sigma:    0.958
+sigma_floor:0.001   sigma_cap:5
+==========================================
+
+✅ Saved Gaussian φ plot to: experiments/results/p2_lstm_gaussian/plots/gaussian_phi_ood.png
+=== Deep Ensemble: test ===
+🔧 create_dataloaders called!
+⚠️ Skipping missing: experiments/results/uncertainty/ensemble_lstm/plots/best_model.pt
+Loaded 5 ensemble members
+Evaluating ensemble over full test set…
+
+==================================================
+Deep Ensemble metrics – TEST
+==================================================
+RMSE (overall):    0.110564
+Coverage ±2σ:      0.758  (nominal 0.954)
+──────────────────────────────────────────────────
+DoF           RMSE    Coverage ±2σ
+u         0.228956           0.771
+v         0.088734           0.758
+p         0.006084           0.769
+r         0.007721           0.799
+phi       0.018638           0.692
+==================================================
+
+Ensemble plots saved to: experiments/results/uncertainty/ensemble_lstm/plots/test
+=== Deep Ensemble: OOD ===
+🔧 create_dataloaders called!
+⚠️ Skipping missing: experiments/results/uncertainty/ensemble_lstm/plots/best_model.pt
+Loaded 5 ensemble members
+Evaluating ensemble over full ood set…
+
+==================================================
+Deep Ensemble metrics – OOD
+==================================================
+RMSE (overall):    0.492436
+Coverage ±2σ:      0.490  (nominal 0.954)
+──────────────────────────────────────────────────
+DoF           RMSE    Coverage ±2σ
+u         1.006631           0.321
+v         0.437362           0.478
+p         0.008038           0.678
+r         0.022729           0.498
+phi       0.051171           0.476
+==================================================
+
+Ensemble plots saved to: experiments/results/uncertainty/ensemble_lstm/plots/ood
+=== MC Dropout: test ===
+Loading checkpoint: experiments/results/uncertainty/mc_dropout_lstm/best_model.pt
+Using config: experiments/results/uncertainty/mc_dropout_lstm/config.yaml
+🔧 create_dataloaders called!
+Using device: cuda
+Running MC Dropout (200 samples) over full test set…
+
+==================================================
+MC Dropout metrics – TEST
+==================================================
+RMSE (overall):    0.123004
+Coverage ±2σ:      0.357  (nominal 0.954)
+──────────────────────────────────────────────────
+DoF           RMSE    Coverage ±2σ
+u         0.250704           0.444
+v         0.108262           0.429
+p         0.006329           0.359
+r         0.011671           0.208
+phi       0.022876           0.345
+==================================================
+
+✅ MC Dropout evaluation complete.
+Plots saved to: experiments/results/uncertainty/mc_dropout_lstm/mc_dropout_plots/test
+=== MC Dropout: OOD ===
+Loading checkpoint: experiments/results/uncertainty/mc_dropout_lstm/best_model.pt
+Using config: experiments/results/uncertainty/mc_dropout_lstm/config.yaml
+🔧 create_dataloaders called!
+Using device: cuda
+Running MC Dropout (200 samples) over full ood set…
+
+==================================================
+MC Dropout metrics – OOD
+==================================================
+RMSE (overall):    0.520089
+Coverage ±2σ:      0.165  (nominal 0.954)
+──────────────────────────────────────────────────
+DoF           RMSE    Coverage ±2σ
+u         1.073153           0.150
+v         0.438361           0.190
+p         0.008327           0.202
+r         0.026398           0.134
+phi       0.054249           0.151
+==================================================
+
+✅ MC Dropout evaluation complete.
+Plots saved to: experiments/results/uncertainty/mc_dropout_lstm/mc_dropout_plots/ood
+=== Conformal: test ===
+🔧 create_dataloaders called!
+🔧 create_dataloaders called!
+📏 Computing calibration residuals...
+
+✅ Conformal prediction intervals saved to:
+   experiments/results/uncertainty/ensemble_lstm/model_3/conformal/test
+
+=== Conformal: OOD ===
+🔧 create_dataloaders called!
+🔧 create_dataloaders called!
+📏 Computing calibration residuals...
+
+✅ Conformal prediction intervals saved to:
+   experiments/results/uncertainty/ensemble_lstm/model_3/conformal/ood
+
+Done: Sat Apr 11 18:54:24 EEST 2026
+
+=== Paper figures expected at ===
+  prediction_phi_test.png  → experiments/results/uncertainty/ensemble_lstm/model_3/plots/
+  gaussian_phi_test.png    → experiments/results/p2_lstm_gaussian/plots/
+  gaussian_phi_ood.png     → experiments/results/p2_lstm_gaussian/plots/
+  ensemble_u_test.png      → experiments/results/uncertainty/ensemble_lstm/plots/test/
+  ensemble_u_ood.png       → experiments/results/uncertainty/ensemble_lstm/plots/ood/
+  mc_u_test.png            → experiments/results/uncertainty/mc_dropout_lstm/mc_dropout_plots/test/
+  conformal_phi_test.png   → experiments/results/uncertainty/ensemble_lstm/model_3/conformal/test/

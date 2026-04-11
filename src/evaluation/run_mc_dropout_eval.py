@@ -87,7 +87,7 @@ def print_metrics(means, stds, ys, split_label):
     print(f"{'='*50}\n")
 
 
-def plot_mc_with_uncertainty(mean, std, truth, save_dir):
+def plot_mc_with_uncertainty(mean, std, truth, save_dir, split):
     """Plot a single example: mean prediction ± 2σ band vs ground truth."""
     T, D = mean.shape
     t = np.arange(T)
@@ -102,15 +102,15 @@ def plot_mc_with_uncertainty(mean, std, truth, save_dir):
         plt.plot(t, truth[:, i], linestyle="--", linewidth=2, label="Ground Truth")
         plt.xlabel("Prediction step")
         plt.ylabel(name)
-        plt.title(f"MC Dropout – {name}")
+        plt.title(f"MC Dropout – {name} ({split.upper()})")
         plt.legend()
         plt.grid(True)
         plt.tight_layout()
-        plt.savefig(os.path.join(save_dir, f"mc_{name}.png"), dpi=300)
+        plt.savefig(os.path.join(save_dir, f"mc_{name}_{split}.png"), dpi=300)
         plt.close()
 
 
-def plot_epistemic_growth(std, save_dir):
+def plot_epistemic_growth(std, save_dir, split):
     """Plot std (epistemic uncertainty) growth over the forecast horizon."""
     T, D = std.shape
     t = np.arange(T)
@@ -121,10 +121,10 @@ def plot_epistemic_growth(std, save_dir):
         plt.xlabel("Prediction step")
         plt.ylabel("Standard deviation")
         plt.yscale("log")
-        plt.title(f"Epistemic Uncertainty Growth – {name}")
+        plt.title(f"Epistemic Uncertainty Growth – {name} ({split.upper()})")
         plt.grid(True)
         plt.tight_layout()
-        plt.savefig(os.path.join(save_dir, f"mc_{name}_std.png"), dpi=300)
+        plt.savefig(os.path.join(save_dir, f"mc_{name}_std_{split}.png"), dpi=300)
         plt.close()
 
 
@@ -187,8 +187,8 @@ def main():
     save_dir = os.path.join(args.model_dir, "mc_dropout_plots", args.split)
     os.makedirs(save_dir, exist_ok=True)
 
-    plot_mc_with_uncertainty(means[0], stds[0], ys[0], save_dir)
-    plot_epistemic_growth(stds[0], save_dir)
+    plot_mc_with_uncertainty(means[0], stds[0], ys[0], save_dir, args.split)
+    plot_epistemic_growth(stds[0], save_dir, args.split)
 
     print("✅ MC Dropout evaluation complete.")
     print(f"Plots saved to: {save_dir}")

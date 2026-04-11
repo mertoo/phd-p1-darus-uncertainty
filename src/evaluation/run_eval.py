@@ -31,6 +31,8 @@ def main():
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument("--model_dir", type=str, required=True)
+    parser.add_argument("--config", type=str, default=None,
+                        help="Path to YAML config. If omitted, inferred from model_dir name.")
     args = parser.parse_args()
 
     model_dir = args.model_dir
@@ -39,26 +41,28 @@ def main():
     print(f"\nLoading checkpoint: {ckpt_path}")
     ckpt = torch.load(ckpt_path, map_location="cpu", weights_only=False)
 
-    # Detect model type from folder name
-    model_name = os.path.basename(model_dir)
-    print(f"Detected model: {model_name}")
+    if args.config is not None:
+        config_path = args.config
+    else:
+        # Detect model type from folder name
+        model_name = os.path.basename(model_dir)
+        print(f"Detected model: {model_name}")
 
-    # Manual mapping
-    MODEL_CONFIG_MAP = {
-        "p1_lstm_baseline": "p1_lstm_seq2seq.yaml",
-        "p1_gru_seq2seq_baseline": "p1_gru_seq2seq.yaml",
-        "p1_tcn_baseline": "p1_tcn.yaml",
-        "p1_mlp_baseline": "p1_mlp.yaml",
-        "p1_linear_baseline": "p1_linear.yaml",
-        "p1_naive_baseline": "p1_naive.yaml",
-    }
+        MODEL_CONFIG_MAP = {
+            "p1_lstm_baseline": "p1_lstm_seq2seq.yaml",
+            "p1_gru_seq2seq_baseline": "p1_gru_seq2seq.yaml",
+            "p1_tcn_baseline": "p1_tcn.yaml",
+            "p1_mlp_baseline": "p1_mlp.yaml",
+            "p1_linear_baseline": "p1_linear.yaml",
+            "p1_naive_baseline": "p1_naive.yaml",
+        }
 
-    if model_name not in MODEL_CONFIG_MAP:
-        raise ValueError(f"Unknown model folder: {model_name}")
+        if model_name not in MODEL_CONFIG_MAP:
+            raise ValueError(f"Unknown model folder: {model_name}. Pass --config explicitly.")
 
-    config_path = os.path.join("experiments/configs", MODEL_CONFIG_MAP[model_name])
-    if not os.path.exists(config_path):
-        raise FileNotFoundError(f"Config file not found: {config_path}")
+        config_path = os.path.join("experiments/configs", MODEL_CONFIG_MAP[model_name])
+        if not os.path.exists(config_path):
+            raise FileNotFoundError(f"Config file not found: {config_path}")
 
     print(f"Using config: {config_path}")
 
@@ -183,6 +187,25 @@ def main():
 
     plot_multi_horizon_rmse(Y_ood, Yhat_ood,
         savepath=os.path.join(plot_dir, "rmse_ood.png"))
+
+    # Paper figures: phi-only (DoF index 4) prediction vs truth
+    DOF_NAMES = ["u", "v", "p", "r", "phi"]
+    for split_label, Y, Yhat in [("test", Y_test, Yhat_test), ("ood", Y_ood, Yhat_ood)]:
+        for dof_idx, dof_name in enumerate(DOF_NAMES):
+            import matplotlib.pyplot as plt
+            sample = 0
+            t = np.arange(Y.shape[1])
+            fig, ax = plt.subplots(figsize=(7, 3))
+            ax.plot(t, Y[sample, :, dof_idx], label="Truth", linewidth=1.5)
+            ax.plot(t, Yhat[sample, :, dof_idx], "--", label="Prediction", linewidth=1.2)
+            ax.set_xlabel("Forecast step")
+            ax.set_ylabel(dof_name)
+            ax.set_title(f"Baseline LSTM — {dof_name} ({split_label.upper()})")
+            ax.legend()
+            ax.grid(True, alpha=0.3)
+            fig.tight_layout()
+            fig.savefig(os.path.join(plot_dir, f"prediction_{dof_name}_{split_label}.png"), dpi=150)
+            plt.close(fig)
 
 
     # ---------------------------
