@@ -188,6 +188,24 @@ SLURM jobs: 918411 (train), 918413 (eval) — `scripts/slurm/train_eval_mc_dropo
 
 ---
 
+## 5. Baseline Model Comparison (point prediction only)
+
+All models trained with history=30, horizon=30. Evaluated on test and OOD splits.  
+SLURM job: 918426 (train array), 918432 (eval array)
+
+| Model | Test RMSE | OOD RMSE |
+|-------|-----------|----------|
+| **LSTM** (hidden=128, layers=2) | **0.120** | 0.537 |
+| MLP (hidden=256, layers=3) | 0.121 | **0.330** |
+| GRU (hidden=128, layers=2) | 0.132 | 0.506 |
+| Naive (last-step repeat) | 0.173 | 0.411 |
+| TCN | 0.155 | 0.347 |
+| Linear | 1.791 | 2.297 |
+
+LSTM is best in-distribution; MLP generalises best OOD. Linear fails to capture nonlinear dynamics.
+
+---
+
 ## Summary Comparison
 
 ### TEST split (nominal coverage 90%)
@@ -195,11 +213,13 @@ SLURM jobs: 918411 (train), 918413 (eval) — `scripts/slurm/train_eval_mc_dropo
 | Method | RMSE | Coverage | Width |
 |--------|------|----------|-------|
 | Gaussian LSTM (calibrated) | 0.133 | **89.9%** ✅ | 0.201 |
-| Conformal Prediction | 0.118* | **90.1%** ✅ | 0.210 |
+| Conformal Prediction | 0.120* | **90.1%** ✅ | 0.210 |
 | Deep Ensemble ±2σ | **0.111** | 75.8% ⚠️ | — |
 | MC Dropout ±2σ | 0.123 | 35.7% ⚠️ | — |
+| LSTM baseline | 0.120 | — | — |
+| MLP baseline | 0.121 | — | — |
 
-*Conformal uses the baseline LSTM backbone (ensemble member 3); RMSE 0.118 is the backbone point-prediction error.
+*Conformal uses the baseline LSTM backbone; RMSE 0.120 is the backbone point-prediction error (re-evaluated, previously 0.118 was from ensemble member 3).
 
 ### OOD split (nominal coverage 90%)
 
@@ -209,6 +229,8 @@ SLURM jobs: 918411 (train), 918413 (eval) — `scripts/slurm/train_eval_mc_dropo
 | Deep Ensemble ±2σ | 0.492 | 49.0% ⚠️ | — |
 | MC Dropout ±2σ | 0.520 | 16.5% ⚠️ | — |
 | Conformal Prediction | — | **65.9%** ⚠️ | 0.210 |
+| LSTM baseline | 0.537 | — | — |
+| MLP baseline | **0.330** | — | — |
 
 ---
 

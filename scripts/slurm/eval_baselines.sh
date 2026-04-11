@@ -1,9 +1,9 @@
 #!/bin/bash
-#SBATCH --job-name=darus_baseline
+#SBATCH --job-name=darus_eval_baseline
 #SBATCH --output=logs/slurm/%x_%A_%a.out
 #SBATCH --error=logs/slurm/%x_%A_%a.err
 #SBATCH --array=0-5
-#SBATCH --time=02:00:00
+#SBATCH --time=01:00:00
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=4
@@ -20,30 +20,18 @@ cd ~/phd-p1-darus-uncertainty
 source venv/bin/activate
 export PYTHONPATH=$PWD
 
-# Map array index → (model name, source config)
 MODELS=(lstm gru tcn mlp linear naive)
-CONFIGS=(
-    experiments/configs/p1_lstm_seq2seq.yaml
-    experiments/configs/p1_gru_seq2seq.yaml
-    experiments/configs/p1_tcn.yaml
-    experiments/configs/p1_mlp.yaml
-    experiments/configs/p1_linear.yaml
-    experiments/configs/p1_naive.yaml
-)
-
 MODEL="${MODELS[$SLURM_ARRAY_TASK_ID]}"
-SRC_CFG="${CONFIGS[$SLURM_ARRAY_TASK_ID]}"
-OUT_DIR="experiments/results/p1_${MODEL}_baseline"
-DST_CFG="${OUT_DIR}/config.yaml"
+MODEL_DIR="experiments/results/p1_${MODEL}_baseline"
+CONFIG="${MODEL_DIR}/config.yaml"
 
 echo "Job: $SLURM_JOB_NAME  Array: $SLURM_ARRAY_JOB_ID[$SLURM_ARRAY_TASK_ID]"
 echo "Node: $SLURMD_NODENAME  GPU: $SLURM_GPUS_ON_NODE"
-echo "Model: $MODEL  →  $OUT_DIR"
+echo "Model: $MODEL  dir: $MODEL_DIR"
 echo "Started: $(date)"
 
-mkdir -p "$OUT_DIR"
-cp "$SRC_CFG" "$DST_CFG"
-
-python -u -m src.training.train_baseline --config "$DST_CFG"
+python -u -m src.evaluation.run_eval \
+    --model_dir "$MODEL_DIR" \
+    --config "$CONFIG"
 
 echo "Done: $(date)"

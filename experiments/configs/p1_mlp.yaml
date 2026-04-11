@@ -13,7 +13,7 @@ model:
 training:
   epochs: 20
   lr: 0.001
-  device: "cpu"
+  device: "cuda"
 
 logging:
   save_dir: "experiments/results"

@@ -1,7 +1,7 @@
 data:
   base_path: "data/processed/darus"
-  history: 60    
-  horizon: 60
+  history: 30
+  horizon: 30
   batch_size: 256
 
 model:
@@ -10,7 +10,7 @@ model:
 training:
   epochs: 20
   lr: 0.001
-  device: "cpu"
+  device: "cuda"
 
 logging:
   save_dir: "experiments/results"
