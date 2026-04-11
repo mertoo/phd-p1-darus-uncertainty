@@ -131,6 +131,8 @@ def plot_epistemic_growth(std, save_dir):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--model_dir", required=True)
+    parser.add_argument("--config", type=str, default=None,
+                        help="Path to YAML config. If omitted, inferred from model_dir name.")
     parser.add_argument("--n_samples", type=int, default=200)
     parser.add_argument("--split", type=str, default="test", choices=["test", "ood"])
     args = parser.parse_args()
@@ -139,8 +141,11 @@ def main():
     print(f"Loading checkpoint: {ckpt_path}")
     ckpt = torch.load(ckpt_path, map_location="cpu")
 
-    config_name = infer_config_from_model_dir(args.model_dir)
-    config_path = f"experiments/configs/{config_name}"
+    if args.config is not None:
+        config_path = args.config
+    else:
+        config_name = infer_config_from_model_dir(args.model_dir)
+        config_path = f"experiments/configs/{config_name}"
     print(f"Using config: {config_path}")
 
     with open(config_path, "r") as f:

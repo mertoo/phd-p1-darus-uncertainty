@@ -1,0 +1,50 @@
+Job: darus_eval_mc_dropout  ID: 918413
+Node: ada1  GPU: 1
+Started: Sat Apr 11 18:29:18 EEST 2026
+=== MC Dropout eval: TEST split ===
+Loading checkpoint: experiments/results/uncertainty/mc_dropout_lstm/best_model.pt
+Using config: experiments/results/uncertainty/mc_dropout_lstm/config.yaml
+🔧 create_dataloaders called!
+Using device: cuda
+Running MC Dropout (200 samples) over full test set…
+
+==================================================
+MC Dropout metrics – TEST
+==================================================
+RMSE (overall):    0.123011
+Coverage ±2σ:      0.357  (nominal 0.954)
+──────────────────────────────────────────────────
+DoF           RMSE    Coverage ±2σ
+u         0.250715           0.444
+v         0.108264           0.430
+p         0.006329           0.359
+r         0.011671           0.207
+phi       0.022876           0.345
+==================================================
+
+✅ MC Dropout evaluation complete.
+Plots saved to: experiments/results/uncertainty/mc_dropout_lstm/mc_dropout_plots/test
+=== MC Dropout eval: OOD split ===
+Loading checkpoint: experiments/results/uncertainty/mc_dropout_lstm/best_model.pt
+Using config: experiments/results/uncertainty/mc_dropout_lstm/config.yaml
+🔧 create_dataloaders called!
+Using device: cuda
+Running MC Dropout (200 samples) over full ood set…
+
+==================================================
+MC Dropout metrics – OOD
+==================================================
+RMSE (overall):    0.520080
+Coverage ±2σ:      0.165  (nominal 0.954)
+──────────────────────────────────────────────────
+DoF           RMSE    Coverage ±2σ
+u         1.073123           0.150
+v         0.438354           0.190
+p         0.008327           0.202
+r         0.026399           0.134
+phi       0.054247           0.151
+==================================================
+
+✅ MC Dropout evaluation complete.
+Plots saved to: experiments/results/uncertainty/mc_dropout_lstm/mc_dropout_plots/ood
+Done: Sat Apr 11 18:32:21 EEST 2026

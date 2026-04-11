@@ -1,0 +1,20 @@
+data:
+  base_path: "data/processed/darus"
+  history: 30
+  horizon: 30
+  batch_size: 256
+
+model:
+  type: lstm
+  hidden_dim: 128
+  num_layers: 2
+  dropout: 0.2
+
+training:
+  epochs: 20
+  lr: 0.001
+  device: "cuda"
+
+logging:
+  save_dir: "experiments/results/uncertainty"
+  run_name: "p2_lstm_mc_dropout"

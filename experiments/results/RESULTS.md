@@ -148,6 +148,46 @@ SLURM job: 918407 — `scripts/slurm/eval_conformal.sh`
 
 ---
 
+## 4. MC Dropout
+
+Single `LSTMSeq2Seq` trained with dropout=0.2. At inference, dropout remains active and 200 stochastic
+forward passes are averaged to estimate mean and epistemic std. Intervals reported as ±2σ (≈95.4% nominal).  
+SLURM jobs: 918411 (train), 918413 (eval) — `scripts/slurm/train_eval_mc_dropout.sh`, `eval_mc_dropout.sh`
+
+**Training:** Best val loss = 0.01629 (epoch 13, dropout=0.2)
+
+### TEST split
+
+| Metric | Value |
+|--------|-------|
+| RMSE (overall) | 0.1230 |
+| Overall coverage ±2σ | **35.7%** ⚠️ (nominal 95.4%) |
+
+| DoF | Coverage | RMSE |
+|-----|----------|------|
+| u   | 44.4% | 0.2507 |
+| v   | 43.0% | 0.1083 |
+| p   | 35.9% | 0.0063 |
+| r   | 20.7% | 0.0117 |
+| φ   | 34.5% | 0.0229 |
+
+### OOD split
+
+| Metric | Value |
+|--------|-------|
+| RMSE (overall) | 0.5201 |
+| Overall coverage ±2σ | **16.5%** ⚠️ (nominal 95.4%) |
+
+| DoF | Coverage | RMSE |
+|-----|----------|------|
+| u   | 15.0% | 1.0731 |
+| v   | 19.0% | 0.4384 |
+| p   | 20.2% | 0.0083 |
+| r   | 13.4% | 0.0264 |
+| φ   | 15.1% | 0.0542 |
+
+---
+
 ## Summary Comparison
 
 ### TEST split (nominal coverage 90%)
@@ -157,6 +197,7 @@ SLURM job: 918407 — `scripts/slurm/eval_conformal.sh`
 | Gaussian LSTM (calibrated) | 0.133 | **89.9%** ✅ | 0.201 |
 | Conformal Prediction | 0.118* | **90.1%** ✅ | 0.210 |
 | Deep Ensemble ±2σ | **0.111** | 75.8% ⚠️ | — |
+| MC Dropout ±2σ | 0.123 | 35.7% ⚠️ | — |
 
 *Conformal uses the baseline LSTM backbone (ensemble member 3); RMSE 0.118 is the backbone point-prediction error.
 
@@ -166,18 +207,21 @@ SLURM job: 918407 — `scripts/slurm/eval_conformal.sh`
 |--------|------|----------|-------|
 | Gaussian LSTM (calibrated) | 0.550 | 44.6% ⚠️ | 0.248 |
 | Deep Ensemble ±2σ | 0.492 | 49.0% ⚠️ | — |
+| MC Dropout ±2σ | 0.520 | 16.5% ⚠️ | — |
 | Conformal Prediction | — | **65.9%** ⚠️ | 0.210 |
 
 ---
 
 ## Key Observations
 
-1. **In-distribution calibration:** Both the calibrated Gaussian LSTM and conformal prediction achieve near-exact 90% coverage on the test set (89.9% and 90.1%). The deep ensemble with raw ±2σ intervals is under-covered (75.8%) — the ensemble spread is too narrow relative to nominal 95.4%, suggesting the members are too similar or the interval computation needs calibration.
+1. **In-distribution calibration:** Both the calibrated Gaussian LSTM and conformal prediction achieve near-exact 90% coverage on the test set (89.9% and 90.1%). The deep ensemble and MC Dropout use raw ±2σ intervals without calibration and are severely under-covered (75.8% and 35.7% respectively).
 
-2. **OOD coverage collapse:** All three methods degrade severely under distribution shift. Conformal prediction degrades least (65.9%), Gaussian LSTM worst (44.6%), with ensemble in between (49.0%). Conformal's advantage comes from its fixed-width intervals being relatively wider for the high-error DoFs (u, v).
+2. **MC Dropout underperforms across the board:** Despite 200 stochastic passes, the epistemic variance is far smaller than the actual prediction error. The model learns to route around dropout, producing near-deterministic outputs — a well-known failure mode. Temperature scaling or a larger dropout rate would be needed to calibrate it.
 
-3. **Per-DoF patterns:** DoF `u` (surge) and `v` (sway) are consistently the hardest — highest RMSE and lowest OOD coverage across all methods. DoF `p` (roll) is best-covered OOD, likely because roll dynamics are more self-similar across sea states.
+3. **OOD coverage collapse:** All methods degrade under distribution shift. Conformal prediction degrades least (65.9%), MC Dropout worst (16.5%), with Gaussian LSTM (44.6%) and ensemble (49.0%) in between. Conformal's advantage comes from its fixed-width intervals being relatively wider for the high-error DoFs (u, v).
 
-4. **Interval width vs. coverage trade-off:** Conformal intervals are fixed-width (constant across input), which is efficient on test but cannot adapt to locally harder OOD inputs. Gaussian and ensemble methods produce input-adaptive widths but are poorly calibrated OOD.
+4. **Per-DoF patterns:** DoF `u` (surge) and `v` (sway) are consistently the hardest — highest RMSE and lowest OOD coverage across all methods. DoF `p` (roll) is best-covered OOD, likely because roll dynamics are more self-similar across sea states.
 
-5. **Next steps:** Covariate-adaptive conformal (e.g. locally-weighted conformal, RAPS) or MC-Dropout with temperature scaling could close the OOD coverage gap while maintaining adaptive interval widths.
+5. **Interval width vs. coverage trade-off:** Conformal intervals are fixed-width (constant across input), which is efficient on test but cannot adapt to locally harder OOD inputs. Gaussian and ensemble methods produce input-adaptive widths but are poorly calibrated OOD without explicit post-hoc calibration.
+
+6. **Next steps:** Covariate-adaptive conformal (e.g. locally-weighted conformal, RAPS) or ensemble calibration via temperature scaling could close the OOD coverage gap while maintaining adaptive interval widths.
