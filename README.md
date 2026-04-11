@@ -99,62 +99,77 @@ The evaluation stage:
 
 ## Baseline Performance Summary
 
-| Model  | Best Validation Loss | Test RMSE | OOD RMSE |
-|--------|-----------------------|-----------|----------|
-| LSTM   | 0.0151                | 0.118     | 0.511    |
-| GRU    | 0.0151                | 1.638     | 2.493    |
-| MLP    | 0.0157                | 0.122     | 0.324    |
-| TCN    | 0.0258                | —         | —        |
-| Linear | 12.608                | 3.554     | 4.239    |
-| Naive  | —                     | 0.300     | 0.585    |
+Verified on GPU (SLURM jobs 918426/918432), history=30, horizon=30.
 
-These values serve as deterministic reference points for later uncertainty-aware modeling.
+| Model  | Best Val Loss | Test RMSE | OOD RMSE |
+|--------|--------------|-----------|----------|
+| LSTM   | 0.01599      | 0.120     | 0.537    |
+| MLP    | 0.01561      | **0.121** | **0.330** |
+| GRU    | 0.01880      | 0.132     | 0.506    |
+| TCN    | 0.02480      | 0.155     | 0.347    |
+| Naive  | —            | 0.173     | 0.411    |
+| Linear | 3.291        | 1.791     | 2.297    |
+
+LSTM is best in-distribution; MLP generalises best OOD. Checkpoints saved to
+`experiments/results/p1_<model>_baseline/best_model.pt`.
+
+These values serve as deterministic reference points for uncertainty-aware modeling.
 
 ## Phase 2: Uncertainty Quantification
 
-P2 extends the deterministic baselines with four uncertainty quantification methods, all using the LSTM backbone:
+P2 extends the deterministic baselines with UQ methods. Results are in
+`experiments/results/RESULTS.md`. Quick summary (α=0.10, nominal 90% coverage):
 
-| Method | Script | Config |
-|---|---|---|
-| Gaussian LSTM | `src/uncertainty/train_lstm_gaussian.py` | `p2_lstm_gaussian.yaml` |
-| Deep Ensemble (5×) | `src/uncertainty/train_ensemble.py` | `p2_lstm_ensemble.yaml` |
-| MC Dropout | `src/evaluation/run_mc_dropout_eval.py` | `p1_lstm_seq2seq.yaml` |
-| Conformal Prediction | `src/uncertainty/run_conformal_eval.py` | any baseline config |
+| Method | Backbone | Test RMSE | Test Coverage | OOD Coverage |
+|--------|----------|-----------|---------------|--------------|
+| Gaussian LSTM (calibrated) | LSTM | 0.133 | 89.9% ✅ | 44.6% |
+| Conformal Prediction | MLP  | 0.121 | 90.1% ✅ | **68.0%** |
+| Conformal Prediction | LSTM | 0.120 | 90.5% ✅ | 66.2% |
+| MLP Deep Ensemble ±2σ | MLP  | 0.123 | 81.3% | 57.4% |
+| LSTM Deep Ensemble ±2σ | LSTM | **0.111** | 75.8% | 49.0% |
+| MC Dropout ±2σ | LSTM | 0.123 | 35.7% | 16.5% |
 
-Train the Gaussian LSTM:
+### Training UQ methods
 
 ```bash
+# Gaussian LSTM
 python -m src.uncertainty.train_lstm_gaussian \
     --config experiments/configs/uncertainty/p2_lstm_gaussian.yaml
+
+# Deep ensemble — 5 members via SLURM array (LSTM or MLP)
+sbatch scripts/slurm/train_ensemble.sh       # LSTM
+sbatch scripts/slurm/train_ensemble_mlp.sh   # MLP
+
+# MC Dropout — standard train_baseline with dropout=0.2
+sbatch scripts/slurm/train_eval_mc_dropout.sh
 ```
 
-Train the deep ensemble (5 members sequentially):
+### Evaluating UQ methods
 
 ```bash
-python -m src.uncertainty.train_ensemble \
-    --config experiments/configs/uncertainty/p2_lstm_ensemble.yaml \
-    --num_models 5
-```
-
-Evaluate with calibrated uncertainty intervals:
-
-```bash
-# Gaussian LSTM — NLL, RMSE, coverage/width per DoF
-python -m src.uncertainty.eval_gaussian_diagnostics \
+# Gaussian LSTM — NLL, RMSE, coverage/width per DoF with per-DoF calibration
+python -m src.uncertainty.eval_gaussian_per_dof \
     --model_dir experiments/results/p2_lstm_gaussian \
     --config experiments/configs/uncertainty/p2_lstm_gaussian.yaml \
-    --split test --calibrate_sigma_temp
+    --split test --calibrate_per_dof
 
-# Deep ensemble
+# Deep ensemble (works for any model type via config model.type)
 python -m src.uncertainty.eval_ensemble \
-    --ensemble_dir experiments/results/uncertainty/ensemble_lstm \
-    --config experiments/configs/uncertainty/p2_lstm_ensemble.yaml \
+    --ensemble_dir experiments/results/uncertainty/ensemble_mlp \
+    --config experiments/configs/uncertainty/p2_mlp_ensemble.yaml \
     --split test
 
-# Conformal prediction
-python -m src.uncertainty.run_conformal_eval \
-    --model_dir experiments/results/p1_lstm_baseline \
-    --config experiments/configs/p1_lstm_seq2seq.yaml
+# Conformal prediction (works for any model type)
+python -m src.uncertainty.eval_conformal_metrics \
+    --model_dir experiments/results/p1_mlp_baseline \
+    --config experiments/results/p1_mlp_baseline/config.yaml \
+    --alpha 0.10 --split test
+
+# MC Dropout
+python -m src.evaluation.run_mc_dropout_eval \
+    --model_dir experiments/results/uncertainty/mc_dropout_lstm \
+    --config experiments/results/uncertainty/mc_dropout_lstm/config.yaml \
+    --n_samples 200 --split test
 ```
 
 ## Running on an HPC Cluster (SLURM)
@@ -204,13 +219,14 @@ sbatch scripts/slurm/train_gaussian_lstm.sh
 **Train all P1 baselines in parallel (job array, one GPU per model):**
 
 ```bash
-sbatch --array=0-5 scripts/slurm/train_baselines.sh
+sbatch scripts/slurm/train_baselines.sh       # array 0-5 defined inside the script
 ```
 
 **Train the deep ensemble in parallel (5 members simultaneously):**
 
 ```bash
-sbatch --array=0-4 scripts/slurm/train_ensemble.sh
+sbatch scripts/slurm/train_ensemble.sh        # LSTM ensemble (array 0-4)
+sbatch scripts/slurm/train_ensemble_mlp.sh    # MLP ensemble  (array 0-4)
 ```
 
 ### 4. Monitor and retrieve results
@@ -230,9 +246,11 @@ tail -f logs/slurm/darus_gaussian_lstm_<JOBID>.out
 
 | Job | GPUs | RAM | Typical wall time |
 |---|---|---|---|
+| Single baseline (20 epochs) | 1 | 16 GB | ~5 min (MLP) / ~10 min (LSTM) |
+| Ensemble member (20 epochs) | 1 | 16 GB | ~5–10 min |
 | Gaussian LSTM (20 epochs) | 1 | 16 GB | ~30 min |
-| Single baseline (20 epochs) | 1 | 16 GB | ~20 min |
-| Ensemble member | 1 | 16 GB | ~20 min |
+| Conformal / ensemble eval | 1 | 16 GB | < 2 min |
+| MC Dropout eval (200 samples) | 1 | 16 GB | ~5 min |
 
 ## Contact
 
