@@ -155,10 +155,10 @@ SLURM job: 918407 — `scripts/slurm/eval_conformal.sh`
 | Method | RMSE | Coverage | Width |
 |--------|------|----------|-------|
 | Gaussian LSTM (calibrated) | 0.133 | **89.9%** ✅ | 0.201 |
-| Conformal Prediction | 0.145* | **90.1%** ✅ | 0.210 |
+| Conformal Prediction | 0.118* | **90.1%** ✅ | 0.210 |
 | Deep Ensemble ±2σ | **0.111** | 75.8% ⚠️ | — |
 
-*Conformal backbone (member 3) RMSE not separately reported; member 3 val loss = 0.01449.
+*Conformal uses the baseline LSTM backbone (ensemble member 3); RMSE 0.118 is the backbone point-prediction error.
 
 ### OOD split (nominal coverage 90%)
 
