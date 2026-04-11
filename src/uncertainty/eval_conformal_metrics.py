@@ -7,26 +7,71 @@ import yaml
 
 from src.data_loading.darus_dataset import create_dataloaders
 from src.models.lstm import LSTMSeq2Seq
+from src.models.gru import GRUSeq2Seq
+from src.models.mlp import MLP
+from src.models.tcn import TCN
+from src.models.linear import LinearBaseline
+from src.models.naive import NaiveBaseline
 
 
 # Use the same DoF ordering you use elsewhere (adjust if needed)
 DOF_NAMES = ["u", "v", "p", "r", "phi"]
 
 
-def build_model_from_config(config, input_dim, target_dim, horizon, device):
-    """Build an LSTMSeq2Seq model from the given config and data dims."""
+def build_model_from_config(config, input_dim, target_dim, horizon, history, device):
+    """Build a model from the given config and data dims."""
     model_cfg = config["model"]
+    mtype = model_cfg["type"].lower()
 
-    model = LSTMSeq2Seq(
-        input_dim=input_dim,
-        hidden_dim=model_cfg["hidden_dim"],
-        num_layers=model_cfg["num_layers"],
-        dropout=model_cfg.get("dropout", 0.0),
-        horizon=horizon,
-        target_dim=target_dim,
-    ).to(device)
+    if mtype == "lstm":
+        model = LSTMSeq2Seq(
+            input_dim=input_dim,
+            hidden_dim=model_cfg["hidden_dim"],
+            num_layers=model_cfg["num_layers"],
+            dropout=model_cfg.get("dropout", 0.0),
+            horizon=horizon,
+            target_dim=target_dim,
+        )
+    elif mtype == "gru":
+        model = GRUSeq2Seq(
+            input_dim=input_dim,
+            hidden_dim=model_cfg["hidden_dim"],
+            num_layers=model_cfg["num_layers"],
+            dropout=model_cfg.get("dropout", 0.0),
+            horizon=horizon,
+            target_dim=target_dim,
+        )
+    elif mtype == "mlp":
+        model = MLP(
+            input_dim=input_dim,
+            history=history,
+            horizon=horizon,
+            output_dim=target_dim,
+            hidden_dim=model_cfg.get("hidden_dim", 256),
+        )
+    elif mtype == "tcn":
+        model = TCN(
+            input_dim=input_dim,
+            target_dim=target_dim,
+            history=history,
+            horizon=horizon,
+            num_channels=model_cfg.get("num_channels", [64, 64, 64]),
+            kernel_size=model_cfg.get("kernel_size", 3),
+            dropout=model_cfg.get("dropout", 0.1),
+        )
+    elif mtype == "linear":
+        model = LinearBaseline(
+            input_dim=input_dim,
+            history=history,
+            output_dim=target_dim,
+            horizon=horizon,
+        )
+    elif mtype == "naive":
+        model = NaiveBaseline(output_dim=target_dim, horizon=horizon)
+    else:
+        raise ValueError(f"Unknown model type: {mtype}")
 
-    return model
+    return model.to(device)
 
 
 def collect_residuals(loader, model, device):
@@ -181,6 +226,7 @@ def main():
         input_dim=input_dim,
         target_dim=target_dim,
         horizon=horizon,
+        history=history,
         device=device,
     )
 

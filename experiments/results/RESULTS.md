@@ -111,40 +111,87 @@ SLURM jobs: 918397 (training array), 918406 (eval) — `scripts/slurm/train_ense
 
 ## 3. Conformal Prediction
 
-Split-conformal intervals calibrated on validation residuals (marginal, per-timestep).  
-Backbone: best baseline LSTM (ensemble member 3, val loss = 0.01449).  
+Split-conformal intervals calibrated on validation residuals (marginal, per-DoF quantile).  
 α = 0.10 → nominal coverage = 90%.  
-SLURM job: 918407 — `scripts/slurm/eval_conformal.sh`
+SLURM jobs: 918407 (orig LSTM), 918441 (LSTM vs MLP comparison) — `scripts/slurm/eval_conformal_mlp_lstm.sh`
 
-### TEST split
+### 3a. Original result: ensemble member 3 backbone (val loss = 0.01449)
+
+| Split | Coverage | Width |
+|-------|----------|-------|
+| TEST  | **90.1%** ✅ | 0.210 |
+| OOD   | **65.9%** ⚠️ | 0.210 |
+
+### 3b. LSTM baseline backbone (val loss = 0.01599, SLURM 918441)
+
+#### TEST split
+
+| Metric | Value |
+|--------|-------|
+| Overall coverage | **90.5%** ✅ (nominal 90%) |
+| Overall width | 0.234 |
+
+| DoF | Coverage | Width |
+|-----|----------|-------|
+| u   | 91.3% | 0.548 |
+| v   | 88.9% | 0.283 |
+| p   | 92.2% | 0.020 |
+| r   | 90.1% | 0.028 |
+| φ   | 90.5% | 0.071 |
+
+#### OOD split
+
+| Metric | Value |
+|--------|-------|
+| Overall coverage | **66.2%** ⚠️ (nominal 90%) |
+| Overall width | 0.234 |
+
+| DoF | Coverage | Width |
+|-----|----------|-------|
+| u   | 25.5% | 0.548 |
+| v   | 28.2% | 0.283 |
+| p   | 81.1% | 0.020 |
+| r   | 46.8% | 0.028 |
+| φ   | 46.5% | 0.071 |
+
+### 3c. MLP baseline backbone (val loss = 0.01561, SLURM 918441)
+
+#### TEST split
 
 | Metric | Value |
 |--------|-------|
 | Overall coverage | **90.1%** ✅ (nominal 90%) |
-| Overall width | 0.210 |
+| Overall width | 0.212 |
 
 | DoF | Coverage | Width |
 |-----|----------|-------|
-| u   | 91.4% | 0.485 |
-| v   | 87.9% | 0.234 |
-| p   | 92.0% | 0.021 |
-| r   | 90.3% | 0.028 |
-| φ   | 91.0% | 0.068 |
+| u   | 89.2% | 0.487 |
+| v   | 88.9% | 0.258 |
+| p   | 92.0% | 0.022 |
+| r   | 90.4% | 0.033 |
+| φ   | 87.4% | 0.080 |
 
-### OOD split
+#### OOD split
 
 | Metric | Value |
 |--------|-------|
-| Overall coverage | **65.9%** ⚠️ (nominal 90%) |
-| Overall width | 0.210 |
+| Overall coverage | **68.0%** ⚠️ (nominal 90%) |
+| Overall width | 0.212 |
 
 | DoF | Coverage | Width |
-|-----|----------|------|
-| u   | 23.3% | 0.485 |
-| v   | 26.5% | 0.234 |
-| p   | 80.1% | 0.021 |
-| r   | 49.8% | 0.028 |
-| φ   | 48.9% | 0.068 |
+|-----|----------|-------|
+| u   | 39.7% | 0.487 |
+| v   | 30.3% | 0.258 |
+| p   | 78.7% | 0.022 |
+| r   | 56.3% | 0.033 |
+| φ   | 53.4% | 0.080 |
+
+### Conformal backbone comparison
+
+Both backbones achieve near-exact 90% test coverage (conformal guarantee holds). The MLP backbone
+gives **+1.8% better OOD coverage** (68.0% vs 66.2%) with slightly **narrower intervals** (0.212 vs 0.234),
+consistent with its better point-prediction accuracy on OOD data. The improvement comes from smaller
+calibration residuals on the val set, which translate to tighter quantiles that still cover more OOD points.
 
 ---
 
@@ -213,24 +260,20 @@ LSTM is best in-distribution; MLP generalises best OOD. Linear fails to capture 
 | Method | RMSE | Coverage | Width |
 |--------|------|----------|-------|
 | Gaussian LSTM (calibrated) | 0.133 | **89.9%** ✅ | 0.201 |
-| Conformal Prediction | 0.120* | **90.1%** ✅ | 0.210 |
+| Conformal (LSTM backbone) | 0.120 | **90.5%** ✅ | 0.234 |
+| Conformal (MLP backbone) | 0.121 | **90.1%** ✅ | 0.212 |
 | Deep Ensemble ±2σ | **0.111** | 75.8% ⚠️ | — |
 | MC Dropout ±2σ | 0.123 | 35.7% ⚠️ | — |
-| LSTM baseline | 0.120 | — | — |
-| MLP baseline | 0.121 | — | — |
-
-*Conformal uses the baseline LSTM backbone; RMSE 0.120 is the backbone point-prediction error (re-evaluated, previously 0.118 was from ensemble member 3).
 
 ### OOD split (nominal coverage 90%)
 
 | Method | RMSE | Coverage | Width |
 |--------|------|----------|-------|
+| Conformal (MLP backbone) | **0.330** | **68.0%** ⚠️ | 0.212 |
+| Conformal (LSTM backbone) | 0.537 | 66.2% ⚠️ | 0.234 |
 | Gaussian LSTM (calibrated) | 0.550 | 44.6% ⚠️ | 0.248 |
 | Deep Ensemble ±2σ | 0.492 | 49.0% ⚠️ | — |
 | MC Dropout ±2σ | 0.520 | 16.5% ⚠️ | — |
-| Conformal Prediction | — | **65.9%** ⚠️ | 0.210 |
-| LSTM baseline | 0.537 | — | — |
-| MLP baseline | **0.330** | — | — |
 
 ---
 
