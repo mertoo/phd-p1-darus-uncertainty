@@ -1,0 +1,24 @@
+data:
+  history: 30
+  horizon: 30
+  input_dim: 12
+  output_dim: 5
+  batch_size: 256
+
+model:
+  type: mlp
+  hidden_dim: 256
+  num_layers: 3
+  dropout: 0.0
+
+ensemble:
+  n_models: 5
+
+training:
+  epochs: 20
+  lr: 0.001
+  device: "cuda"
+
+logging:
+  save_dir: "experiments/results/uncertainty"
+  run_name: "p2_mlp_deep_ensemble"

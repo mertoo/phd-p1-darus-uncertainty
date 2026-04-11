@@ -61,11 +61,13 @@ SLURM job: 918386 — `scripts/slurm/eval_gaussian_per_dof.sh`
 
 ## 2. Deep Ensemble (5 members)
 
+### 2a. LSTM Ensemble
+
 Five independent `LSTMSeq2Seq` models trained with different random initialisations.  
 Uncertainty from variance across member predictions. Intervals reported as ±2σ (≈95.4% nominal).  
 SLURM jobs: 918397 (training array), 918406 (eval) — `scripts/slurm/train_ensemble.sh`, `eval_ensemble.sh`
 
-**Member val losses (best checkpoint per member)**
+**Member val losses**
 
 | Member | Best Val Loss |
 |--------|--------------|
@@ -75,37 +77,63 @@ SLURM jobs: 918397 (training array), 918406 (eval) — `scripts/slurm/train_ense
 | 3 | **0.01449** |
 | 4 | 0.01560 |
 
+| Split | RMSE | Coverage ±2σ |
+|-------|------|-------------|
+| TEST  | 0.111 | **75.8%** ⚠️ |
+| OOD   | 0.492 | **49.0%** ⚠️ |
+
+<details>
+<summary>Per-DoF breakdown</summary>
+
+TEST: u 77.1%/0.229, v 75.8%/0.089, p 76.9%/0.006, r 79.9%/0.008, φ 69.2%/0.019  
+OOD:  u 32.1%/1.007, v 47.8%/0.437, p 67.8%/0.008, r 49.8%/0.023, φ 47.6%/0.051
+
+</details>
+
+### 2b. MLP Ensemble
+
+Five independent `MLP` models (hidden=256, 3 layers) trained with different random initialisations.  
+SLURM jobs: 918445 (training array), 918450 (eval) — `scripts/slurm/train_ensemble_mlp.sh`, `eval_ensemble_mlp.sh`
+
+**Member val losses**
+
+| Member | Best Val Loss |
+|--------|--------------|
+| 0 | 0.01800 |
+| 1 | 0.01915 |
+| 2 | 0.01943 |
+| 3 | **0.01592** |
+| 4 | 0.01653 |
+
 ### TEST split
 
 | Metric | Value |
 |--------|-------|
-| RMSE (overall) | 0.1106 |
-| Overall coverage ±2σ | **75.8%** ⚠️ (nominal 95.4%) |
-| Overall width | — |
+| RMSE (overall) | 0.1226 |
+| Overall coverage ±2σ | **81.3%** ⚠️ (nominal 95.4%) |
 
-| DoF | Coverage | RMSE |
-|-----|----------|------|
-| u   | 77.1% | 0.2290 |
-| v   | 75.8% | 0.0887 |
-| p   | 76.9% | 0.0061 |
-| r   | 79.9% | 0.0077 |
-| φ   | 69.2% | 0.0186 |
+| DoF | Coverage ±2σ | RMSE |
+|-----|-------------|------|
+| u   | 69.5% | 0.2559 |
+| v   | 73.8% | 0.0918 |
+| p   | 89.8% | 0.0066 |
+| r   | 86.0% | 0.0095 |
+| φ   | 87.4% | 0.0250 |
 
 ### OOD split
 
 | Metric | Value |
 |--------|-------|
-| RMSE (overall) | 0.4924 |
-| Overall coverage ±2σ | **49.0%** ⚠️ (nominal 95.4%) |
-| Overall width | — |
+| RMSE (overall) | 0.3237 |
+| Overall coverage ±2σ | **57.4%** ⚠️ (nominal 95.4%) |
 
-| DoF | Coverage | RMSE |
-|-----|----------|------|
-| u   | 32.1% | 1.0066 |
-| v   | 47.8% | 0.4374 |
-| p   | 67.8% | 0.0080 |
-| r   | 49.8% | 0.0227 |
-| φ   | 47.6% | 0.0512 |
+| DoF | Coverage ±2σ | RMSE |
+|-----|-------------|------|
+| u   | 40.1% | 0.5738 |
+| v   | 26.7% | 0.4351 |
+| p   | 91.7% | 0.0089 |
+| r   | 62.8% | 0.0232 |
+| φ   | 65.7% | 0.0530 |
 
 ---
 
@@ -255,24 +283,26 @@ LSTM is best in-distribution; MLP generalises best OOD. Linear fails to capture 
 
 ## Summary Comparison
 
-### TEST split (nominal coverage 90%)
+### TEST split (nominal coverage 90% for calibrated; 95.4% nominal for ±2σ)
 
 | Method | RMSE | Coverage | Width |
 |--------|------|----------|-------|
 | Gaussian LSTM (calibrated) | 0.133 | **89.9%** ✅ | 0.201 |
 | Conformal (LSTM backbone) | 0.120 | **90.5%** ✅ | 0.234 |
 | Conformal (MLP backbone) | 0.121 | **90.1%** ✅ | 0.212 |
-| Deep Ensemble ±2σ | **0.111** | 75.8% ⚠️ | — |
+| LSTM Ensemble ±2σ | **0.111** | 75.8% ⚠️ | — |
+| MLP Ensemble ±2σ | 0.123 | 81.3% ⚠️ | — |
 | MC Dropout ±2σ | 0.123 | 35.7% ⚠️ | — |
 
-### OOD split (nominal coverage 90%)
+### OOD split (nominal coverage 90% for calibrated; 95.4% nominal for ±2σ)
 
 | Method | RMSE | Coverage | Width |
 |--------|------|----------|-------|
 | Conformal (MLP backbone) | **0.330** | **68.0%** ⚠️ | 0.212 |
+| MLP Ensemble ±2σ | 0.324 | 57.4% ⚠️ | — |
 | Conformal (LSTM backbone) | 0.537 | 66.2% ⚠️ | 0.234 |
+| LSTM Ensemble ±2σ | 0.492 | 49.0% ⚠️ | — |
 | Gaussian LSTM (calibrated) | 0.550 | 44.6% ⚠️ | 0.248 |
-| Deep Ensemble ±2σ | 0.492 | 49.0% ⚠️ | — |
 | MC Dropout ±2σ | 0.520 | 16.5% ⚠️ | — |
 
 ---

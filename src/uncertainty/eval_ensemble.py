@@ -8,14 +8,72 @@ import yaml
 from src.uncertainty.deep_ensemble import predict_ensemble
 from src.data_loading.darus_dataset import create_dataloaders
 from src.models.lstm import LSTMSeq2Seq
+from src.models.gru import GRUSeq2Seq
+from src.models.mlp import MLP
+from src.models.tcn import TCN
+from src.models.linear import LinearBaseline
+from src.models.naive import NaiveBaseline
 
 # Must match P1 ordering exactly
 TARGET_NAMES = ["u", "v", "p", "r", "phi"]
 
 
+def build_member(config, input_dim, target_dim, history, horizon, device):
+    """Instantiate a single ensemble member from config."""
+    mcfg = config["model"]
+    mtype = mcfg["type"].lower()
+
+    if mtype == "lstm":
+        return LSTMSeq2Seq(
+            input_dim=input_dim,
+            hidden_dim=mcfg["hidden_dim"],
+            num_layers=mcfg["num_layers"],
+            dropout=mcfg.get("dropout", 0.0),
+            horizon=horizon,
+            target_dim=target_dim,
+        ).to(device)
+    elif mtype == "gru":
+        return GRUSeq2Seq(
+            input_dim=input_dim,
+            hidden_dim=mcfg["hidden_dim"],
+            num_layers=mcfg["num_layers"],
+            dropout=mcfg.get("dropout", 0.0),
+            horizon=horizon,
+            target_dim=target_dim,
+        ).to(device)
+    elif mtype == "mlp":
+        return MLP(
+            input_dim=input_dim,
+            history=history,
+            horizon=horizon,
+            output_dim=target_dim,
+            hidden_dim=mcfg.get("hidden_dim", 256),
+        ).to(device)
+    elif mtype == "tcn":
+        return TCN(
+            input_dim=input_dim,
+            target_dim=target_dim,
+            history=history,
+            horizon=horizon,
+            num_channels=mcfg.get("num_channels", [64, 64, 64]),
+            kernel_size=mcfg.get("kernel_size", 3),
+            dropout=mcfg.get("dropout", 0.1),
+        ).to(device)
+    elif mtype == "linear":
+        return LinearBaseline(
+            input_dim=input_dim, history=history,
+            output_dim=target_dim, horizon=horizon,
+        ).to(device)
+    elif mtype == "naive":
+        return NaiveBaseline(output_dim=target_dim, horizon=horizon).to(device)
+    else:
+        raise ValueError(f"Unknown model type: {mtype}")
+
+
 def load_ensemble(model_dir, config, device, input_dim, target_dim):
     models = []
 
+    history = config["data"]["history"]
     horizon = config["data"]["horizon"]
 
     for sub in sorted(os.listdir(model_dir)):
@@ -26,17 +84,9 @@ def load_ensemble(model_dir, config, device, input_dim, target_dim):
             continue
 
         ckpt = torch.load(ckpt_path, map_location=device)
-        state_dict = ckpt["model_state"]
+        state_dict = ckpt.get("model_state") or ckpt.get("model_state_dict") or ckpt
 
-        model = LSTMSeq2Seq(
-            input_dim=input_dim,
-            hidden_dim=config["model"]["hidden_dim"],
-            num_layers=config["model"]["num_layers"],
-            dropout=config["model"]["dropout"],
-            horizon=horizon,
-            target_dim=target_dim,
-        ).to(device)
-
+        model = build_member(config, input_dim, target_dim, history, horizon, device)
         model.load_state_dict(state_dict)
         model.eval()
         models.append(model)
