@@ -10,9 +10,10 @@ slurm-*.stat
 data/
 !data/README.md
 
-# Model outputs
-experiments/results/
+# Model outputs — ignore contents but allow specific docs
+experiments/results/**
 !experiments/results/README.md
+!experiments/results/RESULTS.md
 
 # Virtual environment
 venv/
