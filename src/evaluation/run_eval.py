@@ -188,12 +188,16 @@ def main():
     plot_multi_horizon_rmse(Y_ood, Yhat_ood,
         savepath=os.path.join(plot_dir, "rmse_ood.png"))
 
-    # Paper figures: phi-only (DoF index 4) prediction vs truth
+    # Paper figures: per-DoF prediction vs truth, sample chosen at median RMSE
+    import matplotlib.pyplot as plt
     DOF_NAMES = ["u", "v", "p", "r", "phi"]
     for split_label, Y, Yhat in [("test", Y_test, Yhat_test), ("ood", Y_ood, Yhat_ood)]:
         for dof_idx, dof_name in enumerate(DOF_NAMES):
-            import matplotlib.pyplot as plt
-            sample = 0
+            # Pick the sample whose per-DoF RMSE is closest to the median — more
+            # representative of typical model performance than a fixed index.
+            rmse_per_sample = np.sqrt(((Y[:, :, dof_idx] - Yhat[:, :, dof_idx]) ** 2).mean(axis=1))
+            sample = int(np.argmin(np.abs(rmse_per_sample - np.median(rmse_per_sample))))
+
             t = np.arange(Y.shape[1])
             fig, ax = plt.subplots(figsize=(7, 3))
             ax.plot(t, Y[sample, :, dof_idx], label="Truth", linewidth=1.5)
@@ -206,6 +210,7 @@ def main():
             fig.tight_layout()
             fig.savefig(os.path.join(plot_dir, f"prediction_{dof_name}_{split_label}.png"), dpi=150)
             plt.close(fig)
+            print(f"  {dof_name} ({split_label}): sample {sample}, RMSE={rmse_per_sample[sample]:.6f} (median={np.median(rmse_per_sample):.6f})")
 
 
     # ---------------------------
