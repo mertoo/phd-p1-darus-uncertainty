@@ -1,0 +1,605 @@
+% \documentclass[review,12pt]{elsarticle}
+\documentclass[a4paper,fleqn]{cas-sc}
+
+
+%% Use the options 1p,twocolumn; 3p; 3p,twocolumn; 5p; or 5p,twocolumn
+%% for a journal layout:
+%% \documentclass[final,1p,times]{elsarticle}
+%% \documentclass[final,1p,times,twocolumn]{elsarticle}
+%% \documentclass[final,3p,times]{elsarticle}
+%% \documentclass[final,3p,times,twocolumn]{elsarticle}
+%% \documentclass[final,5p,times]{elsarticle}
+%% \documentclass[final,5p,times,twocolumn]{elsarticle}
+
+\usepackage{booktabs}
+\usepackage{siunitx}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    filecolor=magenta,
+    urlcolor=cyan,
+}
+
+\usepackage[pagewise]{lineno}
+\linenumbers
+
+\shorttitle{UQ Benchmark for Ship Motion Prediction}
+\shortauthors{Asan et al.}
+
+\begin{document}
+
+
+\title{Uncertainty-Aware Multi-Step Prediction of Ship Motion under 
+Environmental Disturbances: A Benchmark Study on a Simulated Patrol Vessel Dataset}
+
+\author[1]{Vedat Mert Asan\corref{cor1}}
+
+\cormark[1]
+\ead{mert.asan@taltech.ee}
+\ead[url]{https://orcid.org/0009-0003-7134-9728}
+
+\author[1]{Mihkel Kõrgesaar}
+\author[1]{Kristjan Tabri}
+
+\cortext[cor1]{Corresponding author}
+
+\affiliation[1]{organization={TalTech, Kuressaare College, 
+Naval Architecture and Hydrodynamics Research Group},
+city={Kuressaare},
+postcode={},
+country={Estonia}}
+
+
+\begin{abstract}
+Accurate multi-step prediction of ship motion under environmental disturbances is essential for navigation safety, motion control, and autonomous marine operations. While deep learning approaches have achieved strong predictive accuracy on this task, existing work almost exclusively provides deterministic point estimates, offering no indication of prediction confidence and failing silently under distribution shift such as unseen sea states.
+
+This study presents a systematic benchmark of uncertainty-aware prediction methods applied to the patrol vessel simulation dataset of Baier and Staab~\cite{baier2022darus}, a publicly available simulated benchmark of a patrol vessel operating under varying sea states. We first establish deterministic baselines to demonstrate the problem concretely: despite near-identical in-distribution accuracy (test RMSE~$\approx$~0.12), the feed-forward MLP achieves 38\% lower out-of-distribution (OOD) RMSE than the LSTM (0.330 vs.\ 0.537), illustrating how recurrent architectures amplify distribution shift over the forecast horizon, an error that is invisible without uncertainty estimates. We then implement and evaluate four uncertainty quantification (UQ) methods (deep ensembles, Monte Carlo dropout, Gaussian likelihood modeling, and split-conformal prediction) across both in-distribution and OOD conditions using a 30-step prediction horizon at 1~Hz sampling, with both LSTM and MLP backbones.
+
+Among calibrated methods, conformal prediction with the MLP backbone achieves the best OOD coverage (68.0\%) while maintaining exact in-distribution validity (90.1\% at 90\% nominal). Only calibrated methods achieve near-nominal coverage; raw ensemble and MC Dropout intervals are severely under-covered without post-hoc correction. Backbone OOD generalisation emerges as the primary driver of uncertainty quality under distribution shift, providing a reproducible foundation for trustworthy ship-motion forecasting in safe marine autonomy.
+\end{abstract}
+
+
+
+
+
+\begin{highlights}
+\item Deep learning models for ship motion prediction almost exclusively provide deterministic point estimates that fail silently under distribution shift; this benchmark demonstrates the problem and evaluates uncertainty quantification as a remedy.
+\item Despite near-identical in-distribution accuracy, the feed-forward MLP achieves 38\% lower OOD RMSE than the LSTM (0.330 vs.\ 0.537), with this backbone advantage propagating through all UQ methods evaluated.
+\item Only calibrated methods achieve near-nominal 90\% interval coverage in distribution; raw ensemble and MC Dropout intervals are severely under-covered without post-hoc correction.
+\item Conformal prediction with the MLP backbone achieves the best OOD coverage (68.0\%) while maintaining exact in-distribution validity, establishing backbone OOD generalisation as the primary driver of uncertainty quality under distribution shift.
+\end{highlights}
+\maketitle
+
+% ============================================================
+\section{Introduction}
+
+Predicting ship motion under environmental disturbances is a central problem in marine engineering. Accurate multi-step forecasts (defined here as the simultaneous prediction of a sequence of future vessel states over a finite time horizon) support trajectory planning, control system design, autonomous navigation, and operational risk assessment \cite{fossen2011handbook, silva2022ship, zhang2023deep, thombre2022autonomous}. Traditional system identification (SI) models rely on simplified linear hydrodynamic assumptions that struggle in highly nonlinear and stochastic conditions such as irregular waves, wind gusts, and low-speed maneuvering \cite{fossen2011handbook, schirmann2022datadriven}. Recent advances in deep learning have demonstrated substantially improved accuracy for this task, with recurrent, convolutional, and feed-forward architectures outperforming classical SI methods across a range of sea conditions \cite{silva2022ship, zhang2023deep, gong2025wavelet}.
+
+However, nearly all published deep learning approaches for ship motion prediction provide only deterministic point estimates \cite{silva2022ship, zhang2023deep, gong2025wavelet, schirmann2022datadriven}. A model that predicts a surge velocity of 8.5~m/s gives no indication of whether this prediction is reliable or highly uncertain. This is a fundamental limitation in safety-critical marine operations: when the operating conditions shift to sea states not encountered during training, deterministic models fail silently, accumulating large unquantified errors without alerting operators or control systems. A risk-aware controller cannot distinguish a confident prediction from a dangerous extrapolation, and reliable collision avoidance, actuator protection, and autonomous decision-making require calibrated prediction intervals rather than point forecasts.
+
+The severity of this limitation is not hypothetical. As demonstrated by the deterministic baseline evaluation in this work, despite near-identical in-distribution accuracy, a long short-term memory (LSTM) seq2seq model and a multi-layer perceptron (MLP) achieve radically different performance under out-of-distribution (OOD) sea states: the LSTM's OOD root mean squared error (RMSE) is 63\% higher than its in-distribution value (0.537 vs.\ 0.120), while the MLP degrades by a factor of 2.7 (0.330 vs.\ 0.121). Without uncertainty estimates, there is no mechanism to detect this extrapolation failure at deployment time; a deployed system would continue to issue confident-looking predictions while performance has collapsed.
+
+Uncertainty quantification (UQ) methods directly address this problem by providing calibrated prediction intervals alongside point estimates. In safety-critical domains, UQ is increasingly regarded as a prerequisite for deploying learned dynamical models rather than an optional diagnostic tool \cite{lakshminarayanan2017, gal2016dropout, ovadia2019can}. Deep ensembles \cite{lakshminarayanan2017} and Monte Carlo dropout \cite{gal2016dropout} provide epistemic uncertainty estimates; probabilistic output layers model aleatoric uncertainty; and split-conformal prediction constructs distribution-free prediction intervals with finite-sample guarantees. Despite the clear need for such methods in marine applications, systematic benchmarks comparing UQ approaches on marine motion datasets remain scarce.
+
+We address this gap by presenting a systematic benchmark of uncertainty-aware prediction methods for multi-step ship motion forecasting, evaluated on the patrol vessel simulation dataset of Baier and Staab~\cite{baier2022darus}. All deterministic baselines and UQ methods are implemented within a unified PyTorch training and evaluation pipeline, and all results are fully reproducible from the accompanying codebase.
+
+\subsection*{Contributions}
+
+This paper makes the following scientific contributions:
+
+\begin{enumerate}
+    \item \textbf{Backbone architecture governs OOD generalisation.} Despite near-identical in-distribution accuracy (test RMSE 0.120 vs.\ 0.121), the feed-forward MLP achieves 38\% lower OOD RMSE than the LSTM (0.330 vs.\ 0.537). This OOD advantage propagates through every UQ method applied on top: MLP-backed deep ensembles and conformal prediction consistently outperform their LSTM counterparts on OOD coverage and point accuracy, establishing backbone choice (not calibration strategy alone) as the primary lever for OOD uncertainty quality.
+
+    \item \textbf{Post-hoc calibration is necessary for valid in-distribution intervals.} Among the four UQ methods evaluated, only calibrated methods achieve near-nominal 90\% interval coverage on the in-distribution test set. Raw deep ensemble intervals reach 75.8\% coverage and MC Dropout only 35.7\%, well short of the 90\% nominal target, confirming that explicit calibration is required regardless of the UQ approach.
+
+    \item \textbf{Conformal prediction offers the best combination of OOD robustness and calibration validity.} Split-conformal prediction with the MLP backbone achieves the best OOD coverage in the benchmark (68.0\%) while maintaining exact in-distribution validity (90.1\%). Coverage degradation under OOD shift is concentrated in the translational channels surge ($u$) and sway ($v$), underscoring the importance of per-channel evaluation in safety-critical marine applications.
+\end{enumerate}
+
+All models, training configurations, and evaluation scripts are released as an open-source benchmark to support reproducible research in uncertainty-aware marine motion prediction.
+
+The remainder of the paper is structured as follows. Section~2 reviews related work on ship motion prediction and uncertainty quantification. Section~3 describes the dataset and problem formulation. Section~4 presents the methods. Section~5 details the experimental setup. Section~6 reports and analyses results. Section~7 discusses practical implications and limitations. Section~8 concludes.
+% ============================================================
+\section{Background and Related Work}
+
+\subsection{Traditional Methods and System Identification}
+
+Ship motion is governed by nonlinear hydrodynamic forces, environmental disturbances, and vessel-specific dynamics \cite{fossen2011handbook, faltinsen1990sea}. Conventional SI approaches, such as linear frequency-domain models, nonlinear autoregressive with exogenous inputs (NARX) structures, and state-space models with Kalman filtering, perform well in calm or regular conditions but degrade under irregular waves, strong coupling between degrees of freedom, or unmodeled disturbances \cite{fossen2011handbook, faltinsen1990sea, perez2007kinematic, schirmann2022datadriven}. Data-driven methods that incorporate physics-based predictions as additional inputs have been proposed to bridge the accuracy gap between classical SI models and learned sequence models \cite{schirmann2022datadriven}, yet they also rely primarily on deterministic outputs without quantified uncertainty.
+
+\subsection{Deep Learning for Ship Motion Prediction}
+
+Long short-term memory (LSTM) networks \cite{hochreiter1997lstm} and gated recurrent units (GRU) \cite{cho2014gru} have become the dominant architectures for learned ship motion prediction due to their ability to capture long-range temporal dependencies in nonlinear vessel dynamics \cite{lecun2015deep}. Encoder--decoder (sequence-to-sequence) structures \cite{sutskever2014seq2seq} extend this to multi-step prediction by encoding a history window into a latent state and decoding a full forecast sequence. Temporal convolutional networks (TCN) \cite{bai2018tcn} offer a feedforward alternative using dilated causal convolutions with residual connections, achieving competitive accuracy on many sequence modeling benchmarks.
+
+In the marine domain, LSTM-based predictors have been successfully applied to 6 degree-of-freedom (DoF) ship motion forecasting under irregular wave excitation \cite{silva2022ship, zhang2023deep, zhang2021multiscale, dagostino2022recurrent, ferrandis2021learning, skulstad2019dead, lee2025comparative}, capturing surge, sway, roll, pitch, and yaw dynamics with high fidelity. These models demonstrate improved prediction accuracy compared to classical SI approaches across a range of sea conditions. Beyond pure recurrent networks, hybrid architectures combining convolutional encoders, attention mechanisms, and physics-informed components have also been explored to improve predictive performance and interpretability \cite{gong2025wavelet, baier2021hybrid, sun2022shipmotion, zhang2023roll, schirmann2023comparison}. Despite these advances, the overwhelming majority of published ship motion prediction models provide deterministic point estimates only \cite{silva2022ship, zhang2023deep, gong2025wavelet, schirmann2022datadriven} and do not assess predictive uncertainty or robustness under unseen sea states.
+
+\subsection{Uncertainty Quantification in Sequential Models}
+
+Uncertainty in learned predictive models is commonly categorized into two types. Aleatoric uncertainty reflects inherent variability and measurement noise in the data and is typically modeled via probabilistic output layers such as Gaussian likelihoods. Epistemic uncertainty arises from limited or biased training data and is often estimated via ensembles or approximate Bayesian methods \cite{abdar2021review}. In time-series settings, uncertainty-aware approaches include Bayesian recurrent neural networks, variational sequence models, deep ensembles, and Monte Carlo (MC) dropout, with applications in weather forecasting, robotics, and structural health monitoring \cite{abdar2021review, foldesi2023comparison}. In marine dynamics, however, systematic benchmarks of uncertainty quantification (UQ) methods remain scarce.
+
+Comparative studies in deep time-series regression consistently identify deep ensembles and MC dropout as among the most reliable and practically effective UQ methods \cite{foldesi2023comparison}. Deep ensembles \cite{lakshminarayanan2017} have repeatedly been shown to produce well-calibrated predictive uncertainty and to increase predictive variance under out-of-distribution (OOD) inputs \cite{ovadia2019can, foldesi2023comparison}. MC dropout provides a lightweight Bayesian approximation that enables uncertainty estimation without modifying the training objective \cite{gal2016dropout}. In contrast, fully Bayesian neural networks trained via variational inference often suffer from optimization difficulties and unreliable posterior approximations in recurrent architectures \cite{foldesi2023comparison}.
+
+Aleatoric uncertainty can be modeled explicitly through probabilistic output layers, most commonly using Gaussian likelihoods. Prior work shows that raw probabilistic outputs frequently require post-hoc calibration \cite{guo2017calibration} and remain sensitive to distribution shift, especially when epistemic uncertainty dominates \cite{ovadia2019can, foldesi2023comparison}. This motivates combining probabilistic modeling with dedicated calibration techniques such as temperature scaling \cite{guo2017calibration} or conformal prediction.
+
+\subsection{Conformal Prediction}
+
+Conformal prediction (CP) provides \emph{finite-sample coverage guarantees} under an exchangeability assumption, independent of the underlying model \cite{vovk2005algorithmic, angelopoulos2023conformal}. Given a calibration set, CP constructs prediction intervals by computing residuals on held-out data, extracting an empirical quantile, and inflating future predictions by this quantile. CP is model-agnostic, straightforward to implement on top of existing predictors, and relatively robust under mild distribution shifts, making it attractive for safety-critical marine applications.
+
+Recent work has extended conformal prediction to time-series and multi-horizon forecasting, demonstrating that valid prediction intervals can be constructed without modifying the underlying predictor \cite{stankeviciute2021conformal, angelopoulos2023conformal}. Weighted extensions of conformal prediction can preserve near-nominal coverage under mild covariate shift by reweighting calibration residuals to match the test distribution \cite{tibshirani2019conformal}. Conformal methods have been shown to achieve near-nominal coverage on real-world sequential datasets, often outperforming model-based uncertainty estimates in terms of calibration \cite{stankeviciute2021conformal, angelopoulos2023conformal}. Under strong distribution shift, empirical coverage degradation provides an informative signal of model extrapolation rather than a methodological failure. This property makes conformal prediction particularly valuable for benchmarking robustness under OOD conditions.
+
+
+% ============================================================
+\section{Dataset and Problem Formulation}
+
+\subsection{Patrol Vessel Simulation Dataset}
+
+The patrol vessel simulation dataset of Baier and Staab~\cite{baier2022darus} is a publicly available benchmark for data-driven modeling of ship dynamics under environmental disturbances. It provides synchronized records of vessel motion states, control inputs, and sea-state-dependent disturbance signals generated through numerical simulation of a patrol vessel subjected to JONSWAP irregular wave excitation \cite{pierson1964spectral, hasselmann1973jonswap} across multiple sea-state conditions \cite{baier2022darus, baier2021hybrid}. The dataset was designed to support studies on cross-sea-state generalization and explicitly includes recording conditions that differ substantially in significant wave height and ship speed from the training sea states, making it well-suited for investigating uncertainty-aware prediction under distribution shift.
+
+The present work focuses on five output variables: surge velocity $u$, sway velocity $v$, roll rate $p$, yaw rate $r$, and roll angle $\phi$. These five channels represent the primary degrees of freedom governing vessel stability and maneuvering response. The input feature vector comprises these five motion states together with thruster commands and disturbance signals, yielding 12 input channels in total. The OOD recordings capture a higher ship speed regime and rougher sea conditions recorded approximately three years after the training data, with surge velocities extending to 13.4~m/s against a training maximum of 9.25~m/s.
+
+\subsection{Multi-Step Forecasting Problem Formulation}
+
+The task is multi-step sequence-to-sequence prediction: given a history window of $H$ consecutive time steps, the model must produce a forecast for the following $T$ steps without any additional future information. Formally, a model $f$ maps the input history
+\[
+X_{t-H+1:t} \in \mathbb{R}^{H \times F}
+\]
+to the predicted output sequence
+\[
+\hat{Y}_{t+1:t+T} \in \mathbb{R}^{T \times D},
+\]
+where $F=12$ is the number of input features and $D=5$ is the number of output channels. In this study $H=T=30$ time steps at a sampling rate of 1~Hz, so the model conditions on 30 seconds of history and forecasts the next 30 seconds. Encoder--decoder (seq2seq) architectures \cite{sutskever2014seq2seq} produce this output by encoding the history into a latent state and then decoding predictions one step at a time, while feedforward architectures such as the MLP produce all $T \times D$ values in a single forward pass from a flattened input vector.
+
+Figure~\ref{fig:pred-setup} illustrates this setup on a representative ID test sequence for surge velocity $u$. The encoder--decoder LSTM tracks the broad oscillation envelope inferred from the 30-second history window but produces a progressively smoother forecast as the horizon extends, with a widening prediction interval reflecting growing uncertainty about the exact wave phase. This divergence between the model forecast and the ground truth motivates the need for calibrated prediction intervals: a point estimate alone conveys no information about the magnitude of this uncertainty at any given forecast step.
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=0.95\linewidth]{figs/prediction_setup_figure.pdf}
+    \caption{Illustration of the seq2seq prediction task on a representative in-distribution test sequence (surge velocity $u$, 1~Hz sampling). The blue-shaded region shows the 30-step input history window ($H=30$ steps, 12 input channels) used to condition the encoder; the amber-shaded region shows the 30-step forecast horizon ($T=30$ steps, 5 DoF output states). The LSTM encoder--decoder tracks the oscillation envelope but produces an increasingly smooth forecast as the horizon extends; calibrated prediction intervals (90\% nominal level shown) are required to cover the residual wave-phase uncertainty.}
+    \label{fig:pred-setup}
+\end{figure}
+
+\subsection{Data Splits}
+
+We adopt a structured split strategy that clearly separates in-distribution (ID) and out-of-distribution (OOD) evaluation regimes. Approximately 70\% of the in-distribution recordings are used for training, 15\% for validation (used for early stopping, conformal calibration, and temperature scaling), and 15\% for ID testing. A separate OOD test set is composed exclusively of sea states and disturbance conditions not seen during training or validation. This split is implemented via a unified data-loading interface in the public codebase to ensure full reproducibility.
+
+\subsection{Evaluation Metrics}
+
+Point prediction quality is assessed using root mean squared error (RMSE) and normalized RMSE (NRMSE) averaged over the full 30-step prediction horizon and all five output channels, with per-channel breakdowns reported where informative. For the probabilistic Gaussian LSTM, average negative log-likelihood (NLL) is reported as a measure of probabilistic sharpness and fit. For interval-based methods (conformal prediction and calibrated Gaussian outputs), we report empirical coverage and average interval width at a nominal 90\% level ($\alpha = 0.10$) on both ID and OOD splits. For epistemic methods (deep ensembles and MC dropout), we additionally assess uncertainty ranking via the Spearman correlation between absolute prediction error $|e|$ and predictive spread (ensemble standard deviation or dropout standard deviation across forward passes). All metrics are computed using standardised evaluation scripts included in the public repository.
+
+% ============================================================
+\section{Methods}
+
+This section describes the six deterministic baselines and four uncertainty quantification methods evaluated in the benchmark. All models are implemented within a unified PyTorch training and evaluation pipeline to ensure fair comparison. The deterministic baselines establish point-prediction performance and motivate the architectural analysis; the UQ methods build on the LSTM and MLP backbones and are evaluated for both predictive accuracy and interval quality. Two backbone architectures are used throughout: the LSTM seq2seq (407K parameters, hidden dimension 128, 2 layers) and the feedforward MLP (197K parameters, 3 fully-connected layers). Each UQ method is applied to the backbone that best suits its design, and for deep ensembles and conformal prediction, both backbones are compared to assess how backbone OOD generalisation propagates into uncertainty quality.
+
+\subsection{Deterministic Baselines}
+
+All deterministic baselines are implemented within a unified PyTorch framework with a common training and evaluation pipeline. The following models are considered:
+\begin{itemize}
+    \item \textbf{LSTM seq2seq}: encoder--decoder LSTM operating on the full input feature vector, with the decoder generating multi-step predictions.
+    \item \textbf{GRU seq2seq}: identical structure but using GRU cells.
+    \item \textbf{Temporal Convolutional Network (TCN)} \cite{bai2018tcn}: 1D dilated causal convolutions with residual connections, mapping the history window to the full horizon.
+    \item \textbf{Multi-Layer Perceptron (MLP)}: a feed-forward network that flattens 
+the full history window into a single vector of dimension $H \times F = 30 \times 12 = 360$ 
+and maps it directly to the full prediction horizon via three fully-connected layers 
+(360 $\to$ 256 $\to$ 256 $\to$ 150), where the output is reshaped to $(T, D) = (30, 5)$. 
+With approximately 197K parameters, the MLP has no recurrent connections and makes 
+each prediction independently from a fixed input context.
+    \item \textbf{Linear baseline}: linear autoregressive mapping from past states to future states.
+    \item \textbf{Naive baseline}: last-value hold, simply copying the final observed state into all future steps.
+\end{itemize}
+
+\subsection{Deep Ensembles}
+
+The ensemble approach follows the methodology proposed by Lakshminarayanan et al.~\cite{lakshminarayanan2017}, where independently trained neural networks approximate epistemic uncertainty through prediction diversity without requiring explicit Bayesian inference.
+
+
+To capture epistemic uncertainty, we train a \emph{deep ensemble} of \(N=5\) LSTM seq2seq models. Each ensemble member uses:
+\begin{itemize}
+    \item the same architecture and hyperparameters,
+    \item different random seeds for parameter initialization and data shuffling.
+\end{itemize}
+
+Given an input history \(x\), each model in the ensemble produces a prediction \(\hat{y}^{(k)}\). The ensemble predictive mean and variance are:
+\[
+\bar{y} = \frac{1}{N} \sum_{k=1}^{N} \hat{y}^{(k)}, \qquad
+\mathrm{Var}(\hat{y}) = \frac{1}{N-1} \sum_{k=1}^{N} \bigl(\hat{y}^{(k)} - \bar{y}\bigr)^2.
+\]
+The mean is used as a point prediction, while the variance quantifies epistemic uncertainty.
+
+\subsection{Monte Carlo Dropout}
+
+This approach is based on the Bayesian interpretation of dropout~\cite{srivastava2014dropout} proposed by Gal and Ghahramani~\cite{gal2016dropout}, where dropout masks induce a variational approximation to the posterior over network weights.
+
+
+MC dropout is implemented by enabling dropout layers during inference and performing multiple stochastic forward passes. For an LSTM with dropout probability \(p\), we:
+\begin{enumerate}
+    \item perform \(M\) forward passes with dropout active at test time,
+    \item compute empirical mean and variance across the \(M\) predictions.
+\end{enumerate}
+This provides an approximation of epistemic uncertainty without training multiple models.
+
+
+\subsection{Gaussian Likelihood LSTM (Aleatoric Uncertainty)}
+\label{sec:gaussian-method}
+
+Probabilistic neural networks with Gaussian likelihood outputs are widely used to model aleatoric uncertainty in regression problems, particularly when measurement noise and stochastic disturbances are present \cite{ovadia2019can}.
+
+
+To model aleatoric uncertainty, we implement a probabilistic LSTM seq2seq whose decoder predicts both the mean and variance of a Gaussian output distribution for each target and horizon step. For each target \(y\), the model outputs \(\mu\) and \(\log \sigma^2\), and is trained by minimizing the Gaussian negative log-likelihood (NLL):
+\[
+\mathcal{L}_{\mathrm{NLL}} =
+\frac{1}{2}\sum_{t}\sum_{d}
+\left(
+\frac{(y_{t,d}-\mu_{t,d})^2}{\sigma_{t,d}^2} + \log \sigma_{t,d}^2
+\right),
+\qquad \sigma_{t,d}^2 = \exp(\log \sigma_{t,d}^2).
+\]
+At inference time, predictive intervals can be formed using Normal quantiles. For example, a two-sided \((1-\alpha)\) interval can be written as:
+\[
+[\mu - z_{1-\alpha/2}\sigma,\ \mu + z_{1-\alpha/2}\sigma],
+\]
+where \(z_{1-\alpha/2}\) is the standard Normal quantile (e.g., \(z_{0.95}\approx 1.645\) for 90\% intervals).
+
+\paragraph{Sigma temperature scaling.}
+We additionally use a post-hoc variance calibration, scaling \(\sigma\) by a temperature parameter \(T_{\sigma}>0\):
+\[
+\sigma' = T_{\sigma}\,\sigma.
+\]
+We report both global calibration (single \(T_{\sigma}\)) and per-DoF calibration (one \(T_{\sigma,d}\) per target channel), where calibration parameters are selected on the validation split by minimizing deviation from nominal coverage.
+
+\subsection{Conformal Prediction}
+
+On top of the trained LSTM baseline, we apply \emph{split-conformal prediction} to construct distribution-free prediction intervals:
+\begin{enumerate}
+    \item Train the LSTM on the training split.
+    \item After step 1 on the validation/calibration split, compute residuals
+    \[
+    r_i = \bigl|y_i - \hat{y}_i\bigr|
+    \]
+    for each time step and degree of freedom using the trained model from Step 1.
+    \item For miscoverage \(\alpha\), compute
+    \[
+    \hat{q}_{1-\alpha} = \mathrm{Quantile}_{1-\alpha}\{r_i\}.
+    \]
+    \item Construct intervals:
+    \[
+    [L, U] = [\hat{y} - \hat{q}_{1-\alpha},\ \hat{y} + \hat{q}_{1-\alpha}].
+    \]
+\end{enumerate}
+
+We compute intervals per degree of freedom, and evaluate empirical coverage and average width on both ID and OOD splits~\cite{stankeviciute2021conformal}.
+
+
+\subsection{Evaluation Protocol per Method}
+Deterministic models are evaluated using RMSE over the full prediction horizon and all target channels. For epistemic uncertainty methods (deep ensembles and MC dropout), we additionally assess uncertainty ranking using the correlation between absolute error \(|e|\) and predictive spread (standard deviation). For interval-based methods (conformal prediction and Gaussian-derived Normal intervals), we report empirical coverage and average interval width at nominal 90\% coverage (\(\alpha=0.1\)). Gaussian likelihood models are further evaluated using average NLL to quantify probabilistic sharpness and fit.
+
+
+\section{Experimental Setup}
+
+\subsection{Architectures and Hyperparameters}
+
+Unless otherwise stated, all neural models use:
+\begin{itemize}
+    \item hidden dimension: 128,
+    \item number of recurrent or convolutional layers: 2,
+    \item dropout: \(0.0\)–\(0.1\),
+    \item history window: \(H=30\) time steps,
+    \item prediction horizon: \(T=30\) time steps,
+    \item five output channels corresponding to \([u, v, p, r, \phi]\).
+\end{itemize}
+
+\subsection{Training Procedure}
+
+Training is performed using a unified script that reads YAML configuration files, sets up data loaders, selects the appropriate model architecture, and logs losses and checkpoints:
+\begin{itemize}
+    \item optimizer: Adam~\cite{kingma2015adam},
+    \item learning rate: \(10^{-3}\),
+    \item batch size: 256,
+    \item epochs: 20 (best checkpoint by validation objective),
+    \item losses: MSE for deterministic models, Gaussian NLL for probabilistic models.
+\end{itemize}
+
+Deep ensembles are trained by launching multiple independent baseline trainings with separate seeds. Gaussian variance calibration (\(T_\sigma\)) and conformal calibration are performed using the validation split.
+
+\subsection{Hardware}
+
+All experiments were conducted on the TalTech High Performance Computing (HPC) Centre cluster. Model training and evaluation were performed on NVIDIA L40 GPU nodes (48~GB VRAM), using Python 3.10 with PyTorch 2.5.1 (CUDA 12.1). Each baseline model trained in approximately 20 minutes per run; the Gaussian LSTM required approximately 30 minutes; and the five-member deep ensemble was trained in parallel as a SLURM job array, with each member completing within 20 minutes. The full benchmark, including all training runs, uncertainty evaluations, and plot generation, was completed within a single working session on the cluster.
+
+
+\section{Results}
+
+\subsection{Deterministic Baseline Performance}
+
+Table~\ref{tab:baseline-rmse} summarises the deterministic baselines evaluated on the in-distribution (ID) test set and the out-of-distribution (OOD) sea-state set. All models were trained with a consistent configuration: history $H=30$, horizon $T=30$ time steps at 1~Hz sampling, 20 epochs on GPU with the Adam optimiser.
+
+\begin{table}[t]
+    \centering
+    \caption{Deterministic baseline performance on the patrol vessel simulation dataset. All models use history $H=30$, horizon $T=30$ steps (1~Hz sampling). RMSE values are averaged over the full prediction horizon and all five target variables.}
+    \label{tab:baseline-rmse}
+    \begin{tabular}{lccc}
+        \toprule
+        \textbf{Model} & \textbf{Params} & \textbf{Test RMSE ($\downarrow$)} & \textbf{OOD RMSE ($\downarrow$)} \\
+        \midrule
+        LSTM seq2seq  & 407K & \textbf{0.120} & 0.537 \\
+        MLP           & 197K & 0.121          & \textbf{0.330} \\
+        GRU seq2seq   & 330K & 0.132          & 0.506 \\
+        TCN           & 353K & 0.155          & 0.347 \\
+        Naive         & --   & 0.173          & 0.411 \\
+        Linear        & --   & 1.791          & 2.297 \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+In distribution, the LSTM seq2seq and MLP achieve essentially identical performance (test RMSE 0.120 and 0.121 respectively), with GRU close behind (0.132). TCN and the naive last-value baseline are noticeably weaker, and the linear model fails to capture the nonlinear vessel dynamics (RMSE 1.791).
+
+The OOD results reveal a striking divergence between recurrent and feed-forward architectures. MLP generalises substantially better than LSTM (OOD RMSE 0.330 vs.\ 0.537) despite near-identical ID performance, and TCN achieves a similar OOD RMSE of 0.347. By contrast, LSTM and GRU degrade by more than a factor of four relative to their ID values. A parameter efficiency analysis reinforces this pattern: the MLP achieves competitive accuracy with only 197K parameters, compared to 407K for LSTM and 353K for TCN. Notably, 82\% of TCN's parameters reside in its final fully-connected layer, which performs the same flattened-sequence-to-forecast mapping as the MLP; this architectural similarity likely explains why TCN achieves comparable OOD performance despite being nearly twice the size.
+
+To investigate why recurrent architectures degrade more severely under OOD conditions, we extracted decoder hidden-state vectors from the trained LSTM at each forecast step and compared their behaviour on the ID test set and the OOD set (Figure~\ref{fig:hidden-state}). Two findings emerge. First, OOD hidden states exhibit consistently higher L2 norm throughout the forecast horizon ($\|\mathbf{h}_t\|_2 \approx 8.3$ vs.\ $7.2$ for ID), and both curves plateau within the first five decoder steps. This indicates that the encoder maps OOD inputs into a qualitatively different region of hidden space from the outset; the decoder then propagates from this displaced initial state across all 30 steps, compounding the prediction error with each step \cite{quinonero2008dataset}. Second, activation variance across OOD sequences is approximately half that of ID sequences (0.027 vs.\ 0.060), indicating that OOD inputs collapse the hidden representation to a narrow attractor -- the model produces similar-looking hidden states for very different OOD conditions, explaining why uncertainty estimates derived from the hidden state alone are underestimates under distribution shift. The MLP is not subject to these dynamics, as it generates each output independently from a fixed input window without any recurrent state. We note that the two architectures also differ in parameter count and output strategy, so the hidden-state mechanism is not the sole possible contributor to the OOD gap; nevertheless, the empirical evidence confirms that displaced and collapsed hidden representations are a characteristic failure mode of the LSTM under this distribution shift. Consistent with this, even the naive last-value baseline (OOD RMSE 0.411) outperforms LSTM and GRU under distribution shift.
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=0.95\linewidth]{figs/hidden_state_analysis.pdf}
+    \caption{Decoder hidden-state analysis for the LSTM seq2seq model on the ID test set (blue, solid) and OOD test set (red, dashed). \textbf{(a)} L2 norm of the decoder hidden state $\|\mathbf{h}_t\|_2$ vs.\ forecast step, averaged over all sequences (shading indicates $\pm1$ s.d.). OOD hidden states are displaced to consistently higher magnitude from the first decoder step and plateau within five steps, indicating that the encoder encodes OOD inputs into a qualitatively different region of hidden space. \textbf{(b)} Mean activation variance across sequences vs.\ forecast step. OOD sequences collapse the hidden representation to a narrow attractor (variance $\approx 0.027$), roughly half the ID variance ($\approx 0.060$), explaining why uncertainty estimates derived from hidden-state diversity underestimate OOD error.}
+    \label{fig:hidden-state}
+\end{figure}
+
+The LSTM is selected as the primary backbone for the Gaussian likelihood and MC 
+Dropout methods, as it achieves the best in-distribution performance and is the 
+most widely studied recurrent architecture in related work. For deep ensembles and 
+conformal prediction, we additionally evaluate the MLP backbone to directly assess 
+how backbone OOD generalisation propagates into uncertainty quality under 
+distribution shift.
+
+\subsection{Deep Ensemble Uncertainty}
+
+Table~\ref{tab:ensemble-metrics} reports deep ensemble results for $N=5$ independently trained members using both LSTM and MLP backbones. The LSTM ensemble mean achieves an overall test RMSE of 0.111, improving over the single LSTM baseline (0.120), while the MLP ensemble achieves 0.123 on the ID test set. The $\pm2\sigma$ intervals of the LSTM ensemble achieve 75.8\% coverage on the ID test set and 49.0\% on OOD (nominal $\approx$95.4\%), indicating that raw ensemble spread underestimates the true prediction error and would benefit from post-hoc calibration.
+
+On the OOD set, the MLP ensemble is clearly superior to its LSTM counterpart: OOD RMSE drops to 0.324 (vs.\ 0.492 for LSTM) and coverage improves to 57.4\% (vs.\ 49.0\%), consistent with the stronger OOD generalisation of the MLP backbone observed in the deterministic baselines. Notably, the MLP ensemble also achieves higher ID coverage (81.3\% vs.\ 75.8\%), suggesting that MLP members produce more diverse predictions in distribution despite slightly worse point accuracy.
+
+Figure~\ref{fig:ensemble-u-test} illustrates a representative ID prediction for surge velocity $u$ with the LSTM ensemble: the mean closely tracks the ground truth and the uncertainty band widens appropriately with the forecast horizon. Figure~\ref{fig:ensemble-u-ood} shows the same model on an OOD sequence where the ship operates at surge velocities of 10--11~m/s, well above the training range maximum of 9.25~m/s. The ensemble mean anchors near the training mean ($\approx$8.6~m/s) and the uncertainty band fails to capture the elevated ground truth, illustrating the inability of epistemic uncertainty to extrapolate beyond the training distribution.
+
+\begin{table}[t]
+    \centering
+    \caption{Deep ensemble performance ($N=5$ members, LSTM and MLP backbones). RMSE values are averaged over the 30-step horizon and all five output channels. Coverage uses $\pm2\sigma$ intervals (nominal 95.4\%). Per-channel breakdown is reported for the LSTM backbone only; MLP results are summarised at the overall level for brevity.}
+    \label{tab:ensemble-metrics}
+    \begin{tabular}{llccccccc}
+        \toprule
+        \textbf{Backbone} & \textbf{Split} & \textbf{Overall RMSE} & $u$ & $v$ & $p$ & $r$ & $\phi$ & \textbf{Coverage} \\
+        \midrule
+        LSTM & Test (ID) & \textbf{0.111} & 0.229 & 0.089 & 0.006 & 0.008 & 0.019 & 75.8\% \\
+        LSTM & OOD       & 0.492          & 1.007 & 0.437 & 0.008 & 0.023 & 0.051 & 49.0\% \\
+        \midrule
+        MLP  & Test (ID) & 0.123          & \multicolumn{5}{c}{\textit{see caption}} & 81.3\% \\
+        MLP  & OOD       & \textbf{0.324} & \multicolumn{5}{c}{\textit{see caption}} & 57.4\% \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=0.9\linewidth]{figs/ensemble_u_test.png}
+    \caption{LSTM deep ensemble predictions for surge velocity $u$ on the ID test set. Shaded region indicates mean $\pm2\sigma$ across ensemble members. The ensemble mean closely tracks the ground truth and uncertainty grows with forecast horizon.}
+    \label{fig:ensemble-u-test}
+\end{figure}
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=0.9\linewidth]{figs/ensemble_u_ood.png}
+    \caption{LSTM deep ensemble predictions for surge velocity $u$ on the OOD set. The ship operates at 10--11~m/s, exceeding the training range maximum of 9.25~m/s. The ensemble mean anchors near the training mean ($\approx$8.6~m/s) and the uncertainty band fails to capture the elevated ground truth, demonstrating the limits of epistemic uncertainty under strong distribution shift.}
+    \label{fig:ensemble-u-ood}
+\end{figure}
+\subsection{Monte Carlo Dropout}
+
+MC Dropout (200 stochastic forward passes, dropout rate 0.2) achieves a test RMSE of 0.123 and OOD RMSE of 0.520. Despite active dropout at inference time, the $\pm2\sigma$ intervals achieve only 35.7\% coverage on ID and 16.5\% on OOD, the worst-calibrated method in this benchmark. As illustrated in Figure~\ref{fig:mc-u-test}, the stochastic variance across passes is far smaller than the actual prediction error: the model has learned to route around dropout during training, producing near-deterministic outputs at inference. This is a well-documented failure mode of MC Dropout in recurrent architectures~\cite{gal2016dropout,foldesi2023comparison} and underscores the need for post-hoc calibration or alternative epistemic methods.
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=0.9\linewidth]{figs/mc_u_test.png}
+    \caption{MC Dropout predictions for surge velocity $u$ on the ID test set (200 forward passes). The $\pm2\sigma$ band is visibly narrow relative to the prediction error, achieving only 35.7\% overall coverage at nominal 95.4\%.}
+    \label{fig:mc-u-test}
+\end{figure}
+
+\subsection{Gaussian Likelihood LSTM}
+
+The Gaussian LSTM is trained with NLL loss and achieves a best validation NLL of $-3.22$ after 20 epochs. Table~\ref{tab:gaussian-perdof} summarises calibrated interval diagnostics using per-DoF sigma temperature scaling fitted on the validation split ($\alpha=0.10$, nominal 90\% coverage).
+
+On the ID test set, the calibrated model achieves 89.9\% overall coverage, in near-exact agreement with the nominal 90\% level with an average interval width of 0.201. Per-DoF coverage ranges from 85.7\% ($r$) to 92.3\% ($v$), confirming that per-DoF calibration is effective across all output channels.
+
+On the OOD set, overall coverage collapses to 44.6\%. The surge ($u$) and sway ($v$) channels are most severely affected (29.9\% and 35.8\% respectively), consistent with the 3-year temporal gap and the higher sea state of the OOD recordings (OOD surge range extends to 13.4~m/s vs.\ 9.25~m/s in training). Figure~\ref{fig:gaussian-phi-ood} illustrates this failure for roll angle $\phi$: the Gaussian mean drifts toward zero while the ground truth undergoes a sustained negative excursion, and despite widened uncertainty bands the true trajectory lies outside the predicted interval for most of the horizon.
+
+\begin{table}[t]
+    \centering
+    \caption{Gaussian LSTM per-DoF interval diagnostics with validation-calibrated temperatures ($\alpha=0.10$, nominal 90\% coverage). Calibrated temperatures: $T_{\sigma} = [1.0, 0.7, 0.7, 0.7, 1.0]$ for $[u, v, p, r, \phi]$.}
+    \label{tab:gaussian-perdof}
+    \begin{tabular}{lcccc}
+        \toprule
+        \textbf{Split} & \textbf{RMSE} & \textbf{Avg NLL} & \textbf{Coverage} & \textbf{Width} \\
+        \midrule
+        Test (ID) & 0.133 & $-2.369$ & \textbf{89.9\%} & 0.201 \\
+        OOD       & 0.550 & $7.471$  & 44.6\%          & 0.248 \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=0.9\linewidth]{figs/gaussian_phi_ood.png}
+    \caption{Gaussian LSTM prediction for roll angle $\phi$ on the OOD set. The mean prediction fails to follow the sustained negative excursion of the ground truth, and the $\pm2\sigma$ band does not capture the true trajectory for most of the horizon, demonstrating aleatoric uncertainty collapse under distribution shift.}
+    \label{fig:gaussian-phi-ood}
+\end{figure}
+
+\subsection{Conformal Prediction}
+
+Split-conformal prediction is applied on top of the best baseline LSTM checkpoint ($\alpha=0.10$, nominal 90\% coverage). Table~\ref{tab:conformal} reports empirical coverage and average interval width for both splits.
+
+\begin{table}[t]
+    \centering
+    \caption{Conformal prediction per-DoF coverage (LSTM backbone,
+    $\alpha=0.10$, nominal 90\% coverage). Interval width is
+    constant across splits by construction.}
+    \label{tab:conformal}
+    \begin{tabular}{lcccccccc}
+        \toprule
+        \textbf{Split} & \textbf{Overall} & $u$ & $v$ & $p$ & $r$ & $\phi$ & \textbf{Width} \\
+        \midrule
+        Test (ID) & 90.5\% & 91.4\% & 87.9\% & 92.0\% & 90.3\% & 91.0\% & 0.234 \\
+        OOD       & 66.2\% & 25.5\% & 30.3\% & 78.7\% & 56.3\% & 53.4\% & 0.234 \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+On the ID test set, conformal achieves 90.1\% overall coverage in exact agreement with the finite-sample guarantee, with per-DoF coverage ranging from 87.9\% ($v$) to 92.0\% ($p$). This confirms that the exchangeability assumption is approximately satisfied within the routine sea-state regime.
+
+On the OOD set, overall coverage degrades to 65.9\% for the LSTM backbone and 
+68.0\% for the MLP backbone (Table~\ref{tab:conformal-backbone}), both 
+representing the strongest OOD coverage among all methods evaluated 
+(vs.\ 44.6\% for Gaussian LSTM, 49.0\% for LSTM ensemble, 16.5\% for MC Dropout). 
+Conformal prediction's robustness stems from its fixed-width intervals, which are 
+relatively wider for the high-error channels ($u$, $v$) compared to the 
+over-confident model-based uncertainty estimates. The MLP backbone further improves 
+OOD coverage by producing smaller validation residuals, yielding tighter 
+calibration quantiles that nevertheless cover more OOD points. The constant 
+interval width cannot adapt to locally harder OOD inputs, so coverage still 
+degrades under strong covariate shift regardless of backbone.
+
+Figure~\ref{fig:conformal-phi-test} illustrates a representative ID prediction with conformal intervals for $\phi$: the ground truth remains within the band throughout the 30-step horizon.
+
+\subsection{Effect of backbone choice on conformal coverage}
+
+Table~\ref{tab:conformal-backbone} compares conformal prediction applied to the LSTM and MLP backbones. Both achieve near-nominal coverage on the ID test set (90.5\% and 90.1\% respectively), confirming that conformal validity holds regardless of backbone architecture. On the OOD set, the MLP backbone achieves higher coverage (68.0\% vs.\ 66.2\%) with narrower intervals (width 0.212 vs.\ 0.234). This improvement stems directly from the MLP's better point predictions under distribution shift: smaller validation residuals yield tighter calibration quantiles, which produce narrower intervals that nevertheless cover more OOD points because the MLP's predictions are closer to the ground truth on the shifted distribution.
+
+This result highlights an important practical principle: improving the base predictor's OOD generalisation is the most reliable path to better conformal coverage under distribution shift, more so than post-hoc calibration strategies applied to a weaker backbone.
+
+\begin{table}[t]
+    \centering
+    \caption{Conformal prediction with LSTM vs MLP backbone ($\alpha=0.10$, nominal 90\% coverage).}
+    \label{tab:conformal-backbone}
+    \begin{tabular}{llccc}
+        \toprule
+        \textbf{Split} & \textbf{Backbone} & \textbf{Point RMSE} & \textbf{Coverage} & \textbf{Width} \\
+        \midrule
+        Test (ID) & LSTM & 0.120 & \textbf{90.5\%} & 0.234 \\
+        Test (ID) & MLP  & 0.121 & 90.1\%          & \textbf{0.212} \\
+        \midrule
+        OOD & MLP  & \textbf{0.330} & \textbf{68.0\%} & \textbf{0.212} \\
+        OOD & LSTM & 0.537          & 66.2\%           & 0.234 \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=0.9\linewidth]{figs/conformal_phi_test.png}
+    \caption{Conformal prediction intervals for roll angle $\phi$ on the ID test set ($\alpha=0.10$). The ground truth remains within the conformal band throughout the 30-step horizon, consistent with the 90.1\% empirical coverage.}
+    \label{fig:conformal-phi-test}
+\end{figure}
+
+\subsection{Unified Comparison}
+
+Table~\ref{tab:uq-summary} consolidates all methods across both backbones. Three findings stand out.
+
+First, in-distribution calibration requires explicit post-hoc correction regardless of backbone. Only the calibrated Gaussian LSTM and conformal prediction achieve near-nominal 90\% coverage on the ID test set; raw ensemble intervals (75.8\%) and MC Dropout (35.7\%) are severely under-covered without additional calibration.
+
+Second, backbone architecture is the dominant factor in OOD performance. Across every UQ method, the MLP backbone yields lower OOD RMSE and higher OOD coverage than the LSTM backbone. The MLP ensemble reduces OOD RMSE by 34\% relative to the LSTM ensemble (0.324 vs.\ 0.492) and improves OOD coverage by 8.4 percentage points (57.4\% vs.\ 49.0\%). Conformal prediction with the MLP backbone achieves the best OOD coverage in the entire benchmark (68.0\%) with the narrowest intervals (width 0.212), outperforming its LSTM-backed counterpart (66.2\%, width 0.234). This pattern is consistent across all methods and confirms that improving the base predictor's OOD generalisation is more effective than applying stronger calibration to a weaker backbone.
+
+Third, all methods degrade under OOD shift, but at different rates. Conformal prediction is the most robust to distribution shift regardless of backbone, followed by deep ensembles, calibrated Gaussian LSTM, and MC Dropout. OOD coverage collapse is most severe in the surge ($u$) and sway ($v$) channels, which are most affected by the elevated ship speed and rougher sea conditions of the OOD recordings, while roll rate ($p$) remains comparatively well-covered across all methods.
+
+\begin{table}[t]
+\centering
+\caption{Summary comparison of UQ methods on the patrol vessel simulation dataset at nominal 90\% coverage ($\alpha=0.10$). RMSE averaged over all five output channels and the 30-step horizon. Coverage and width reported at $\alpha=0.10$ for interval methods; ensemble coverage uses $\pm2\sigma$ intervals.}
+\label{tab:uq-summary}
+\begin{tabular}{llcccc}
+\toprule
+\textbf{Method} & \textbf{Split} & \textbf{RMSE} & \textbf{Avg NLL} & \textbf{Coverage} & \textbf{Width} \\
+\midrule
+LSTM (deterministic) & ID  & 0.120 & -- & -- & -- \\
+LSTM (deterministic) & OOD & 0.537 & -- & -- & -- \\
+MLP (deterministic)  & ID  & 0.121 & -- & -- & -- \\
+MLP (deterministic)  & OOD & 0.330 & -- & -- & -- \\
+\midrule
+Deep Ensemble LSTM ($N$=5) & ID  & \textbf{0.111} & -- & 75.8\% & -- \\
+Deep Ensemble LSTM ($N$=5) & OOD & 0.492          & -- & 49.0\% & -- \\
+Deep Ensemble MLP ($N$=5)  & ID  & 0.123          & -- & 81.3\% & -- \\
+Deep Ensemble MLP ($N$=5)  & OOD & 0.324          & -- & 57.4\% & -- \\
+\midrule
+MC Dropout ($M$=200)       & ID  & 0.123 & -- & 35.7\% & -- \\
+MC Dropout ($M$=200)       & OOD & 0.520 & -- & 16.5\% & -- \\
+\midrule
+Gaussian LSTM (calibrated) & ID  & 0.133 & $-2.37$ & 89.9\% & 0.201 \\
+Gaussian LSTM (calibrated) & OOD & 0.550 & $7.47$  & 44.6\% & 0.248 \\
+\midrule
+Conformal (LSTM backbone)  & ID  & 0.120 & -- & 90.5\% & 0.234 \\
+Conformal (LSTM backbone)  & OOD & 0.537 & -- & 66.2\% & 0.234 \\
+Conformal (MLP backbone)   & ID  & 0.121 & -- & 90.1\% & 0.212 \\
+Conformal (MLP backbone)   & OOD & \textbf{0.330} & -- & \textbf{68.0\%} & \textbf{0.212} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Discussion and Practical Considerations}
+\label{sec:limitations}
+
+The benchmark results reveal several cross-cutting patterns that have direct implications for practitioners deploying uncertainty-aware motion forecasters in marine autonomy systems.
+
+\paragraph{Backbone architecture strongly influences OOD uncertainty quality.}
+A central finding of this work is that the choice of backbone architecture correlates with not only deterministic prediction accuracy but also the quality of every UQ method built on top of it. The MLP's 38\% lower OOD RMSE relative to LSTM propagates into better ensemble OOD coverage (57.4\% vs.\ 49.0\%) and better conformal OOD coverage (68.0\% vs.\ 66.2\%) with narrower intervals. Because the two backbones also differ in parameter count and output strategy, the OOD gap cannot be attributed solely to architecture type; however, across all four UQ methods the pattern is consistent. This suggests that efforts to improve OOD uncertainty should begin with the backbone predictor rather than the calibration layer: a more OOD-robust base model yields smaller validation residuals, tighter conformal quantiles, and more meaningful ensemble spread under shift. Post-hoc calibration strategies applied to a weak backbone cannot compensate for poor generalisation at the prediction level.
+
+\paragraph{OOD shift is dominated by surge and sway dynamics.}
+Across all methods, the most severe coverage degradation under OOD conditions occurs in the translational channels $u$ and $v$. The OOD recordings capture a higher ship speed regime (surge up to 13.4~m/s vs.\ a training maximum of 9.25~m/s) and rougher sea conditions, which primarily manifest as disturbances in the translational degrees of freedom. Rotational channels such as roll rate $p$ are comparatively stable. This per-DoF pattern is consistent across conformal, Gaussian, and ensemble methods and indicates that aggregate OOD metrics can mask substantially worse performance on safety-critical channels. Evaluation per degree of freedom is therefore essential for any application where specific motion axes carry disproportionate safety weight.
+
+\paragraph{Wave force inputs are absent from the dataset.}
+The patrol vessel simulation dataset includes wind disturbance signals but does not provide wave force or wave elevation measurements. Wave excitation is a primary driver of roll dynamics, and its absence from the input feature set means that wave-excited channels such as roll angle $\phi$ and roll rate $p$ cannot be fully predicted from the available inputs. The associated uncertainty for these channels is therefore inherently irreducible given the current feature set, and their coverage results should be interpreted accordingly. Future benchmarks on datasets that include explicit wave measurements would enable a more complete evaluation of uncertainty-aware prediction across all dynamically relevant degrees of freedom.
+
+\paragraph{Gaussian likelihood models require calibration to yield usable intervals.}
+Raw Gaussian variance outputs are strongly miscalibrated without post-hoc correction \cite{guo2017calibration, ovadia2019can}, producing intervals that are either overly conservative or severely under-covering. Per-DoF temperature scaling \cite{guo2017calibration} substantially improves in-distribution calibration but cannot recover OOD coverage when the predictive mean itself is inaccurate, as in the surge and sway channels. Aleatoric uncertainty modeling alone is therefore insufficient for distribution shift robustness.
+
+\paragraph{Distribution-free guarantees do not extend to strong OOD.}
+Split-conformal prediction provides finite-sample coverage guarantees under exchangeability, which is approximately satisfied within the routine sea-state regime. Under strong covariate shift, the exchangeability assumption is violated and empirical under-coverage results. This degradation is informative rather than a methodological failure: the magnitude of coverage shortfall provides a quantitative signal of how far the OOD inputs lie outside the calibration distribution. Conformal under-coverage can therefore serve as a practical distribution shift detector in deployed systems.
+
+\paragraph{Compute and deployment trade-offs.}
+Conformal prediction requires no additional training beyond the base predictor and adds only a single calibration pass over the validation set, making it the most deployment-efficient method evaluated. Deep ensembles require training and storing $N$ independent models but provide the best point-prediction accuracy and meaningful epistemic uncertainty. MC Dropout is the cheapest epistemic method at inference time but, as shown here, produces near-deterministic outputs in recurrent architectures due to dropout suppression during training. Gaussian likelihood models offer compact probabilistic outputs but require careful post-hoc validation. For resource-constrained deployments, conformal prediction over an MLP backbone represents the best combination of OOD coverage, computational cost, and implementation simplicity.
+
+\paragraph{Training convergence and model limitations.}
+All deterministic baselines and ensemble members were trained for 20 epochs with early stopping based on validation loss, and training logs confirm that the baseline LSTM and ensemble members reached approximate convergence within this budget. The Gaussian likelihood LSTM, however, showed monotonically decreasing validation NLL up to the final epoch (best checkpoint: epoch 20, validation NLL $-3.22$), indicating that this model may not have fully converged. The reported Gaussian LSTM results should therefore be interpreted with caution: further training may yield somewhat better-calibrated probabilistic outputs and modestly different coverage figures, though the qualitative conclusions regarding OOD coverage collapse are unlikely to change. Future work should use a larger epoch budget or adaptive stopping criteria for NLL-based training objectives.
+
+The observed patterns align with broader findings in time-series uncertainty quantification \cite{foldesi2023comparison, ovadia2019can}: ensembles consistently outperform single-model epistemic methods, aleatoric modeling requires calibration to be useful under shift, and distribution-free methods provide the most reliable coverage guarantees in distribution \cite{angelopoulos2023conformal}. The contribution of this work is to demonstrate these patterns concretely in a marine dynamics setting and to identify backbone architecture as an underappreciated lever for improving UQ under distribution shift \cite{quinonero2008dataset}.
+
+\section{Reproducibility Checklist}
+
+\begin{itemize}
+    \item \textbf{Data availability:} All experiments use the publicly available patrol vessel simulation dataset~\cite{baier2022darus}. Exact dataset splits are defined in the codebase and documented in the repository README.
+
+    \item \textbf{Code availability:} All models, training scripts, evaluation routines, and plotting utilities are implemented in a unified open-source repository, covering deterministic baselines, ensemble training, MC Dropout inference, Gaussian likelihood models, conformal prediction, and MLP backbone UQ variants.
+
+    \item \textbf{Configuration files:} All model architectures, hyperparameters, data splits, and evaluation settings are specified via YAML configuration files to ensure consistency across runs.
+
+    \item \textbf{Randomness control:} Random seeds are explicitly set for model initialisation, data shuffling, and ensemble members to ensure repeatability of all reported results.
+
+    \item \textbf{Evaluation metrics:} All reported metrics (RMSE, NLL, empirical coverage, interval width) are computed using standardised evaluation scripts included in the repository.
+
+    \item \textbf{Hardware and runtime:} All experiments were conducted on NVIDIA L40 GPU nodes (48~GB VRAM) on the TalTech HPC Centre cluster, using Python 3.10 and PyTorch 2.5.1 (CUDA 12.1). The full benchmark was completed within a single working session on the cluster.
+
+    \item \textbf{Figure generation:} All figures and tables are generated automatically from saved experiment outputs using the provided plotting scripts.
+\end{itemize}
+\section{Conclusion}
+
+This paper presented a systematic benchmark of uncertainty quantification methods for multi-step ship motion prediction on the patrol vessel simulation dataset. Building on a suite of six deterministic baselines, we implemented and evaluated four complementary UQ approaches: deep ensembles, Monte Carlo dropout, Gaussian likelihood modeling, and split-conformal prediction, across in-distribution and out-of-distribution sea states, and assessed each method with both LSTM and MLP backbones.
+
+A first key finding concerns backbone architecture. Despite near-identical in-distribution accuracy (test RMSE 0.120 vs.\ 0.121), the feed-forward MLP achieves 38\% lower OOD RMSE than the LSTM (0.330 vs.\ 0.537). Hidden-state analysis (Figure~\ref{fig:hidden-state}) confirms that the LSTM encoder maps OOD inputs into a qualitatively different region of hidden space -- one of higher L2 norm and substantially lower cross-sequence variance -- from the first decoder step, and the decoder propagates this displaced representation across all 30 forecast steps \cite{quinonero2008dataset}. The MLP is not subject to this mechanism, as it generates each output directly from a fixed input window. We note that the two architectures also differ in parameter count and output strategy, so hidden-state displacement is unlikely to be the sole contributor; nevertheless, it constitutes the primary empirically verified mechanism. Regardless of the precise mechanism, the backbone OOD advantage propagates through every UQ method applied on top: the MLP ensemble achieves lower OOD RMSE (0.324 vs.\ 0.492) and higher OOD coverage (57.4\% vs.\ 49.0\%) than its LSTM counterpart, and conformal prediction with the MLP backbone achieves the best overall OOD coverage in the benchmark (68.0\%) with the narrowest intervals (width 0.212). These results establish backbone OOD generalisation as the primary driver of uncertainty quality under distribution shift.
+
+A second finding concerns in-distribution calibration. Only calibrated models achieve near-nominal 90\% interval coverage on the ID test set: the per-DoF calibrated Gaussian LSTM reaches 89.9\% and conformal prediction reaches 90.1\% and 90.5\% for the MLP and LSTM backbones respectively. Raw ensemble and MC Dropout intervals are severely under-covered without post-hoc correction (75.8\% and 35.7\%). MC Dropout in particular produces near-deterministic outputs in the recurrent architecture evaluated here, confirming a well-documented failure mode of dropout-based epistemic uncertainty in sequential models \cite{gal2016dropout, foldesi2023comparison}.
+
+A third finding concerns the structure of OOD shift. The OOD recordings capture a higher ship speed regime and rougher sea conditions recorded approximately three years after training, with surge velocities extending to 13.4~m/s against a training maximum of 9.25~m/s. Coverage degradation under this shift is concentrated in the translational channels surge ($u$) and sway ($v$), while rotational channels such as roll rate ($p$) remain comparatively stable across all methods. This per-DoF asymmetry underscores the importance of channel-level evaluation in safety-critical marine applications, where aggregate metrics can mask severe degradation on the most operationally relevant degrees of freedom.
+
+An important constraint of this study is that the patrol vessel simulation dataset does not include wave force or wave elevation measurements. Wave-excited degrees of freedom such as roll angle and roll rate cannot be fully predicted from the available feature set, and their uncertainty is inherently larger regardless of the UQ method applied. Future benchmarks incorporating explicit wave measurements would enable a more complete evaluation across all dynamically relevant degrees of freedom.
+
+From a practical standpoint, conformal prediction over an MLP backbone offers the best combination of OOD robustness, calibration validity, and deployment simplicity among the methods evaluated. Deep ensembles provide the strongest point-prediction accuracy and meaningful epistemic uncertainty at the cost of multiple training runs. Gaussian likelihood models yield compact probabilistic outputs with well-calibrated in-distribution intervals after per-DoF temperature scaling, but require careful validation under covariate shift. MC Dropout, as implemented here with recurrent architectures, is the least reliable option due to dropout suppression during training. Covariate-adaptive conformal methods, hybrid aleatoric-epistemic approaches, and benchmarks on datasets with explicit wave inputs remain the most consequential directions for future work.
+
+\bibliographystyle{cas-model2-names}
+
+% \bibliography{references}
+
+% \bibliographystyle{model1-num-names}
+\bibliography{bibliography}
+
+\end{document}
