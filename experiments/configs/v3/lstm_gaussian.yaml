@@ -1,0 +1,26 @@
+data:
+  base_path: "data/processed/darus"
+  history: 30
+  horizon: 30
+  stride: 1
+  features: "no_time"      # PROVISIONAL: frozen after the validation-only time-feature ablation (EXPERIMENT_PROTOCOL.md §3)
+  normalize: true          # train-only standardisation of inputs and targets
+  calibration:             # 9 training recordings held out for calibration only
+    n_recordings: 9
+    seed: 20261001
+
+model:
+  type: "lstm_gaussian"
+  hidden_dim: 128
+  num_layers: 2
+  dropout: 0.0
+training:
+  epochs: 100
+  patience: 10
+  lr: 0.001
+  batch_size: 256
+  weight_decay: 0.0
+  device: "auto"
+logging:
+  save_dir: "experiments/runs/v3"
+  run_name: "lstm_gaussian"

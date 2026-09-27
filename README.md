@@ -148,7 +148,7 @@ sbatch scripts/slurm/train_eval_mc_dropout.sh
 
 ```bash
 # Gaussian LSTM — NLL, RMSE, coverage/width per DoF with per-DoF calibration
-python -m src.uncertainty.eval_gaussian_per_dof \
+python -m src.uncertainty.eval_gaussian_diagnostics_per_dof \
     --model_dir experiments/results/p2_lstm_gaussian \
     --config experiments/configs/uncertainty/p2_lstm_gaussian.yaml \
     --split test --calibrate_per_dof
