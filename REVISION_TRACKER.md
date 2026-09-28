@@ -80,7 +80,7 @@ Evidence types: *src* = source read, *log* = committed historical log, *data* = 
 | R9 MLP Gaussian (backbone pairing) | yes | yes | yes | no | P6 |
 | R11 bootstrap CIs + paired differences entry point | yes | yes | yes | no | P4 |
 | R11 channel/horizon/level analyses | yes (metrics) | yes | yes | no | table/figure scripts not yet written |
-| Timing pilot (preflight, jobs, report) | yes | yes (`test_pilot_report.py`) | yes (dry run) | no | authorised ≤ 5.5 GPU-h; submission pending (see P8) |
+| Timing pilot (preflight, jobs, report) | yes | yes (`test_pilot_report.py`) | yes (HPC, full data, 3 epochs) | pilot complete — PASS | 0.075 GPU-h billed; validation split only; not a benchmark result |
 | R10, R12–R14 | no | no | no | no | after pilot and full runs |
 
 ## Pre-run corrections round (2026-09-28, author request)
@@ -97,8 +97,10 @@ Evidence types: *src* = source read, *log* = committed historical log, *data* = 
 
 | P8 | Calibration decision + pilot authorisation | Primary calibration = fixed-seed random draw, after an eligibility check (unique deposit-training files, complete, no content duplicates); balance reported descriptively; stratified draw kept as optional sensitivity; history in `calibration_selection.json`. Pilot report split into correctness failures, resource failures, diagnostics (non-monotonic losses are diagnostics only) and a separate planning section; exits 1 on failure. `scripts/pilot_preflight.py` checks the frozen split and scaling in every pilot config and the aggregate SLURM cap over all array tasks + eval (5.50 h). `--no-requeue` on both jobs; eval runs `afterany` and reports failed steps. | `tests/test_pilot_report.py`; dry run on trimmed data; local preflight passes except for uncommitted changes |
 
+| P9 | Pilot execution | The cluster's April venv was unusable (its Python install is no longer accessible). A new environment `~/envs/darus-v3` was built by CPU-only job 984242 (Python 3.11.16, torch 2.5.1+cu121, numpy 2.3.5, pandas 2.3.3; freeze archived); **60/60 tests pass on the cluster**; preflight OK. Pilot jobs 984243/984244 **PASS**: 0.075 GPU-h billed, no numerical issues, 2 diagnostics (TCN val loss +0.4% at epoch 3; 2-member pilot ensemble floors 1.0–1.9% of calibration spreads). Revised full-run estimate ≈ 3 GPU-h expected, ≈ 6 worst case. | `experiments/manifests/pilot_2026-09-28/` (report, sacct, pip freeze) |
+
 ## Separate track: historical checkpoint recovery (not part of the new benchmark)
-Purpose: an old-vs-new comparison for RESULTS_CHANGELOG.md only. Requires the April 2026 HPC checkpoints and logs (author question 1). If recovered, they are evaluated with `benchmark_eval --legacy_config` (recording-aware windows, validation calibration, flagged `legacy_checkpoint: true`). They are never mixed into benchmark tables. Status: **blocked** (artifacts not local).
+Purpose: an old-vs-new comparison for RESULTS_CHANGELOG.md only. Requires the April 2026 HPC checkpoints and logs (author question 1). If recovered, they are evaluated with `benchmark_eval --legacy_config` (recording-aware windows, validation calibration, flagged `legacy_checkpoint: true`). They are never mixed into benchmark tables. Status: **unblocked, not started.** The April artifacts exist on the cluster (`~/phd-p1-darus-uncertainty/experiments/results/`: baselines, Gaussian, LSTM/MLP ensembles, MC dropout; 106 logs in `logs/slurm/`, including jobs missing from GitHub such as 918426). Left untouched.
 
 
 ## Findings
@@ -161,7 +163,7 @@ Purpose: an old-vs-new comparison for RESULTS_CHANGELOG.md only. Requires the Ap
 ---
 
 ## Author questions that block valid corrections
-1. **HPC artifacts:** do `~/phd-p1-darus-uncertainty/experiments/results/` and `logs/slurm/` still exist on the TalTech cluster (April 2026 checkpoints, logs 918426/918432/918441/918445/918450/918411)? They are needed only for the old-versus-new comparison (evaluate the historical checkpoints with corrected windows/intervals via `benchmark_eval --legacy_config`). They are not needed for the new benchmark.
+1. ~~**HPC artifacts:**~~ answered: they exist on the cluster (see the separate track). Original question: do `~/phd-p1-darus-uncertainty/experiments/results/` and `logs/slurm/` still exist on the TalTech cluster (April 2026 checkpoints, logs 918426/918432/918441/918445/918450/918411)? They are needed only for the old-versus-new comparison (evaluate the historical checkpoints with corrected windows/intervals via `benchmark_eval --legacy_config`). They are not needed for the new benchmark.
 2. **Dataset provenance:** the DaRUS DOI(s)/versions of the routine and OOD deposits, and any documented simulation settings (Hs, Tp, wave direction, speed/propeller set-points). The processed files contain no sea-state parameters; without them the shift must be called a *combined operating-condition shift*.
 3. **Compute authorisation and protocol sign-off:** see EXPERIMENT_PROTOCOL.md (≈45–100 L40 GPU-hours). Also: add an MLP Gaussian head to complete the pairing (R12), or narrow the backbone claim to ensembles/conformal/dropout?
 4. **Confirmation data:** all 29 OOD recordings already informed backbone selection. Is any other DaRUS patrol-vessel condition available as an untouched confirmation set? If not, the OOD results are reported as exploratory (current default).

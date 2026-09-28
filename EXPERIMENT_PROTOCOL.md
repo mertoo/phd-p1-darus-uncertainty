@@ -3,7 +3,7 @@
 Status (2026-09-28): **nothing run on the full data yet.**
 - D1 and D2 are the protocol; the primary calibration split is fixed (§1).
 - The feature set is decided by the §3 rule after stage 0; the pilot uses `no_time`.
-- The timing pilot (§7a) is **authorised** (≤ 5.5 L40 GPU-h combined, no retries).
+- The timing pilot (§7a) **ran on 2026-09-28 and PASSED** (0.075 billed GPU-h).
 - The full run list (§7) needs **separate authorisation** after the pilot report.
 
 The historical-checkpoint recovery track (old-vs-new comparison) is separate from this benchmark and is described in REVISION_TRACKER.md.
@@ -106,6 +106,18 @@ Adam, lr 1e-3, batch 256, max 100 epochs, early stopping with patience 10 on the
   - *Resources (failure):* peak GPU memory < 40 GB, peak host RSS < 14 GB, each evaluation's artifacts < 1 GB. The job limits enforce the time cap.
   - *Diagnostics (inspect, never automatic failures):* non-monotonic train or validation loss over the 3 epochs; > 1% of calibration spreads floored; infinite interval bounds.
   - *Planning (separate):* projected GPU-h for the 63-row run list at 40 and 100 epochs, including evaluation. Exceeding 40 / 100 GPU-h blocks the full benchmark until it is re-planned; it is not a pilot failure.
+- **Result (2026-09-28): PASS.**
+  - Jobs 984243 (array 1–7) and 984244 on `ada1` (L40), commit `54a69d5`; environment `~/envs/darus-v3` built by CPU job 984242. Record: `experiments/manifests/pilot_2026-09-28/`.
+  - Billed: 271 GPU-seconds = **0.075 GPU-h** of the 5.5 authorised.
+  - Training speed: 3.4–3.7 s/epoch for LSTM variants, 2.4–2.8 for MLP variants, 3.4 for TCN (46–70k windows/s).
+  - Memory: ≤ 0.22 GB GPU, about 1.1 GB peak RSS in training; eval job RSS 1.6 GB.
+  - Evaluation (cal + val, 63.8k windows): 1–2.5 s per method, 23 s per split for MC dropout with 200 passes.
+  - Artifacts: 59–125 MB per method at cal + val scale, i.e. about 0.23–0.47 GB per method at full scale (< 1 GB).
+  - Numerical issues: none (no non-finite losses, no NaN metrics).
+  - Diagnostics:
+    - TCN validation loss rose slightly at epoch 3 (0.1911 → 0.1919); ordinary fluctuation, and the best epoch (2) was kept.
+    - The 2-member, 3-epoch pilot ensemble floored 1.0–1.9% of calibration spreads per channel, above the 1% trigger. In the full run the floor sensitivity analysis will be run if the 5-member ensembles also exceed 1%.
+  - **Revised full-run estimate** (63 rows, compute only): 2.1 GPU-h training at 40 epochs, 5.2 at 100 epochs; evaluation ≈ 0.2–0.5 GPU-h (35 evaluation jobs). With about 15–20 s SLURM start-up per job, the total is ≈ 3 GPU-h expected and ≈ 6 GPU-h worst case, compared with the earlier 22–55 GPU-h estimate.
 - **After the pilot,** report: measured GPU-hours from `sacct -j <ids> --format=JobID,Elapsed,AllocTRES%40,MaxRSS,State`; peak memory; throughput (s/epoch, windows/s, inference s); artifact sizes; numerical issues; and the revised full-run estimate. Then wait for separate authorisation of the full benchmark.
 
 ## 8. Selection hygiene

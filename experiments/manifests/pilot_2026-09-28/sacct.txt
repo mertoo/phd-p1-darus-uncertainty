@@ -1,0 +1,29 @@
+             JobID                JobName      State    Elapsed ElapsedRaw NodeList     MaxRSS                                          AllocTRES 
+------------------ ---------------------- ---------- ---------- ---------- -------- ---------- -------------------------------------------------- 
+            984242     darus_v3_setup_env  COMPLETED   00:02:54        174  green24                            billing=266664,cpu=4,mem=8G,node=1 
+      984242.batch                  batch  COMPLETED   00:02:54        174  green24    308164K                                cpu=4,mem=8G,node=1 
+     984242.extern                 extern  COMPLETED   00:02:54        174  green24       848K                 billing=266664,cpu=4,mem=8G,node=1 
+            984244       darus_pilot_eval  COMPLETED   00:02:20        140     ada1              billing=10333333,cpu=4,gres/gpu=1,mem=32G,node=1 
+      984244.batch                  batch  COMPLETED   00:02:20        140     ada1   1565348K                    cpu=4,gres/gpu=1,mem=32G,node=1 
+     984244.extern                 extern  COMPLETED   00:02:20        140     ada1       920K   billing=10333333,cpu=4,gres/gpu=1,mem=32G,node=1 
+          984243_1      darus_pilot_train  COMPLETED   00:00:26         26     ada1              billing=10333333,cpu=4,gres/gpu=1,mem=16G,node=1 
+    984243_1.batch                  batch  COMPLETED   00:00:26         26     ada1      3476K                    cpu=4,gres/gpu=1,mem=16G,node=1 
+   984243_1.extern                 extern  COMPLETED   00:00:26         26     ada1       956K   billing=10333333,cpu=4,gres/gpu=1,mem=16G,node=1 
+          984243_2      darus_pilot_train  COMPLETED   00:00:26         26     ada1              billing=10333333,cpu=4,gres/gpu=1,mem=16G,node=1 
+    984243_2.batch                  batch  COMPLETED   00:00:26         26     ada1      3392K                    cpu=4,gres/gpu=1,mem=16G,node=1 
+   984243_2.extern                 extern  COMPLETED   00:00:26         26     ada1       944K   billing=10333333,cpu=4,gres/gpu=1,mem=16G,node=1 
+          984243_3      darus_pilot_train  COMPLETED   00:00:14         14     ada1              billing=10333333,cpu=4,gres/gpu=1,mem=16G,node=1 
+    984243_3.batch                  batch  COMPLETED   00:00:14         14     ada1      3468K                    cpu=4,gres/gpu=1,mem=16G,node=1 
+   984243_3.extern                 extern  COMPLETED   00:00:14         14     ada1       952K   billing=10333333,cpu=4,gres/gpu=1,mem=16G,node=1 
+          984243_4      darus_pilot_train  COMPLETED   00:00:18         18     ada1              billing=10333333,cpu=4,gres/gpu=1,mem=16G,node=1 
+    984243_4.batch                  batch  COMPLETED   00:00:18         18     ada1      3480K                    cpu=4,gres/gpu=1,mem=16G,node=1 
+   984243_4.extern                 extern  COMPLETED   00:00:18         18     ada1       944K   billing=10333333,cpu=4,gres/gpu=1,mem=16G,node=1 
+          984243_5      darus_pilot_train  COMPLETED   00:00:17         17     ada1              billing=10333333,cpu=4,gres/gpu=1,mem=16G,node=1 
+    984243_5.batch                  batch  COMPLETED   00:00:17         17     ada1      3464K                    cpu=4,gres/gpu=1,mem=16G,node=1 
+   984243_5.extern                 extern  COMPLETED   00:00:17         17     ada1       952K   billing=10333333,cpu=4,gres/gpu=1,mem=16G,node=1 
+          984243_6      darus_pilot_train  COMPLETED   00:00:13         13     ada1              billing=10333333,cpu=4,gres/gpu=1,mem=16G,node=1 
+    984243_6.batch                  batch  COMPLETED   00:00:13         13     ada1      3484K                    cpu=4,gres/gpu=1,mem=16G,node=1 
+   984243_6.extern                 extern  COMPLETED   00:00:13         13     ada1       912K   billing=10333333,cpu=4,gres/gpu=1,mem=16G,node=1 
+          984243_7      darus_pilot_train  COMPLETED   00:00:17         17     ada1              billing=10333333,cpu=4,gres/gpu=1,mem=16G,node=1 
+    984243_7.batch                  batch  COMPLETED   00:00:17         17     ada1      1192K                    cpu=4,gres/gpu=1,mem=16G,node=1 
+   984243_7.extern                 extern  COMPLETED   00:00:17         17     ada1       928K   billing=10333333,cpu=4,gres/gpu=1,mem=16G,node=1 
