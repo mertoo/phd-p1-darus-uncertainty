@@ -1,9 +1,10 @@
 #!/bin/bash
 # TIMING PILOT, training part. DO NOT SUBMIT without compute authorisation.
+#   python -m scripts.pilot_preflight            # must print PREFLIGHT OK
 #   TRAIN=$(sbatch --parsable --array=1-7 scripts/slurm/v3/pilot_train.sh)
-#   sbatch --dependency=afterok:$TRAIN scripts/slurm/v3/pilot_eval.sh
-# 3 epochs, no early stopping, full real data, provisional v3 protocol.
-# Hard cap: 7 tasks x 30 min = 3.5 GPU-h.
+#   sbatch --dependency=afterany:$TRAIN scripts/slurm/v3/pilot_eval.sh
+# 3 epochs, no early stopping, full real data, primary v3 split and scaling.
+# Hard cap: 7 tasks x 30 min x 1 GPU = 3.5 GPU-h. No automatic requeue.
 #SBATCH --job-name=darus_pilot_train
 #SBATCH --output=logs/slurm/v3/%x_%A_%a.out
 #SBATCH --error=logs/slurm/v3/%x_%A_%a.err
@@ -14,6 +15,7 @@
 #SBATCH --mem=16G
 #SBATCH --partition=gpu
 #SBATCH --gres=gpu:L40:1
+#SBATCH --no-requeue
 set -euo pipefail
 module load rocky8-spack/master
 module load cuda/12.2.2-gcc-10.3.0-5rec

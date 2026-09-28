@@ -64,8 +64,8 @@ Evidence types: *src* = source read, *log* = committed historical log, *data* = 
 | Item | Code | Tests | E2E | Full | Notes |
 |---|---|---|---|---|---|
 | R1 recording-aware windows, correct counts | yes | yes | yes | no | |
-| R2 splits/roles: calibration hold-out (D1), train-only scaling (D2) | yes | yes | yes | no | D1/D2 preferred; calibration selection provisional (C1) |
-| R2 calibration representativeness check | yes | n.a. | yes (full training data) | n.a. | predeclared criterion failed for both draws; criterion mis-specified (§ P5) |
+| R2 splits/roles: calibration hold-out (D1), train-only scaling (D2) | yes | yes | yes | no | D1/D2 adopted; primary calibration = fixed-seed random draw (author decision) |
+| R2 calibration representativeness check | yes | n.a. | yes (full training data) | n.a. | predeclared criterion failed for both draws; reported descriptively, no post-hoc threshold; stratified draw kept as optional sensitivity |
 | R3 named interval variants, one object per result | yes | yes | yes | no | |
 | R3b finite-sample order statistic, legitimate +inf | yes | yes | yes | no | |
 | R4 regenerate tables from structured records | no | no | no | no | needs R10 |
@@ -80,7 +80,7 @@ Evidence types: *src* = source read, *log* = committed historical log, *data* = 
 | R9 MLP Gaussian (backbone pairing) | yes | yes | yes | no | P6 |
 | R11 bootstrap CIs + paired differences entry point | yes | yes | yes | no | P4 |
 | R11 channel/horizon/level analyses | yes (metrics) | yes | yes | no | table/figure scripts not yet written |
-| Timing pilot (jobs, report, pass/fail) | yes | n.a. | yes (dry run) | no | awaiting compute authorisation |
+| Timing pilot (preflight, jobs, report) | yes | yes (`test_pilot_report.py`) | yes (dry run) | no | authorised ≤ 5.5 GPU-h; submission pending (see P8) |
 | R10, R12–R14 | no | no | no | no | after pilot and full runs |
 
 ## Pre-run corrections round (2026-09-28, author request)
@@ -94,6 +94,8 @@ Evidence types: *src* = source read, *log* = committed historical log, *data* = 
 | P5 | D1/D2 preferred; document and check calibration recordings | `scripts/check_calibration_split.py` produces the documented list and SMD table. The predeclared criterion failed for the random draw (max \|SMD\| 0.84) **and** the stratified fallback (0.83). A diagnostic added afterwards shows the criterion passes only 7.1% of random draws, and both selections are typical (≈67th percentile). `stratified_n` is adopted provisionally; the author decides (C1). | `experiments/manifests/calibration_selection.json`, `calibration_representativeness.csv`; loader reproduces the documented list |
 | P6 | MLP Gaussian | `src/models/mlp_gaussian.py`, factory entry, config `v3/mlp_gaussian.yaml`, run-list stage 1e (3 seeds). Increment ≤ 1 GPU-h (to be measured by the pilot). | `tests/test_models.py` (NLL constant, learns heteroscedastic scale, logvar clamp); smoke train + eval |
 | P7 | Timing pilot | `scripts/slurm/v3/pilot_{train,eval}.sh`, `pilot_runs.tsv`, `scripts/pilot_report.py`. 7 trainings × 3 epochs + evaluation on the validation split only; hard cap 5.5 GPU-h; mechanical pass/fail. | full chain dry-run on trimmed data: all checks pass (numbers meaningless) |
+
+| P8 | Calibration decision + pilot authorisation | Primary calibration = fixed-seed random draw, after an eligibility check (unique deposit-training files, complete, no content duplicates); balance reported descriptively; stratified draw kept as optional sensitivity; history in `calibration_selection.json`. Pilot report split into correctness failures, resource failures, diagnostics (non-monotonic losses are diagnostics only) and a separate planning section; exits 1 on failure. `scripts/pilot_preflight.py` checks the frozen split and scaling in every pilot config and the aggregate SLURM cap over all array tasks + eval (5.50 h). `--no-requeue` on both jobs; eval runs `afterany` and reports failed steps. | `tests/test_pilot_report.py`; dry run on trimmed data; local preflight passes except for uncommitted changes |
 
 ## Separate track: historical checkpoint recovery (not part of the new benchmark)
 Purpose: an old-vs-new comparison for RESULTS_CHANGELOG.md only. Requires the April 2026 HPC checkpoints and logs (author question 1). If recovered, they are evaluated with `benchmark_eval --legacy_config` (recording-aware windows, validation calibration, flagged `legacy_checkpoint: true`). They are never mixed into benchmark tables. Status: **blocked** (artifacts not local).
@@ -163,5 +165,5 @@ Purpose: an old-vs-new comparison for RESULTS_CHANGELOG.md only. Requires the Ap
 2. **Dataset provenance:** the DaRUS DOI(s)/versions of the routine and OOD deposits, and any documented simulation settings (Hs, Tp, wave direction, speed/propeller set-points). The processed files contain no sea-state parameters; without them the shift must be called a *combined operating-condition shift*.
 3. **Compute authorisation and protocol sign-off:** see EXPERIMENT_PROTOCOL.md (≈45–100 L40 GPU-hours). Also: add an MLP Gaussian head to complete the pairing (R12), or narrow the backbone claim to ensembles/conformal/dropout?
 4. **Confirmation data:** all 29 OOD recordings already informed backbone selection. Is any other DaRUS patrol-vessel condition available as an untouched confirmation set? If not, the OOD results are reported as exploratory (current default).
-5. **C1 (calibration recordings):** accept the provisional `stratified_n` selection, or replace the mis-specified representativeness criterion with the chance-referenced one (both selections pass it); either choice is disclosed.
-6. **Pilot authorisation:** submit the timing pilot (hard cap 5.5 L40 GPU-h)?
+5. ~~C1~~ decided: random draw is primary (2026-09-28).
+6. ~~Pilot authorisation~~ granted: ≤ 5.5 L40 GPU-h combined, no retries. Full benchmark needs separate authorisation.

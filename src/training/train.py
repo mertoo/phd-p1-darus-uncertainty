@@ -12,6 +12,7 @@ An existing run directory is never overwritten unless --overwrite is given.
 
 import argparse
 import copy
+import hashlib
 import json
 import math
 import os
@@ -190,7 +191,13 @@ def train(config, overwrite=False):
                    "sec_per_epoch": log[-1]["elapsed_s"] / n_ep if n_ep else None,
                    "train_windows_per_sec": len(train_ds) * n_ep / log[-1]["elapsed_s"] if n_ep else None,
                    "stopped_by": stopped, "seed": tr["seed"],
-                   "split_hash": data_state["split_hash"], "git": meta["git"]}, f, indent=2)
+                   "split_hash": data_state["split_hash"], "git": meta["git"],
+                   "cal_files": data_state["split_files"].get("cal"),
+                   "features": data_state["features"],
+                   "normalize": data_state["x_scaler"] is not None,
+                   "scaler_hash": hashlib.sha256(json.dumps(
+                       [data_state["x_scaler"], data_state["y_scaler"]], sort_keys=True).encode()).hexdigest()[:16]},
+                  f, indent=2)
     print(f"Best val loss {best_val:.6f} at epoch {best_epoch} ({stopped}); saved {ckpt_path}")
     return ckpt_path
 

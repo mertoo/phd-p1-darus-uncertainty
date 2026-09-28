@@ -38,9 +38,12 @@
     "worst_variable": "Vw_mean",
     "max_abs_smd_chance_percentile": 66.24
   },
-  "selected_method": "stratified_n",
+  "primary": "random",
+  "sensitivity": [
+    "stratified_n"
+  ],
   "chance_reference": {
-    "note": "diagnostic, added after the first check: max|SMD| over 5000 random draws",
+    "note": "descriptive only (added after the first check): distribution of max|SMD| over 5000 random draws. Not used as a replacement threshold.",
     "p_criterion_passes_by_chance": 0.0706,
     "max_abs_smd_quantiles_5_50_95": [
       0.472,
@@ -48,5 +51,11 @@
       1.139
     ]
   },
-  "status": "criterion mis-specified (passes by chance in ~7% of draws); neither selection passes; stratified_n adopted provisionally as the predeclared fallback pending author decision"
+  "history": [
+    "2026-09-28 draft protocol: 9 of 57 training recordings, numpy default_rng(20261001), random draw",
+    "2026-09-28 predeclared check (|SMD|<=0.5 on 22 variables, u/n in range): random draw FAILED (max |SMD| 0.84); predeclared stratified fallback also FAILED (max |SMD| 0.83)",
+    "2026-09-28 diagnostic: criterion passes in ~7% of random draws; both draws typical (~67th percentile)",
+    "2026-09-28 stratified_n briefly set as provisional default in configs (commit 1970dd9)",
+    "2026-09-28 author decision: random draw is PRIMARY; no eligibility problem found (all 9 unique deposit training files, complete, no content duplicates); failure reported descriptively; stratified_n kept as optional sensitivity analysis"
+  ]
 }

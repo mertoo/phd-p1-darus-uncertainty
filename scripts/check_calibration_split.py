@@ -8,9 +8,13 @@ Predeclared criterion (fixed before the check was first run):
   mean over fit recordings) / SD over fit recordings. PASS iff |SMD| <= 0.5
   for all variables AND each calibration recording's mean u and mean n lie
   within the [min, max] of the fit recordings.
-  If the random selection fails, the protocol switches to the predeclared
-  stratified selection (one recording per equal-count stratum of mean n,
-  same seed), which is checked and reported the same way.
+  The stratified alternative (one recording per equal-count stratum of mean
+  n, same seed) is always computed and reported as well.
+
+Decision (author, 2026-09-28): the fixed-seed random selection is the PRIMARY
+calibration split; the criterion's failure is reported descriptively and is
+NOT replaced by a post-hoc threshold. The stratified selection is retained only
+as an optional sensitivity analysis. Selection history is written to the JSON.
 
     python -m scripts.check_calibration_split [--seed 20261001 --n 9]
 Writes experiments/manifests/calibration_selection.json and
@@ -92,30 +96,38 @@ def main():
                      "worst_variable": res.loc[res["smd"].abs().idxmax(), "variable"]}
     res.assign(selection="random").to_csv(os.path.join(args.out_dir, "calibration_representativeness.csv"), index=False)
 
-    if passed:
-        out["selected_method"] = "random"
-    else:
-        strat = select_calibration_files(names, args.n, args.seed,
-                                         strata_values=table["n_mean"].to_dict())
-        res2, in2, pass2 = check(table, strat)
-        out["stratified_n"] = {"files": strat, "passed": pass2, "u_n_in_range": in2,
-                               "max_abs_smd": float(res2["smd"].abs().max()),
-                               "worst_variable": res2.loc[res2["smd"].abs().idxmax(), "variable"]}
-        out["selected_method"] = "stratified_n"
-        pd.concat([res.assign(selection="random"), res2.assign(selection="stratified_n")]).to_csv(
-            os.path.join(args.out_dir, "calibration_representativeness.csv"), index=False)
+    strat = select_calibration_files(names, args.n, args.seed,
+                                     strata_values=table["n_mean"].to_dict())
+    res2, in2, pass2 = check(table, strat)
+    out["stratified_n"] = {"files": strat, "passed": pass2, "u_n_in_range": in2,
+                           "max_abs_smd": float(res2["smd"].abs().max()),
+                           "worst_variable": res2.loc[res2["smd"].abs().idxmax(), "variable"]}
+    pd.concat([res.assign(selection="random"), res2.assign(selection="stratified_n")]).to_csv(
+        os.path.join(args.out_dir, "calibration_representativeness.csv"), index=False)
+    out["primary"] = "random"
+    out["sensitivity"] = ["stratified_n"]
 
     ref = chance_reference(table, args.n)
     out["chance_reference"] = {
-        "note": "diagnostic, added after the first check: max|SMD| over 5000 random draws",
+        "note": ("descriptive only (added after the first check): distribution of max|SMD| over 5000 "
+                 "random draws. Not used as a replacement threshold."),
         "p_criterion_passes_by_chance": float((ref <= SMD_MAX).mean()),
         "max_abs_smd_quantiles_5_50_95": np.quantile(ref, [0.05, 0.5, 0.95]).round(3).tolist(),
     }
     for sel in ("random", "stratified_n"):
         if sel in out:
             out[sel]["max_abs_smd_chance_percentile"] = float((ref < out[sel]["max_abs_smd"]).mean() * 100)
-    out["status"] = ("criterion mis-specified (passes by chance in ~7% of draws); neither selection passes; "
-                     "stratified_n adopted provisionally as the predeclared fallback pending author decision")
+    out["history"] = [
+        "2026-09-28 draft protocol: 9 of 57 training recordings, numpy default_rng(20261001), random draw",
+        "2026-09-28 predeclared check (|SMD|<=0.5 on 22 variables, u/n in range): random draw FAILED "
+        f"(max |SMD| {out['random']['max_abs_smd']:.2f}); predeclared stratified fallback also FAILED "
+        f"(max |SMD| {out['stratified_n']['max_abs_smd']:.2f})",
+        "2026-09-28 diagnostic: criterion passes in ~7% of random draws; both draws typical (~67th percentile)",
+        "2026-09-28 stratified_n briefly set as provisional default in configs (commit 1970dd9)",
+        "2026-09-28 author decision: random draw is PRIMARY; no eligibility problem found (all 9 unique deposit "
+        "training files, complete, no content duplicates); failure reported descriptively; stratified_n kept "
+        "as optional sensitivity analysis",
+    ]
 
     with open(os.path.join(args.out_dir, "calibration_selection.json"), "w") as f:
         json.dump(out, f, indent=2)

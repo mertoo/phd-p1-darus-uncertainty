@@ -1,9 +1,10 @@
 # Experiment protocol v3 (pre-run draft)
 
-Status (2026-09-28): **not frozen, nothing run on the full data.**
-- D1 and D2 are the preferred protocol (author instruction, 2026-09-28).
-- The calibration-recording choice and the feature set remain provisional (§1, §3).
-- The timing pilot (§7a) is prepared and **awaits compute authorisation**; the full run list (§7) will not be submitted until after the pilot.
+Status (2026-09-28): **nothing run on the full data yet.**
+- D1 and D2 are the protocol; the primary calibration split is fixed (§1).
+- The feature set is decided by the §3 rule after stage 0; the pilot uses `no_time`.
+- The timing pilot (§7a) is **authorised** (≤ 5.5 L40 GPU-h combined, no retries).
+- The full run list (§7) needs **separate authorisation** after the pilot report.
 
 The historical-checkpoint recovery track (old-vs-new comparison) is separate from this benchmark and is described in REVISION_TRACKER.md.
 
@@ -26,9 +27,12 @@ Script: `python -m scripts.check_calibration_split`. Outputs: `experiments/manif
   - Random draw (seed 20261001): fails. Max |SMD| 0.84 on `deltal_std`; mean `u`/`n` in range, but the calibration set is slower (SMD −0.52 for `u`, −0.49 for `n`).
   - Stratified draw: also fails. Max |SMD| 0.83 on `Vw_mean`; speed matched (SMD 0.03 for both `u` and `n`).
 - **Diagnosis:** the criterion was mis-specified. Over 5000 random 9-of-57 draws it passes only 7.1% of the time (chance max |SMD|: median 0.75, 95th percentile 1.14). Both actual selections are typical draws (≈67th percentile). We do not redraw until something passes.
-- **Provisional choice:** `stratified_n` (the predeclared fallback), recorded in every v3 config:
-  `20190805-095929, -100322, -100351, -101342, -101925, -102210, -102939, -104006, -104542` (.csv).
-- *Author decision C1:* accept `stratified_n` as is, or replace the criterion with the chance-referenced one (max |SMD| below the 95th percentile of random draws, which both selections satisfy). Either way the post-hoc change is disclosed.
+- **Decision (author, 2026-09-28): the fixed-seed random draw is the PRIMARY calibration split.**
+  `20190805-100228, -100852, -101342, -102826, -104006, -104246, -104247, -105120, -110729` (.csv)
+  - No provenance, duplication or eligibility problem was found: all 9 are unique deposit-training files listed in the MANIFEST, complete (3601 rows, no gaps or missing values), with no content duplicates among the 125 files.
+  - The failed 0.5-SD check is reported descriptively: max |SMD| 0.84 (`deltal_std`); speed variables `u_mean` −0.52 and `n_mean` −0.49, i.e. somewhat slower calibration recordings. It is **not** replaced by a post-hoc threshold. The chance-reference numbers are descriptive only.
+- **Sensitivity analysis (optional, not in the primary run list):** the speed-stratified draw (`method: stratified_n`; overlaps the primary in 2 recordings) can be run by retraining with that config setting, because it changes the fit set.
+- The selection history is recorded in `calibration_selection.json` (`history`), including the brief provisional use of `stratified_n` in commit 1970dd9.
 
 ## 2. Preprocessing (D2)
 Inputs and targets are standardised with statistics from the 48 fit recordings; the scalers are stored in each checkpoint and re-verified at evaluation. Loss is MSE (or Gaussian NLL with 0.5·log 2π) in standardised units, so the five targets carry equal weight. Metrics are reported in physical units, plus dimensionless summaries divided by the training-target SD.
@@ -78,28 +82,31 @@ Adam, lr 1e-3, batch 256, max 100 epochs, early stopping with patience 10 on the
 
 **Compute**, to be replaced by the pilot's measured projection. A local CPU benchmark (Apple laptop) gave about 1 min per LSTM epoch, about 1.4 s per MLP epoch, and about 240k windows/s from the loader, so data loading is not the bottleneck. As an upper bound, assume L40 ≥ laptop CPU speed. The 30 recurrent trainings (LSTM incl. stage 0b, GRU, LSTM-dropout, LSTM-Gaussian) plus 3 TCN runs (assumed no slower) then need at most 33 × 100 epochs × 1 min ≈ 55 GPU-h worst case, about 22 GPU-h at 40 epochs. The feed-forward trainings are negligible and evaluation is a few GPU-h. **Increment for the MLP Gaussian (stage 1e):** 3 runs × ≤ 100 epochs of an MLP-size model plus 3 evaluations, ≤ 1 GPU-h; the pilot measures it directly (task 6).
 
-## 7a. Timing pilot (awaiting authorisation)
-- **Jobs:** `scripts/slurm/v3/pilot_train.sh` (array 1–7, `pilot_runs.tsv`) then `pilot_eval.sh` (`--dependency=afterok`).
-  - Training: LSTM seeds 9001/9002, MLP, LSTM-dropout 0.2, LSTM-Gaussian, MLP-Gaussian and TCN on the full data, 3 epochs each, early stopping off.
-  - Evaluation: point (LSTM, MLP), a 2-member LSTM ensemble, MC dropout with 200 passes, LSTM- and MLP-Gaussian, ridge fit, bootstrap, `scripts/pilot_report.py`.
-  - The evaluations score the **validation split only** (`--eval_splits val`), so no test/OOD number is produced.
-- **Maximum GPU-hours (SLURM hard limits):** 7 × 0.5 h + 1 × 2 h = **5.5 GPU-h**. Expected ≈ 1–2 GPU-h.
-- **Expected outputs:**
-  - per-run `train_log.json` (s/epoch, windows/s, peak GPU memory, peak RSS);
-  - per-eval `metrics.json` (inference seconds per split, GPU memory, member validation);
-  - `bootstrap/summary_val.csv` and `paired_val.csv`;
-  - `pilot_report.json` with every check and the projected full-plan GPU-hours per config.
-- **Pass criteria (mechanical, `pilot_report.py`):**
-  - all jobs exit 0 within limits;
-  - every run has 3 finite epochs, and train loss decreases from epoch 1 to 3;
-  - GPU memory < 40 GB and host RSS < 14 GB;
-  - identical split hash across runs;
-  - every evaluation has no NaN in coverage/width/score, scored val only, used exactly the manifest's calibration recordings, and wrote < 1 GB;
-  - the bootstrap output exists;
-  - projected full plan ≤ 40 GPU-h at 40 epochs and ≤ 100 GPU-h at 100 epochs;
-  - every planned config has a timing proxy.
-- **On failure:** stop, report, and revise before any stage-0/1 submission. Pilot checkpoints are not reused as benchmark runs.
-- The chain was dry-run end-to-end on trimmed recordings (CPU, 2026-09-28) and all checks passed. That only shows the scripts work; the dry-run numbers are meaningless.
+## 7a. Timing/correctness pilot (authorised 2026-09-28: ≤ 5.5 L40 GPU-h combined, no retries)
+- **Preflight** (login node, no GPU): `python -m scripts.pilot_preflight` must print `PREFLIGHT OK`. It checks:
+  - identical data blocks in all pilot configs, with the primary random calibration (seed 20261001) and training-only standardisation;
+  - the loader's calibration list equals the manifest's;
+  - summed SLURM limits across **every array task and the evaluation job** are ≤ 5.5 GPU-h (7 × 0.5 h + 2 h = 5.5 h);
+  - `--no-requeue` on both scripts;
+  - no earlier pilot outputs;
+  - a clean tree at a pushed commit.
+- **Jobs:**
+  - `TRAIN=$(sbatch --parsable --array=1-7 scripts/slurm/v3/pilot_train.sh)`: seven 3-epoch trainings, early stopping off: LSTM ×2, MLP, LSTM-dropout, LSTM-Gaussian, MLP-Gaussian, TCN.
+  - `sbatch --dependency=afterany:$TRAIN scripts/slurm/v3/pilot_eval.sh`: point LSTM/MLP, 2-member LSTM ensemble, MC dropout (200 passes), LSTM/MLP Gaussian, ridge, bootstrap, report. It runs even if a training task failed, so the failure is reported.
+- **Scope:** the validation split only (`--eval_splits val`). Test and OOD are never scored. No pilot coverage or loss is used to choose methods, calibration settings or the feature set. Pilot checkpoints are not reused.
+- **Report** (`scripts/pilot_report.py`, exit 1 on FAIL):
+  - *Correctness (failure):*
+    - exactly 3 epochs and all losses finite;
+    - identical split hash, scaler hash and features across runs;
+    - calibration files equal the primary list, and standardisation is on;
+    - every evaluation present, with no NaN coverage/width/score, validation-only scoring, the primary calibration list, and member provenance validated;
+    - bootstrap output present.
+
+    Invalid intervals and provenance mismatches also raise inside the evaluator and are reported as a failed step.
+  - *Resources (failure):* peak GPU memory < 40 GB, peak host RSS < 14 GB, each evaluation's artifacts < 1 GB. The job limits enforce the time cap.
+  - *Diagnostics (inspect, never automatic failures):* non-monotonic train or validation loss over the 3 epochs; > 1% of calibration spreads floored; infinite interval bounds.
+  - *Planning (separate):* projected GPU-h for the 63-row run list at 40 and 100 epochs, including evaluation. Exceeding 40 / 100 GPU-h blocks the full benchmark until it is re-planned; it is not a pilot failure.
+- **After the pilot,** report: measured GPU-hours from `sacct -j <ids> --format=JobID,Elapsed,AllocTRES%40,MaxRSS,State`; peak memory; throughput (s/epoch, windows/s, inference s); artifact sizes; numerical issues; and the revised full-run estimate. Then wait for separate authorisation of the full benchmark.
 
 ## 8. Selection hygiene
 No hyperparameter, seed, calibration setting, floor, feature set or example window is chosen from ID-test or OOD results. The pilot never scores test/OOD. Example trajectories are chosen by a fixed rule (median per-window RMSE of the primary model, same window across methods) and their IDs are reported.
