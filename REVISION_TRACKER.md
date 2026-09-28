@@ -204,7 +204,7 @@ Status levels: **code** = analysis/generation code exists and is tested; **exper
 |---|---|---|---|---|
 | Methods match executed benchmark (roles, windows, scaling, `no_time`, training, repeats, constructions, floor, bootstrap) | yes | yes | yes | Stage A at `dde1848`, B–D at `83585da` stated explicitly |
 | Tables (9, all generated) and Figures 1–2 | yes (`src/analysis/report_pub.py`) | yes | yes | provenance: `paper/revision_v3/generated/manifest.json` + `SHA256SUMS` |
-| Figure 3 (example window) | yes (regeneration code tested on smoke data) | yes | **frozen copy** | relabelled regeneration needs the cluster predictions (VPN); rule and window unchanged |
+| Figure 3 (example window) | yes | yes | yes (round 3) | regenerated with AR/EN/DN/GN-SCP labels from the saved predictions; window 104748, recording 20190805-112459, start row 2030 |
 | Post hoc analyses | yes (`scripts/posthoc_analyses.py`; reproduces the CSVs exactly) | yes | yes, labelled post hoc | no recording-level CIs for the matched contrasts |
 | Claim-to-evidence record | — | — | yes | `experiments/analysis/v3/claim_evidence.md` (items 1–23) |
 | Bibliography | — | — | yes | cited entries only, complete authors, notes moved to `paper/revision_v3/SOURCE_VERIFICATION.md` |
@@ -217,3 +217,21 @@ Status levels: **code** = analysis/generation code exists and is tested; **exper
 3. **Figure 3 regeneration.** Needs TalTech VPN access to copy four evaluation directories (predictions only), then `python -m src.analysis.report_pub` and `scripts/sync_paper_assets.sh`.
 4. **O1 (ID over-coverage in surge and sway)** remains unexplained; per-recording breakdown pending cluster access.
 5. **Compiled-PDF inspection** of the revised source (Overleaf recompile), in particular citations, page totals, dense tables and figures.
+
+## Round 3: compiled-PDF corrections (2026-09-28)
+
+- **AR-SCP width range** is now 0.97–1.04 and matches Table 4. It is generated as the macro `\ARwidthID` in `generated/prose_values.tex`, and `tests/test_report_pub_prose.py` checks it against the table.
+- **Seed and recording uncertainty** are reported separately:
+  - seed range ≤ 0.4 pp (split conformal) and 1.2 pp (raw Gaussian);
+  - bootstrap CI width 0.6–3.5 pp (split conformal) and 0.6 pp (raw Gaussian).
+
+  The sentence "smaller than the recording-level uncertainty" was removed.
+- **Ridge wording:** "Observed errors were similar; no paired ridge comparison or equivalence test was performed." Applied in the results and discussion; the highlight now says "similar observed". The abstract and conclusions already said "similar observed".
+- **Propeller-unit footnote and Units limitation:** explain invariance under a consistent positive multiplicative conversion of the input and its train-fitted mean/SD scaler (verified against `Standardizer` in `src/data_loading/darus_dataset.py`). The unit itself stays unresolved; no rpm relabelling.
+- **Table 4/5 subheading:** "held-out" replaced by "excluded from fitting".
+- **Figure 3:**
+  - Copied read-only from the cluster: `metrics.json`, `predictions_{cal,test}.npz` and `windows_{cal,test}.csv` of `lstm_{single,ens,mcd,gauss}_rep0` (20 files). SHA-256 matches the cluster copies. Nothing on the cluster was changed. The local copy is under `experiments/eval/v3` and is git-ignored.
+  - Verification: re-running the frozen `src.analysis.report.figure_example` on these files selects the same window and reproduces the archived `example_window.pdf` path data exactly (4688/4688 drawing operators identical).
+  - The rebuilt intervals match the stored metrics to within 6.3e-8.
+  - The new figure calls the same interval functions (horizon/channel thresholds, 90%) with the same panels. Only labels, font sizes and colours changed; y-limits are shared per channel row.
+- **Compilation:** no local TeX engine is available, so the compiled PDF of this round still needs checking in Overleaf.

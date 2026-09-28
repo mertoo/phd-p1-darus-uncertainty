@@ -60,15 +60,16 @@
   "experiments/analysis/v3/report_pub/tab_roles.tex": "482d168cf5bdab899e53c7f75f75d0896139143040b4fab41853aba8a3d6534d",
   "experiments/analysis/v3/report_pub/tab_baselines.tex": "5b029572f4aaf6d86dce4aacb0205c8f59152ec6bd8620df51c1af9333838293",
   "experiments/analysis/v3/report_pub/tab_channel_rmse.tex": "91f738f075c733c4bd9f636556eb8e2d010770f06c84de2624e3ef6d157ab00d",
-  "experiments/analysis/v3/report_pub/tab_uq_id.tex": "4cd1c7b4afafbe4b66dc8b979e7a06ca92109f8046c88fc5aa40f50ea4a6e07e",
-  "experiments/analysis/v3/report_pub/tab_uq_ood.tex": "cc8c25bc3cc7187e4dbe365fcdc8ac454c9d58ff5e4aaa81b7e3ead3c954bdbd",
+  "experiments/analysis/v3/report_pub/tab_uq_id.tex": "f8b83036d03fb6dfcb202c52dfa91c8838b8e415b6acdb3aa4e293e4a27be2f5",
+  "experiments/analysis/v3/report_pub/tab_uq_ood.tex": "8eaddbb711a40e2cac9c2994cc1a578c9c1b0255728292751efd811167189e77",
   "experiments/analysis/v3/report_pub/tab_paired.tex": "9f584e1440e69d115bd4bb4c14b7c7fc601e0f7359cd004e3e1fdffca2979a49",
   "experiments/analysis/v3/report_pub/tab_matched_posthoc.tex": "49cc8ce58fd2e3bebc1e3763cd2be208ebf79c3080a4ef4c972ce437a6cb1c67",
   "experiments/analysis/v3/report_pub/tab_channel_coverage.tex": "444ccca9271a1cce9eeba9be708325e768628a1a2a779940cb07381dc3185b25",
   "experiments/analysis/v3/report_pub/tab_o1.tex": "fb5ef23bef7957572362c60020e2556a226e1217acb49b48ddbca58c4d9b6248",
-  "experiments/analysis/v3/report_pub/fig_coverage_levels.pdf": "28fa5157014b02165d6be1d8c4268e5ca228479dd4025edaeea464889119841f",
-  "experiments/analysis/v3/report_pub/fig_horizon.pdf": "a5bc6f3d62ada4b091f3c7adaaf48c09a995b261c0375ed9f5025b5fb0aceec6",
-  "experiments/analysis/v3/report_pub/fig_example_window.pdf": "128bb2e0c95ee958e9baa33fcb057df3ec2828abbe2bac8b328fada6310bc2a0"
+  "experiments/analysis/v3/report_pub/prose_values.tex": "8f9830138740d6c873be4ac1e3462ea6435ba5c08cf1312d2052293304009efa",
+  "experiments/analysis/v3/report_pub/fig_coverage_levels.pdf": "468e6acc651fea4c7b0b539da749033af4451e9210f9e72fc2f418a06bc8c9eb",
+  "experiments/analysis/v3/report_pub/fig_horizon.pdf": "9770e763f2e3094981f628782181eadf6377ad7ac72c9bd759e16f297ec716e7",
+  "experiments/analysis/v3/report_pub/fig_example_window.pdf": "b47a94fea83f45a032004802ace776f6f9640bb4d5e166521dcb5475d5dc14c5"
  },
  "example_window": {
   "window_id": 104748,
@@ -76,6 +77,6 @@
   "start_row": 2030,
   "rule": "window whose mean over channels of per-window RMSE / training-target SD is the median over all windows of the split; ties -> smallest window_id"
  },
- "example_figure_source": "FROZEN COPY of experiments/analysis/v3/report/figures/example_window.pdf (predictions unavailable locally; labels not yet updated)",
+ "example_figure_source": "regenerated from saved predictions (presentation only; same rule and window)",
  "deviation": "D-P1 presentation-only changes (see REVISION_TRACKER.md)"
 }

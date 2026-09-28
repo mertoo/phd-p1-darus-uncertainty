@@ -25,14 +25,15 @@
 
 ## Inputs NOT in the repository
 - Model checkpoints and full prediction arrays (`experiments/runs/v3`, `experiments/eval/v3`, about 16 GB) remain on the TalTech HPC cluster and are not publicly archived.
-- The bootstrap (`src.analysis.bootstrap`), floor sensitivity and the regenerated example-window figure read per-window files or predictions from `experiments/eval/v3`, so they can be re-run only with those arrays.
+- The bootstrap (`src.analysis.bootstrap`), floor sensitivity and the regenerated example-window figure read per-window files or predictions from `experiments/eval/v3`, so they can be re-run only with those arrays. Figure 3 needs only `metrics.json`, `predictions_{cal,test}.npz` and `windows_{cal,test}.csv` of `lstm_{single,ens,mcd,gauss}_rep0` (about 560 MB), plus the DaRUS recording `patrol_ship_routine/test/20190805-112459.csv`.
 
 ## Commands
 ```bash
 # 0. Post hoc descriptive analyses from stored metrics (reproduces experiments/analysis/v3/posthoc exactly)
 python -m scripts.posthoc_analyses
 
-# 1. Publication tables and figures from the archived outputs (all 9 tables; Figs 1-2;
+# 1. Publication tables, figures and the numbers quoted in the text (generated/prose_values.tex)
+#    from the archived outputs (all 9 tables; Figs 1-2;
 #    Fig 3 is regenerated when experiments/eval/v3 predictions are present, otherwise the
 #    frozen figure is copied and the manifest records that)
 python -m src.analysis.report_pub --out experiments/analysis/v3/report_pub
