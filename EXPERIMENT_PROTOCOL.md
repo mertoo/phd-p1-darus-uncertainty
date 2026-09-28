@@ -1,4 +1,4 @@
-# Experiment protocol v3 (pre-run draft)
+# Experiment protocol v3.0 (frozen 2026-09-28 for the full benchmark, pending author approval of §9)
 
 Status (2026-09-28): **nothing run on the full data yet.**
 - D1 and D2 are the protocol; the primary calibration split is fixed (§1).
@@ -59,7 +59,17 @@ Adam, lr 1e-3, batch 256, max 100 epochs, early stopping with patience 10 on the
 | Gaussian likelihood | LSTM, MLP | μ, σ | raw Gaussian; spread-normalised (= fitted temperature per group); residual conformal on μ |
 
 - **Levels** (predeclared): 0.5, 0.8, **0.9 (primary)**, 0.95. Primary construction: `horizon_channel`.
-- **Spread floor:** floor_d = 1e-3 × max(mean calibration spread_d, SD of calibration targets_d). It is strictly positive and in the channel's physical scale. If both terms are zero (constant target and no spread), evaluation stops with `DegenerateSpreadError`. NaN inputs or bounds are errors. Infinite conformal thresholds (k > n) are kept and reported (`frac_infinite`). The fraction of floored scores is recorded per channel; a sensitivity analysis (floor_rel 1e-4 / 1e-3 / 1e-2) is added if more than 1% of calibration scores are floored for any method. Note (pilot): because every method's mean spread is well below the target SD, the target-SD term sets the floor in practice (floor ≈ 1e-3 × SD(y)).
+- **Spread floor (FROZEN, v3.0):** for each method, channel d and calibration set,
+  `floor_d = 1e-3 × max( mean over calibration windows/steps of spread_d , SD over calibration windows/steps of y_d )`.
+  - Scores are `|y − μ| / max(spread, floor_d)`, and intervals are `μ ± q · max(spread, floor_d)`.
+  - If both terms are 0, evaluation stops with `DegenerateSpreadError`.
+  - NaN inputs or bounds are errors; ±inf bounds (k > n) are legitimate and reported as `frac_infinite`.
+  - In practice the target-SD term sets the floor, because every spread measured so far is well below the target SD (P10).
+- **Floor sensitivity (FROZEN):** floor_rel ∈ {1e-4, **1e-3 (primary)**, 1e-2}.
+  - Triggered for any method whose floored calibration fraction exceeds 1% in any channel. P10 is **open**, so the floored fractions of all spread methods are reported regardless.
+  - The analysis is recomputed on CPU from the saved calibration and evaluation predictions (no retraining, no GPU). It reports how thresholds, widths, coverage and interval scores change.
+  - It does **not** select a floor: the primary result stays at 1e-3.
+- **"Chance" reference for floor activation (provisional comparison only):** P10 compared the pilot's floored fraction with a half-normal reference. The reference assumes the two members' prediction difference is Gaussian, mean zero, with one variance shared by all windows and horizon steps of a channel; the 2-member SD |a−b|/√2 is then half-normal with its scale fixed by the channel's mean spread. Real member disagreement varies between windows and lead times, and a scale mixture puts more mass near zero than a single half-normal. The windows also overlap and are not independent. The reference is therefore descriptive only, not a test, and does not apply to 5-member ensembles or MC dropout.
 - **Metrics:** RMSE per channel (physical), pooled, and dimensionless mean; marginal coverage (overall/channel/horizon); width (physical and normalised); interval score; simultaneous trajectory coverage, reported separately.
 - **Provenance:** every checkpoint of every evaluation is checked (count = declared ensemble size, distinct checkpoints and seeds, identical model config, parameter shapes, features, target order, split files, split hash and scalers).
 - **Uncertainty:** `python -m src.analysis.bootstrap --spec … --out …` does a recording-level cluster bootstrap (2000 draws, shared across methods) giving 95% CIs and paired differences on identical recordings. Between-seed SD across the 3 repeats is reported separately. No finite-sample guarantee is claimed.
@@ -67,8 +77,8 @@ Adam, lr 1e-3, batch 256, max 100 epochs, early stopping with patience 10 on the
 ## 6. Repeats
 3 independent repeats per trained configuration. An ensemble repeat is 5 fresh members; member 0 of each repeat is that repeat's single-model backbone. The 5 members are not 5 repeats.
 
-## 7. Full run list (after the pilot; not submitted)
-`scripts/slurm/v3/run_list.tsv`: 63 rows = 55 unconditional trainings + 8 conditional (stage 0b).
+## 7. Full run list (not submitted)
+`scripts/slurm/v3/run_list.tsv`: 63 training rows, plus `eval_list.tsv` with 35 evaluations (ridge and naive trained by the CPU job `cpu_baselines.sh`) = 55 unconditional trainings + 8 conditional (stage 0b).
 
 | Stage | Trainings |
 |---|---|
@@ -80,7 +90,7 @@ Adam, lr 1e-3, batch 256, max 100 epochs, early stopping with patience 10 on the
 | 1d LSTM Gaussian × 3 | 3 |
 | **1e MLP Gaussian × 3 (new, separate increment)** | **3** |
 
-**Compute**, to be replaced by the pilot's measured projection. A local CPU benchmark (Apple laptop) gave about 1 min per LSTM epoch, about 1.4 s per MLP epoch, and about 240k windows/s from the loader, so data loading is not the bottleneck. As an upper bound, assume L40 ≥ laptop CPU speed. The 30 recurrent trainings (LSTM incl. stage 0b, GRU, LSTM-dropout, LSTM-Gaussian) plus 3 TCN runs (assumed no slower) then need at most 33 × 100 epochs × 1 min ≈ 55 GPU-h worst case, about 22 GPU-h at 40 epochs. The feed-forward trainings are negligible and evaluation is a few GPU-h. **Increment for the MLP Gaussian (stage 1e):** 3 runs × ≤ 100 epochs of an MLP-size model plus 3 evaluations, ≤ 1 GPU-h; the pilot measures it directly (task 6).
+**Compute:** superseded by the pilot measurements; see §9 and `experiments/manifests/full_plan_estimate.json` (`python -m scripts.estimate_full_plan`).
 
 ## 7a. Timing/correctness pilot (authorised 2026-09-28: ≤ 5.5 L40 GPU-h combined, no retries)
 - **Preflight** (login node, no GPU): `python -m scripts.pilot_preflight` must print `PREFLIGHT OK`. It checks:
@@ -122,3 +132,17 @@ Adam, lr 1e-3, batch 256, max 100 epochs, early stopping with patience 10 on the
 
 ## 8. Selection hygiene
 No hyperparameter, seed, calibration setting, floor, feature set or example window is chosen from ID-test or OOD results. The pilot never scores test/OOD. Example trajectories are chosen by a fixed rule (median per-window RMSE of the primary model, same window across methods) and their IDs are reported.
+
+## 9. Staged execution proposal (awaiting author approval)
+Everything runs from one pushed commit (the "v3.0 commit", reported with the approval request); stage B may use a follow-up commit that only records the feature decision (§3). Each stage has a preflight before submission and a gate after it (`scripts/check_stage.py`: finite losses, 665 optimiser steps per epoch, 170,016 training windows, seeds, primary calibration files, identical split and scaler hashes, member counts, evaluation validity, and the floor-activation table). A failed gate stops the next stage. No automatic retries (`--no-requeue`). Skipped or failed tasks are reported, never replaced by historical checkpoints. The per-task limit is 15 min, against a measured worst case of about 6.5 min.
+
+| Stage | Jobs | Hard ceiling (limits × GPUs) | Estimate (measured, max epochs) | Gate |
+|---|---|---|---|---|
+| A: feature ablation (stage 0) | 4 GPU trainings | 1.00 GPU-h | 0.34 GPU-h | `check_stage --stages 0`; `select_features` decision committed |
+| A2: conditional repeat (0b), only if A says "repeat" | 8 GPU trainings | 2.00 GPU-h | 0.69 GPU-h | same, round 2 |
+| B: all benchmark trainings (1a–1e) + CPU baselines | 51 GPU trainings + 1 CPU job | 12.75 GPU-h (+ 0.5 CPU-h) | 4.47 GPU-h | `check_stage --stages 1a 1b 1c 1d 1e` |
+| C: evaluations (test + OOD, first time) | 35 GPU eval tasks | 8.75 GPU-h | 1.09 GPU-h | `check_stage --evals` + floor table |
+| D: analysis | CPU only (bootstrap per `bootstrap_full.yaml`, floor sensitivity, tables) | ≤ 2 CPU-h | < 1 CPU-h | outputs complete |
+| **Total** | | **24.5 GPU-h ceiling** | **6.6 GPU-h (9.9 with ×1.5 contingency)** | |
+
+Storage ≈ 12.3 GB (evaluation artifacts) + 0.1 GB (checkpoints), against 468 GB free in the home quota. The ceiling is what SLURM can bill at most. The estimate uses measured L40 epoch times with every run at 100 epochs (early stopping can only lower it). GRU, linear and MLP-dropout are timed by proxy. Cumulative billed GPU-h is read from `sacct` at every gate, and remaining stages are not submitted if the authorised total would be exceeded.

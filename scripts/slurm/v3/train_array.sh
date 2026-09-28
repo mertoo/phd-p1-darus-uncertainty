@@ -6,13 +6,14 @@
 #SBATCH --job-name=darus_v3_train
 #SBATCH --output=logs/slurm/v3/%x_%A_%a.out
 #SBATCH --error=logs/slurm/v3/%x_%A_%a.err
-#SBATCH --time=04:00:00
+#SBATCH --time=00:15:00
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=4
 #SBATCH --mem=16G
 #SBATCH --partition=gpu
 #SBATCH --gres=gpu:L40:1
+#SBATCH --no-requeue
 set -euo pipefail
 cd ~/phd-p1-darus-uncertainty
 ENV="${DARUS_ENV:-$HOME/envs/darus-v3}"      # built by scripts/slurm/v3/setup_env.sh

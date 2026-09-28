@@ -1,0 +1,36 @@
+task	method	runs	n_members	tag
+1	point	lstm_ens/rep0/model_0		lstm_single_rep0
+2	point	mlp_ens/rep0/model_0		mlp_single_rep0
+3	point	gru/rep0		gru_rep0
+4	point	tcn/rep0		tcn_rep0
+5	point	linear/rep0		linear_rep0
+6	ensemble	lstm_ens/rep0/model_*	5	lstm_ens_rep0
+7	ensemble	mlp_ens/rep0/model_*	5	mlp_ens_rep0
+8	mc_dropout	lstm_dropout/rep0		lstm_mcd_rep0
+9	mc_dropout	mlp_dropout/rep0		mlp_mcd_rep0
+10	gaussian	lstm_gaussian/rep0		lstm_gauss_rep0
+11	gaussian	mlp_gaussian/rep0		mlp_gauss_rep0
+12	point	lstm_ens/rep1/model_0		lstm_single_rep1
+13	point	mlp_ens/rep1/model_0		mlp_single_rep1
+14	point	gru/rep1		gru_rep1
+15	point	tcn/rep1		tcn_rep1
+16	point	linear/rep1		linear_rep1
+17	ensemble	lstm_ens/rep1/model_*	5	lstm_ens_rep1
+18	ensemble	mlp_ens/rep1/model_*	5	mlp_ens_rep1
+19	mc_dropout	lstm_dropout/rep1		lstm_mcd_rep1
+20	mc_dropout	mlp_dropout/rep1		mlp_mcd_rep1
+21	gaussian	lstm_gaussian/rep1		lstm_gauss_rep1
+22	gaussian	mlp_gaussian/rep1		mlp_gauss_rep1
+23	point	lstm_ens/rep2/model_0		lstm_single_rep2
+24	point	mlp_ens/rep2/model_0		mlp_single_rep2
+25	point	gru/rep2		gru_rep2
+26	point	tcn/rep2		tcn_rep2
+27	point	linear/rep2		linear_rep2
+28	ensemble	lstm_ens/rep2/model_*	5	lstm_ens_rep2
+29	ensemble	mlp_ens/rep2/model_*	5	mlp_ens_rep2
+30	mc_dropout	lstm_dropout/rep2		lstm_mcd_rep2
+31	mc_dropout	mlp_dropout/rep2		mlp_mcd_rep2
+32	gaussian	lstm_gaussian/rep2		lstm_gauss_rep2
+33	gaussian	mlp_gaussian/rep2		mlp_gauss_rep2
+34	point	ridge		ridge
+35	point	naive		naive

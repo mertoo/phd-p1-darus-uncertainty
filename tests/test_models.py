@@ -94,3 +94,14 @@ def test_logvar_clamped():
             p.fill_(10.0)
         _, logvar = m(torch.ones(2, 30, 3))
     assert logvar.max() <= 5.0 and logvar.min() >= -10.0
+
+
+def test_run_epoch_counts_steps_and_windows():
+    from src.training.train import run_epoch
+    from torch.utils.data import DataLoader, TensorDataset
+    ds = TensorDataset(torch.randn(1001, 4, 2), torch.randn(1001, 3, 1))
+    m = build_model({"type": "mlp", "hidden_dim": 8}, 2, 1, 4, 3)
+    opt = torch.optim.Adam(m.parameters())
+    mse = torch.nn.MSELoss()
+    _, steps = run_epoch(m, DataLoader(ds, batch_size=256), lambda o, y: mse(o, y), "cpu", opt)
+    assert steps == 4                                      # ceil(1001/256), last batch kept

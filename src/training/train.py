@@ -73,9 +73,10 @@ def loss_fn(model_cfg):
 
 
 def run_epoch(model, loader, criterion, device, optimizer=None):
+    """Returns (mean loss, number of optimiser steps / batches processed)."""
     train = optimizer is not None
     model.train(train)
-    total, count = 0.0, 0
+    total, count, steps = 0.0, 0, 0
     with torch.set_grad_enabled(train):
         for X, Y in loader:
             X, Y = X.to(device), Y.to(device)
@@ -86,7 +87,10 @@ def run_epoch(model, loader, criterion, device, optimizer=None):
                 optimizer.step()
             total += loss.item() * X.size(0)   # all losses are per-element means
             count += X.size(0)
-    return total / count
+            steps += 1
+    if count != len(loader.dataset):
+        raise RuntimeError(f"epoch saw {count} windows, dataset has {len(loader.dataset)}")
+    return total / count, steps
 
 
 def resolve_config(config, seed=None, run_name=None, epochs=None, patience="keep"):
@@ -161,12 +165,17 @@ def train(config, overwrite=False):
     optimizer = torch.optim.Adam(model.parameters(), lr=float(tr["lr"]),
                                  weight_decay=float(tr["weight_decay"]))
 
-    log, best_val, best_epoch, since_best = [], float("inf"), 0, 0
+    log, best_val, best_epoch, since_best, total_steps = [], float("inf"), 0, 0, 0
     t0 = time.time()
     for epoch in range(1, int(tr["epochs"]) + 1):
-        train_loss = run_epoch(model, train_loader, criterion, device, optimizer)
-        val_loss = run_epoch(model, val_loader, criterion, device)
+        train_loss, n_steps = run_epoch(model, train_loader, criterion, device, optimizer)
+        val_loss, _ = run_epoch(model, val_loader, criterion, device)
+        expected_steps = math.ceil(len(train_ds) / tr["batch_size"])   # drop_last=False
+        if n_steps != expected_steps:
+            raise RuntimeError(f"{n_steps} optimiser steps, expected {expected_steps}")
+        total_steps += n_steps
         log.append({"epoch": epoch, "train_loss": train_loss, "val_loss": val_loss,
+                    "optimizer_steps": n_steps,
                     "elapsed_s": time.time() - t0,
                     "gpu_max_mem_gb": (torch.cuda.max_memory_allocated() / 1e9) if device == "cuda" else None,
                     "peak_rss_gb": peak_rss_gb()})
@@ -188,6 +197,7 @@ def train(config, overwrite=False):
         n_ep = len(log)
         json.dump({"epochs": log, "best_epoch": best_epoch, "best_val_loss": best_val,
                    "n_train_windows": len(train_ds), "n_val_windows": len(datasets["val"]),
+                   "batch_size": tr["batch_size"], "drop_last": False, "optimizer_steps_total": total_steps,
                    "sec_per_epoch": log[-1]["elapsed_s"] / n_ep if n_ep else None,
                    "train_windows_per_sec": len(train_ds) * n_ep / log[-1]["elapsed_s"] if n_ep else None,
                    "stopped_by": stopped, "seed": tr["seed"],
