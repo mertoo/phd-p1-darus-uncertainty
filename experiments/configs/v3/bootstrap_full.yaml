@@ -5,6 +5,7 @@ level: 90
 n_boot: 2000
 seed: 0
 ci: 0.95
+required_repeats: 3           # a missing or extra repeat blocks the analysis
 splits: [test, ood_test]
 methods:
   # split conformal on single point models (member 0 of each ensemble repeat = single model)
@@ -13,6 +14,8 @@ methods:
   conformal_gru:    {tag: conformal_horizon_channel,  evals: ["experiments/eval/v3/gru_rep*"]}
   conformal_tcn:    {tag: conformal_horizon_channel,  evals: ["experiments/eval/v3/tcn_rep*"]}
   conformal_linear: {tag: conformal_horizon_channel,  evals: ["experiments/eval/v3/linear_rep*"]}
+  conformal_ridge:  {tag: conformal_horizon_channel,  evals: ["experiments/eval/v3/ridge"], repeats: 1}
+  conformal_naive:  {tag: conformal_horizon_channel,  evals: ["experiments/eval/v3/naive"], repeats: 1}
   # spread methods, calibrated (spread-normalised) and raw (Gaussian-reference) variants
   ensemble_lstm:        {tag: ensemble_horizon_channel,   evals: ["experiments/eval/v3/lstm_ens_rep*"]}
   ensemble_mlp:         {tag: ensemble_horizon_channel,   evals: ["experiments/eval/v3/mlp_ens_rep*"]}

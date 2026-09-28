@@ -70,7 +70,7 @@ def test_estimates_match_direct_computation_and_self_difference_is_zero(tmp_path
 def test_repeats_give_seed_sd(tmp_path):
     fake_eval(tmp_path / "r0", seed=0)
     fake_eval(tmp_path / "r1", seed=5, err=0.15)
-    summary, _ = run(tmp_path, {"splits": ["test"], "n_boot": 100, "methods": {
+    summary, _ = run(tmp_path, {"splits": ["test"], "n_boot": 100, "required_repeats": 2, "methods": {
         "A": {"tag": "m_channel", "evals": [str(tmp_path / "r*")]}}})
     row = summary[summary.statistic == "rmse_u"].iloc[0]
     assert row.n_repeats == 2 and row.seed_sd > 0
@@ -92,3 +92,11 @@ def test_different_scale_rejected(tmp_path):
         run(tmp_path, {"splits": ["test"], "n_boot": 10, "methods": {
             "A": {"tag": "m_channel", "evals": [str(tmp_path / "e1")]},
             "B": {"tag": "m_channel", "evals": [str(tmp_path / "e2")]}}})
+
+
+def test_missing_repeat_blocks_analysis(tmp_path):
+    fake_eval(tmp_path / "r0")
+    fake_eval(tmp_path / "r1", seed=5)
+    with pytest.raises(FileNotFoundError, match="3 required"):
+        run(tmp_path, {"splits": ["test"], "n_boot": 10, "required_repeats": 3, "methods": {
+            "A": {"tag": "m_channel", "evals": [str(tmp_path / "r*")]}}})

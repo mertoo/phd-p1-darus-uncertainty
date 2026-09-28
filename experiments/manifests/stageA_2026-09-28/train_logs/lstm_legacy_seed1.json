@@ -1,0 +1,173 @@
+{
+  "epochs": [
+    {
+      "epoch": 1,
+      "train_loss": 0.2899152140327481,
+      "val_loss": 0.23622192733868114,
+      "optimizer_steps": 665,
+      "elapsed_s": 3.5289742946624756,
+      "gpu_max_mem_gb": 0.21560576,
+      "peak_rss_gb": 0.978176
+    },
+    {
+      "epoch": 2,
+      "train_loss": 0.21784913974889317,
+      "val_loss": 0.19253632885057614,
+      "optimizer_steps": 665,
+      "elapsed_s": 6.928112745285034,
+      "gpu_max_mem_gb": 0.21560576,
+      "peak_rss_gb": 0.980212
+    },
+    {
+      "epoch": 3,
+      "train_loss": 0.2066385348273293,
+      "val_loss": 0.18677423665311346,
+      "optimizer_steps": 665,
+      "elapsed_s": 10.255892276763916,
+      "gpu_max_mem_gb": 0.21560576,
+      "peak_rss_gb": 0.98032
+    },
+    {
+      "epoch": 4,
+      "train_loss": 0.20330446558597284,
+      "val_loss": 0.18483726432674,
+      "optimizer_steps": 665,
+      "elapsed_s": 13.680056810379028,
+      "gpu_max_mem_gb": 0.21560576,
+      "peak_rss_gb": 0.980496
+    },
+    {
+      "epoch": 5,
+      "train_loss": 0.20124331730896977,
+      "val_loss": 0.18734423141297582,
+      "optimizer_steps": 665,
+      "elapsed_s": 17.09342932701111,
+      "gpu_max_mem_gb": 0.21560576,
+      "peak_rss_gb": 0.980496
+    },
+    {
+      "epoch": 6,
+      "train_loss": 0.19780595920616773,
+      "val_loss": 0.19420558191820456,
+      "optimizer_steps": 665,
+      "elapsed_s": 20.49176597595215,
+      "gpu_max_mem_gb": 0.21560576,
+      "peak_rss_gb": 0.980496
+    },
+    {
+      "epoch": 7,
+      "train_loss": 0.19443234450148925,
+      "val_loss": 0.19520840671167514,
+      "optimizer_steps": 665,
+      "elapsed_s": 23.907238960266113,
+      "gpu_max_mem_gb": 0.21560576,
+      "peak_rss_gb": 0.980496
+    },
+    {
+      "epoch": 8,
+      "train_loss": 0.1899727142992474,
+      "val_loss": 0.20074250789600998,
+      "optimizer_steps": 665,
+      "elapsed_s": 27.30775499343872,
+      "gpu_max_mem_gb": 0.21560576,
+      "peak_rss_gb": 0.980496
+    },
+    {
+      "epoch": 9,
+      "train_loss": 0.18507122281646404,
+      "val_loss": 0.20076580824070667,
+      "optimizer_steps": 665,
+      "elapsed_s": 30.709867000579834,
+      "gpu_max_mem_gb": 0.21560576,
+      "peak_rss_gb": 0.980496
+    },
+    {
+      "epoch": 10,
+      "train_loss": 0.17928559370247765,
+      "val_loss": 0.20795103373122029,
+      "optimizer_steps": 665,
+      "elapsed_s": 34.11064171791077,
+      "gpu_max_mem_gb": 0.21560576,
+      "peak_rss_gb": 0.980512
+    },
+    {
+      "epoch": 11,
+      "train_loss": 0.17371605984262214,
+      "val_loss": 0.21888675077145392,
+      "optimizer_steps": 665,
+      "elapsed_s": 37.50568890571594,
+      "gpu_max_mem_gb": 0.21560576,
+      "peak_rss_gb": 0.980512
+    },
+    {
+      "epoch": 12,
+      "train_loss": 0.1690032358686062,
+      "val_loss": 0.24042458757344454,
+      "optimizer_steps": 665,
+      "elapsed_s": 40.913355350494385,
+      "gpu_max_mem_gb": 0.21560576,
+      "peak_rss_gb": 0.980512
+    },
+    {
+      "epoch": 13,
+      "train_loss": 0.1625706733925047,
+      "val_loss": 0.2284726777029659,
+      "optimizer_steps": 665,
+      "elapsed_s": 44.3205451965332,
+      "gpu_max_mem_gb": 0.21560576,
+      "peak_rss_gb": 0.980512
+    },
+    {
+      "epoch": 14,
+      "train_loss": 0.15610794619261467,
+      "val_loss": 0.23866452578090838,
+      "optimizer_steps": 665,
+      "elapsed_s": 47.73922896385193,
+      "gpu_max_mem_gb": 0.21560576,
+      "peak_rss_gb": 0.980512
+    }
+  ],
+  "best_epoch": 4,
+  "best_val_loss": 0.18483726432674,
+  "n_train_windows": 170016,
+  "n_val_windows": 31878,
+  "batch_size": 256,
+  "drop_last": false,
+  "optimizer_steps_total": 9310,
+  "sec_per_epoch": 3.4099449259894237,
+  "train_windows_per_sec": 49858.869773583945,
+  "stopped_by": "early_stopping",
+  "seed": 1,
+  "split_hash": "3b0f38b4bd3df279",
+  "git": {
+    "commit": "dde1848087fd149cbd058bb43972eaec58b93c08",
+    "dirty": false
+  },
+  "cal_files": [
+    "20190805-100228.csv",
+    "20190805-100852.csv",
+    "20190805-101342.csv",
+    "20190805-102826.csv",
+    "20190805-104006.csv",
+    "20190805-104246.csv",
+    "20190805-104247.csv",
+    "20190805-105120.csv",
+    "20190805-110729.csv"
+  ],
+  "features": [
+    "time",
+    "n",
+    "deltal",
+    "deltar",
+    "Vw",
+    "alpha_x",
+    "alpha_y",
+    "u",
+    "v",
+    "p",
+    "r",
+    "phi"
+  ],
+  "normalize": true,
+  "scaler_hash": "c8e259c9d31efc4a"
+}

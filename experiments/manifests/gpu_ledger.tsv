@@ -1,0 +1,4 @@
+scope	stage	job_id	allocated_gpu_s	source
+pilot	pilot	984243	131	sacct ElapsedRaw x gres/gpu (7 tasks)
+pilot	pilot	984244	140	sacct ElapsedRaw x gres/gpu
+benchmark	A	984252	203	sacct ElapsedRaw x gres/gpu (4 tasks)

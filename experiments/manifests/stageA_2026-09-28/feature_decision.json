@@ -1,0 +1,24 @@
+{
+  "round": 1,
+  "seeds": [
+    1
+  ],
+  "mean_val_loss": {
+    "lstm_legacy": 0.18483726432674,
+    "lstm_no_time": 0.18448222275332304,
+    "mlp_legacy": 0.1866488321408217,
+    "mlp_no_time": 0.18599915609723824
+  },
+  "gain": {
+    "lstm": -0.0019245300068380594,
+    "mlp": -0.0034928978024169896
+  },
+  "time_helps": {
+    "lstm": false,
+    "mlp": false
+  },
+  "backbones_disagree": false,
+  "borderline": false,
+  "decision": "no_time",
+  "rule": "legacy iff gain > 2% for both LSTM and MLP; borderline (1-3% or disagreement) -> one repeat round with seeds 2,3"
+}

@@ -58,6 +58,10 @@ def main():
     ap.add_argument("--eval_script", default=EVAL_SH, help="'none' if the stage has no eval job")
     ap.add_argument("--n_eval_tasks", type=int, default=1)
     ap.add_argument("--budget", type=float, default=BUDGET_GPU_H)
+    ap.add_argument("--ledger", default="experiments/manifests/gpu_ledger.tsv")
+    ap.add_argument("--scope", default=None, help="ledger scope whose consumed GPU-h count against --cap_total")
+    ap.add_argument("--cap_total", type=float, default=None,
+                    help="authorised total GPU-h for the scope; requires consumed + this batch's ceiling <= cap")
     ap.add_argument("--outputs", nargs="*", default=["experiments/runs/v3/pilot", "experiments/eval/v3/pilot"])
     args = ap.parse_args()
     ok, lines = True, []
@@ -101,6 +105,12 @@ def main():
     check(f"summed SLURM limits <= {args.budget} GPU-h", total <= args.budget + 1e-9,
           f"{n_tasks} array tasks x {tr['time']} x {gpus(tr)} GPU = {train_h:.2f} h; "
           f"{args.n_eval_tasks if ev else 0} eval tasks = {eval_h:.2f} h; total {total:.2f} h")
+    if args.cap_total is not None:
+        rows_l = [r for r in csv.DictReader(open(args.ledger), delimiter="\t") if r["scope"] == args.scope]
+        consumed = sum(float(r["allocated_gpu_s"]) for r in rows_l) / 3600
+        check(f"consumed ({args.scope}) + batch ceiling <= authorised {args.cap_total} GPU-h",
+              consumed + total <= args.cap_total + 1e-9,
+              f"consumed {consumed:.4f} h ({len(rows_l)} ledger jobs) + batch ceiling {total:.2f} h = {consumed + total:.4f} h")
     check("no-requeue set on all scripts", "no-requeue" in tr and (ev is None or "no-requeue" in ev))
     existing = [r["run_name"] for r in rows if os.path.exists(os.path.join("experiments/runs/v3", r["run_name"]))] \
         if args.stage else []

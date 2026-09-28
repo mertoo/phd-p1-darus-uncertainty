@@ -4,6 +4,7 @@
 
 SPEC.yaml:
     level: 90                       # per-window files are written at this level
+    required_repeats: 3             # every method must match exactly this many dirs (per-method `repeats` overrides)
     n_boot: 2000
     seed: 0
     ci: 0.95
@@ -150,8 +151,10 @@ def main():
         inputs = {}
         for m, mspec in spec["methods"].items():
             dirs = sorted({d for pat in mspec["evals"] for d in glob.glob(pat)})
-            if not dirs:
-                raise FileNotFoundError(f"{m}: no eval dirs match {mspec['evals']}")
+            need = int(mspec.get("repeats", spec.get("required_repeats", 1)))
+            if len(dirs) != need:
+                raise FileNotFoundError(f"{m}: {len(dirs)} evaluation dirs match {mspec['evals']}, "
+                                        f"{need} required (missing or extra evaluations block the analysis)")
             reps = []
             for d in dirs:
                 frame, scale = load_eval(d, split, mspec["tag"], level)

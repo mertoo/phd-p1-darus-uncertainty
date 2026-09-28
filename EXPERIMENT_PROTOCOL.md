@@ -2,7 +2,7 @@
 
 Status (2026-09-28): **nothing run on the full data yet.**
 - D1 and D2 are the protocol; the primary calibration split is fixed (§1).
-- The feature set is decided by the §3 rule after stage 0; the pilot uses `no_time`.
+- Feature set: **`no_time`**, decided by the §3 rule in Stage A (2026-09-28). A2 was not triggered.
 - The timing pilot (§7a) **ran on 2026-09-28 and PASSED** (0.075 billed GPU-h).
 - The full run list (§7) needs **separate authorisation** after the pilot report.
 
@@ -146,3 +146,14 @@ Everything runs from one pushed commit (the "v3.0 commit", reported with the app
 | **Total** | | **24.5 GPU-h ceiling** | **6.6 GPU-h (9.9 with ×1.5 contingency)** | |
 
 Storage ≈ 12.3 GB (evaluation artifacts) + 0.1 GB (checkpoints), against 468 GB free in the home quota. The ceiling is what SLURM can bill at most. The estimate uses measured L40 epoch times with every run at 100 epochs (early stopping can only lower it). GRU, linear and MLP-dropout are timed by proxy. Cumulative billed GPU-h is read from `sacct` at every gate, and remaining stages are not submitted if the authorised total would be exceeded.
+
+## 10. Analysis rules (FROZEN 2026-09-28, before Stage C)
+Fixed before any full-benchmark test/OOD result exists. Any later change is logged as a deviation.
+- **Tables and figures:** `python -m src.analysis.report --rules experiments/configs/v3/analysis_rules.yaml`.
+  - Tables: baselines (per-channel physical RMSE and normalised RMSE with 95% CI and seed SD); UQ summary at 90% (coverage, normalised width, normalised interval score, all with CI); per-channel coverage and width; paired differences for the pairs predeclared in `bootstrap_full.yaml`.
+  - Figures: coverage vs nominal level (mean and min–max over repeats); horizon-resolved coverage and width; one example window.
+  - Every number is read from bootstrap outputs, `metrics.json` or saved predictions. `analysis_manifest.json` records the SHA-256 of all inputs and outputs.
+- **Example window:** reference evaluation `lstm_single_rep0`, ID test. Chosen as the window whose mean over channels of per-window RMSE / training-target SD equals the median; ties go to the smallest window ID. The same window is used for every panel, and its ID and recording are printed on the figure. It is an illustration only.
+- **Missing inputs block:** any `eval_list.tsv` evaluation without `metrics.json`, any missing bootstrap summary, or a method with ≠ 3 repeats stops both the bootstrap (`required_repeats`) and the report. No partial tables are produced. The Stage C gate (`check_stage --evals`) fails on the same conditions.
+- **Floor sensitivity:** `python -m src.analysis.floor_sensitivity` runs for all spread-method evaluations at floor_rel {1e-4, 1e-3, 1e-2}, for both variants, all levels and all scored splits. It fails if the rebuilt primary intervals differ from the stored metrics (coverage > 1e-4 absolute, normalised width > 1e-4 relative). A result is marked `triggered` when the primary floor clamps > 1% of calibration spreads in any channel. The primary floor is never replaced.
+- **Budget rule:** before every submission batch, the preflight requires consumed GPU-h (ledger `experiments/manifests/gpu_ledger.tsv`, from `sacct`) + the batch's maximum allocation (SLURM limits × GPUs × tasks) ≤ the authorised total (`--scope benchmark --cap_total X`).
