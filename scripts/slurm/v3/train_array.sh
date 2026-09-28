@@ -14,11 +14,10 @@
 #SBATCH --partition=gpu
 #SBATCH --gres=gpu:L40:1
 set -euo pipefail
-module load rocky8-spack/master
-module load cuda/12.2.2-gcc-10.3.0-5rec
-module load python/3.10.8-gcc-10.3.0-56wj
 cd ~/phd-p1-darus-uncertainty
-source venv/bin/activate
+ENV="${DARUS_ENV:-$HOME/envs/darus-v3}"      # built by scripts/slurm/v3/setup_env.sh
+[ -x "$ENV/bin/python" ] || { echo "ERROR: environment $ENV missing"; exit 1; }
+export PATH="$ENV/bin:$PATH"
 export PYTHONPATH=$PWD
 mkdir -p logs/slurm/v3
 
