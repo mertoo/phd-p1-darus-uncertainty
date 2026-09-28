@@ -6,7 +6,7 @@
 | Feature ablation (Stage A) | `dde1848` | `experiments/manifests/stageA_2026-09-28/` |
 | Training, evaluation, analysis (Stages B–D) | `83585da` | `experiments/manifests/stageB_2026-09-28/`, `stageC_2026-09-28/` |
 | Results archive | `630baad` | `experiments/analysis/v3/`, `RESULTS_CHANGELOG.md` |
-| Manuscript tables/figures, post hoc analyses | see `REVISION_TRACKER.md` (manuscript-integration commit) | `experiments/analysis/v3/report_pub/manifest.json` |
+| Manuscript tables/figures, post hoc analyses | `eaa44a6` | `experiments/analysis/v3/report_pub/manifest.json` |
 
 `83585da` and `dde1848` have identical training, data, model and evaluation code.
 
