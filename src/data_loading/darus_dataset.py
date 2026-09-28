@@ -234,13 +234,24 @@ class SequenceDataset(Dataset):
         return out
 
 
-def select_calibration_files(train_files, n_recordings, seed):
-    """Deterministically hold out `n_recordings` training recordings for calibration."""
+def select_calibration_files(train_files, n_recordings, seed, strata_values=None):
+    """
+    Deterministically hold out `n_recordings` training recordings for calibration.
+
+    Random mode (strata_values=None): uniform draw without replacement from the
+    sorted names. Stratified mode: recordings are sorted by `strata_values`
+    (e.g. per-recording mean shaft speed n), cut into n_recordings equal-count
+    strata, and one recording is drawn per stratum.
+    """
     names = sorted(train_files)
     if not 0 < n_recordings < len(names):
         raise ValueError(f"n_recordings must be in (0, {len(names)})")
     rng = np.random.default_rng(seed)
-    return sorted(rng.choice(names, size=n_recordings, replace=False).tolist())
+    if strata_values is None:
+        return sorted(rng.choice(names, size=n_recordings, replace=False).tolist())
+    order = sorted(names, key=lambda f: (strata_values[f], f))
+    strata = np.array_split(np.array(order), n_recordings)
+    return sorted(str(rng.choice(stratum)) for stratum in strata)
 
 
 def build_datasets(data_cfg):
@@ -269,11 +280,19 @@ def build_datasets(data_cfg):
     cal_cfg = data_cfg.get("calibration")
     cal_files = []
     if cal_cfg:
+        mode = cal_cfg.get("method", "random")
         if "files" in cal_cfg:
             cal_files = sorted(cal_cfg["files"])
-        else:
+        elif mode == "random":
             cal_files = select_calibration_files(train_names, int(cal_cfg["n_recordings"]),
                                                  int(cal_cfg.get("seed", 0)))
+        elif mode == "stratified_n":
+            means = {r["source_file"].iloc[0]: float(r["n"].mean())
+                     for r in load_split_recordings(base, "train")}
+            cal_files = select_calibration_files(train_names, int(cal_cfg["n_recordings"]),
+                                                 int(cal_cfg.get("seed", 0)), strata_values=means)
+        else:
+            raise ValueError(f"Unknown calibration method '{mode}'")
     fit_files = [f for f in train_names if f not in set(cal_files)]
 
     recs = {

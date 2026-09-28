@@ -85,21 +85,53 @@ class Intervals:
     def __post_init__(self):
         if self.lower.shape != self.upper.shape:
             raise ValueError("lower/upper shape mismatch")
+        # NaN bounds are always an error. +/-inf is legitimate (finite-sample
+        # conformal threshold with k > n) and is reported via frac_infinite.
+        if np.isnan(self.lower).any() or np.isnan(self.upper).any():
+            raise ValueError(f"{self.method}/{self.variant}: NaN interval bounds")
         if np.any(self.upper < self.lower):
             raise ValueError("upper < lower")
 
 
-def spread_floor(spread_cal, rel=1e-3):
+class DegenerateSpreadError(ValueError):
+    """A channel has zero calibration spread and zero calibration-target variation."""
+
+
+def _check_finite(name, *arrays):
+    for a in arrays:
+        if not np.all(np.isfinite(a)):
+            raise ValueError(f"{name}: non-finite values in inputs (NaN/inf predictions, spreads or targets)")
+
+
+def spread_floor(spread_cal, y_cal, rel=1e-3):
     """
-    Predeclared floor for spread-normalised scores: `rel` times the mean
-    calibration spread of each channel (never tuned on test data).
+    Predeclared, strictly positive floor for spread-normalised scores, per channel:
+
+        floor_d = rel * max(mean calibration spread_d, std of calibration targets_d)
+
+    The second term keeps the floor positive and in the channel's physical
+    scale when a method reports (near-)zero spread for a whole channel. If
+    both are zero, the channel is degenerate (constant target, no spread) and
+    no meaningful normalised score exists, so DegenerateSpreadError is raised
+    rather than silently returning NaN/inf intervals. Never tuned on test data.
     Returns shape (1, 1, D).
     """
-    return rel * np.asarray(spread_cal).mean(axis=(0, 1), keepdims=True)
+    spread_cal = np.asarray(spread_cal, dtype=np.float64)
+    y_cal = np.asarray(y_cal, dtype=np.float64)
+    if np.any(spread_cal < 0):
+        raise ValueError("negative spread")
+    mean_spread = spread_cal.mean(axis=(0, 1))
+    y_std = y_cal.reshape(-1, y_cal.shape[-1]).std(axis=0)
+    ref = np.maximum(mean_spread, y_std)
+    if np.any(ref <= 0):
+        bad = np.where(ref <= 0)[0].tolist()
+        raise DegenerateSpreadError(f"channels {bad}: zero calibration spread and constant targets")
+    return (rel * ref).reshape(1, 1, -1)
 
 
 def conformal_intervals(yhat_cal, y_cal, yhat, level, variant, method="conformal"):
     """Absolute-residual split conformal around point predictions."""
+    _check_finite("conformal", yhat_cal, y_cal, yhat)
     q = calibrate_scores(np.abs(np.asarray(y_cal) - np.asarray(yhat_cal)), level, variant)
     q_full = np.broadcast_to(q, yhat.shape)
     return Intervals(yhat - q_full, yhat + q_full, method, variant, level,
@@ -108,7 +140,9 @@ def conformal_intervals(yhat_cal, y_cal, yhat, level, variant, method="conformal
 
 
 def raw_gaussian_intervals(mu, sigma, level, method):
-    """Uncalibrated mean +/- z * sigma band (Gaussian-reference nominal level)."""
+    """Uncalibrated mean +/- z * sigma band (Gaussian-reference nominal level).
+    Zero spread gives a zero-width band (reported as such, not floored)."""
+    _check_finite(method, mu, sigma)
     z = normal_z(level)
     return Intervals(mu - z * sigma, mu + z * sigma, method, "raw_gaussian", level,
                      info={"z": z})
@@ -121,12 +155,15 @@ def scaled_spread_intervals(mu_cal, s_cal, y_cal, mu, s, level, variant, method,
     mu +/- q * max(s, floor); for a Gaussian this is an empirically fitted
     per-group temperature T = q / z.
     """
-    floor = spread_floor(s_cal, floor_rel)
+    _check_finite(method, mu_cal, s_cal, y_cal, mu, s)
+    floor = spread_floor(s_cal, y_cal, floor_rel)
     s_cal_f = np.maximum(s_cal, floor)
     s_f = np.maximum(s, floor)
     q = calibrate_scores(np.abs(y_cal - mu_cal) / s_cal_f, level, variant)
-    half = q * s_f
+    half = q * s_f                      # s_f > 0, so q = inf gives inf, never NaN
     return Intervals(mu - half, mu + half, method, variant, level,
                      info={"threshold": np.asarray(q).squeeze(0), "score": "spread_normalised",
                            "floor": floor.squeeze((0, 1)), "floor_rel": floor_rel,
+                           "frac_floored_cal": (s_cal < floor).mean(axis=(0, 1)),
+                           "frac_floored_eval": (s < floor).mean(axis=(0, 1)),
                            "n_cal_windows": int(np.asarray(y_cal).shape[0])})

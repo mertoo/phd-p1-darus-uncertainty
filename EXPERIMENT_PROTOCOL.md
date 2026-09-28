@@ -1,62 +1,105 @@
-# Experiment protocol v3 (DRAFT: requires author sign-off before any HPC run)
+# Experiment protocol v3 (pre-run draft)
 
-Status: **draft, not frozen.** The items marked *decision* need a yes/no from the authors. Nothing in this protocol has been run on the full data.
+Status (2026-09-28): **not frozen, nothing run on the full data.**
+- D1 and D2 are the preferred protocol (author instruction, 2026-09-28).
+- The calibration-recording choice and the feature set remain provisional (§1, §3).
+- The timing pilot (§7a) is prepared and **awaits compute authorisation**; the full run list (§7) will not be submitted until after the pilot.
 
-## 1. Data roles (fixed before any test/OOD evaluation)
+The historical-checkpoint recovery track (old-vs-new comparison) is separate from this benchmark and is described in REVISION_TRACKER.md.
+
+## 1. Data roles
 | Role | Recordings | Used for |
 |---|---|---|
-| Train (fit) | 48 of the 57 deposit `train` recordings | gradient updates; scaler fitting |
-| Calibration | 9 of the 57 `train` recordings, drawn with `numpy.random.default_rng(20261001)` from the sorted names (list written into every checkpoint and `metrics.json`) | conformal thresholds and spread calibration only; never model selection |
-| Model selection | deposit `validation` (9) | best-epoch choice, early stopping, ridge penalty, time-feature ablation |
+| Train (fit) | 48 of the 57 deposit `train` recordings | gradient updates; scaler fitting (D2) |
+| Calibration (D1) | 9 of the 57 `train` recordings (list below) | conformal thresholds and spread calibration only; never model selection |
+| Model selection | deposit `validation` (9) | best epoch, early stopping, ridge penalty, feature decision |
 | ID test | deposit routine `test` (30) | reporting only |
-| OOD test | deposit `patrol_ship_ood/test` (29) | reporting only. Exploratory: these recordings already influenced the historical backbone choice |
+| OOD test | deposit `patrol_ship_ood/test` (29) | reporting only. **Exploratory**: these recordings informed the historical backbone choice, and no untouched OOD recordings are known |
 
-*Decision D1:* hold calibration recordings out of `train` (proposed) instead of splitting `validation` (only 9 recordings, which would leave about 4–5 for each role).
+Windows: H = T = 30 s at 1 Hz, stride 1, within recordings only (3542 per recording; train 170,016, cal 31,878, val 31,878, test 106,260, OOD 102,718). The independent unit is the recording.
 
-Windows: H = T = 30 s at 1 Hz, stride 1, built only inside recordings (3542 per recording). All windows overlap heavily; the independent unit is the **recording** (48/9/9/30/29).
+### Calibration recordings: selection and representativeness check
+Script: `python -m scripts.check_calibration_split`. Outputs: `experiments/manifests/calibration_selection.json` and `calibration_representativeness.csv`. It reads only the 57 training recordings (per-recording mean and SD of the 11 physical inputs/targets). No model, validation, test or OOD data is used.
 
-## 2. Preprocessing
-- Inputs and targets are standardised with per-channel mean/std fitted on the 48 fit recordings (`normalize: true`). Loss is MSE (or Gaussian NLL) in standardised units, so all five targets carry equal weight. *Decision D2* (changes the historical loss weighting; needs retraining anyway).
-- Metrics are computed in physical units after inverse transform. Dimensionless summaries divide by the training-target std.
+- **Predeclared criterion:** |standardised mean difference| ≤ 0.5 for all 22 variables, and the calibration recordings' mean `u` and `n` within the fit-recording range. Fallback if the random draw fails: stratified draw, one recording per equal-count stratum of mean shaft speed `n`, same seed.
+- **Outcome:**
+  - Random draw (seed 20261001): fails. Max |SMD| 0.84 on `deltal_std`; mean `u`/`n` in range, but the calibration set is slower (SMD −0.52 for `u`, −0.49 for `n`).
+  - Stratified draw: also fails. Max |SMD| 0.83 on `Vw_mean`; speed matched (SMD 0.03 for both `u` and `n`).
+- **Diagnosis:** the criterion was mis-specified. Over 5000 random 9-of-57 draws it passes only 7.1% of the time (chance max |SMD|: median 0.75, 95th percentile 1.14). Both actual selections are typical draws (≈67th percentile). We do not redraw until something passes.
+- **Provisional choice:** `stratified_n` (the predeclared fallback), recorded in every v3 config:
+  `20190805-095929, -100322, -100351, -101342, -101925, -102210, -102939, -104006, -104542` (.csv).
+- *Author decision C1:* accept `stratified_n` as is, or replace the criterion with the chance-referenced one (max |SMD| below the 95th percentile of random draws, which both selections satisfy). Either way the post-hoc change is disclosed.
 
-## 3. Feature set: validation-only ablation (Stage 0)
-`time` restarts at 0 in every file and encodes position within a recording. We train LSTM and MLP with `features: legacy` (12 inputs) and `no_time` (11 inputs), seed 1 each. **Rule:** keep `no_time` unless `legacy` lowers the normalised validation MSE by more than 2%. The rule is fixed now; test/OOD results of the ablation are not looked at. The chosen set is then frozen for Stage 1.
+## 2. Preprocessing (D2)
+Inputs and targets are standardised with statistics from the 48 fit recordings; the scalers are stored in each checkpoint and re-verified at evaluation. Loss is MSE (or Gaussian NLL with 0.5·log 2π) in standardised units, so the five targets carry equal weight. Metrics are reported in physical units, plus dimensionless summaries divided by the training-target SD.
+
+## 3. Feature set: validation-only rule
+Script: `python -m scripts.select_features`. It reads only `train_log.json` best validation losses; test and OOD are never read.
+
+- **Stage 0:** LSTM and MLP × {`legacy` (12 inputs, with `time`), `no_time` (11 inputs)}, seed 1.
+- **Gain per backbone:** gain_b = (L_no_time − L_legacy) / L_no_time, using the mean best-validation loss over the available seeds. Losses are comparable because the target scaler is identical.
+- **Borderline:** any gain in [1%, 3%], or the backbones disagree about whether gain > 2%.
+- **Round 1:** if not borderline, use `legacy` iff gain > 2% for **both** backbones, else `no_time`. If borderline, the decision is "repeat": run stage 0b (seeds 2 and 3 for all four configurations).
+- **Round 2:** the same rule on the 3-seed means. A remaining disagreement defaults to `no_time`, the parsimonious set, since `time` encodes position within a recording. The disagreement is reported as a finding. There are no further rounds.
+- **One common feature set** is used for every model in the primary comparison. The non-selected set is not evaluated on test/OOD.
 
 ## 4. Training
-Adam, lr 1e-3, batch 256, max 100 epochs, early stopping with patience 10 on the validation objective (MSE, or Gaussian NLL including 0.5·log 2π), best-validation checkpoint. Seeds are explicit and recorded. Linear: SGD version (as before) **plus** closed-form ridge with the penalty selected on validation (`src/training/fit_ridge.py`).
+Adam, lr 1e-3, batch 256, max 100 epochs, early stopping with patience 10 on the validation objective, and the best-validation checkpoint is kept. Seeds are explicit and recorded. A best epoch equal to the last epoch is reported as "stopped by epoch budget". It is not interpreted as proof of (non-)convergence either way. Linear: the SGD model plus a closed-form ridge with the penalty chosen on validation.
 
 ## 5. UQ methods and scoring
 | Method | Backbones | Raw output | Calibrated variants (same calibration recordings) |
 |---|---|---|---|
-| Split conformal | each point model | point | abs-residual, `channel` and `horizon_channel` |
-| Deep ensemble, N=5 | LSTM, MLP | mean, member std (ddof=1) | raw mean±zσ; spread-normalised `channel`/`horizon_channel`; residual conformal on ensemble mean |
-| MC dropout, M=200, p=0.2 | LSTM (inter-layer), MLP (after hidden layers) | mean, pass std (ddof=1) | same as ensemble |
-| Gaussian likelihood | LSTM (MLP: *decision D3*) | μ, σ | raw Gaussian; spread-normalised (= fitted temperature per group) |
+| Split conformal | each point model | point | abs-residual, `channel` / `horizon_channel` |
+| Deep ensemble, N=5 | LSTM, MLP | mean, member SD (ddof=1) | raw mean ± zσ; spread-normalised `channel` / `horizon_channel`; residual conformal on the mean |
+| MC dropout, M=200, p=0.2 | LSTM (inter-layer only), MLP (after hidden layers) | mean, pass SD (ddof=1) | as ensemble |
+| Gaussian likelihood | LSTM, MLP | μ, σ | raw Gaussian; spread-normalised (= fitted temperature per group); residual conformal on μ |
 
-- Nominal levels, predeclared: 0.5, 0.8, **0.9 (primary)**, 0.95.
-- Spread floor for normalised scores: 1e-3 × mean calibration spread per channel (fixed; sensitivity reported only if the floor is ever active for >1% of calibration scores).
-- Primary conformal construction: **`horizon_channel`** (marginal coverage per forecast step and channel), chosen because error grows with lead time. `channel` is reported as secondary.
-- Reported per split: RMSE per channel (physical units), pooled and dimensionless mean RMSE; marginal coverage overall/per channel/per horizon; mean width per channel (physical and normalised); interval (Winkler) score; simultaneous trajectory coverage per channel and over all channels (reported separately, never called marginal).
-- Uncertainty: cluster bootstrap over **recordings** (2000 resamples) for ID (30) and OOD (29) metrics, plus between-seed spread across repeats. Paired method comparisons use the same recordings.
-- No claim of a finite-sample guarantee: windows overlap and recordings differ. We report empirical marginal calibration in distribution, and describe OOD behaviour without guarantees.
+- **Levels** (predeclared): 0.5, 0.8, **0.9 (primary)**, 0.95. Primary construction: `horizon_channel`.
+- **Spread floor:** floor_d = 1e-3 × max(mean calibration spread_d, SD of calibration targets_d). It is strictly positive and in the channel's physical scale. If both terms are zero (constant target and no spread), evaluation stops with `DegenerateSpreadError`. NaN inputs or bounds are errors. Infinite conformal thresholds (k > n) are kept and reported (`frac_infinite`). The fraction of floored scores is recorded per channel; a sensitivity analysis is added only if more than 1% of calibration scores are floored.
+- **Metrics:** RMSE per channel (physical), pooled, and dimensionless mean; marginal coverage (overall/channel/horizon); width (physical and normalised); interval score; simultaneous trajectory coverage, reported separately.
+- **Provenance:** every checkpoint of every evaluation is checked (count = declared ensemble size, distinct checkpoints and seeds, identical model config, parameter shapes, features, target order, split files, split hash and scalers).
+- **Uncertainty:** `python -m src.analysis.bootstrap --spec … --out …` does a recording-level cluster bootstrap (2000 draws, shared across methods) giving 95% CIs and paired differences on identical recordings. Between-seed SD across the 3 repeats is reported separately. No finite-sample guarantee is claimed.
 
 ## 6. Repeats
-3 independent repeats of every trained configuration (seeds listed in the run manifest). An ensemble repeat = 5 fresh members; member 0 of each repeat doubles as that repeat's single-model backbone for conformal/point results. The 5 members of one ensemble are **not** 5 repeats of the ensemble experiment.
+3 independent repeats per trained configuration. An ensemble repeat is 5 fresh members; member 0 of each repeat is that repeat's single-model backbone. The 5 members are not 5 repeats.
 
-## 7. Proposed run list and compute
-Timings are placeholders until a real-data timing run exists. Historical L40 runs took about 1 min/epoch with the old loader (20 epochs ≈ 20 min). With early stopping we expect 20–60 epochs.
+## 7. Full run list (after the pilot; not submitted)
+`scripts/slurm/v3/run_list.tsv`: 63 rows = 55 unconditional trainings + 8 conditional (stage 0b).
 
-| Stage | Runs | Trainings | GPU-h (est.) |
-|---|---|---|---|
-| 0 time ablation | LSTM, MLP × {legacy, no_time} × seed 1 | 4 | 2–7 |
-| 1a ensembles (incl. single-model backbones) | LSTM, MLP × 3 repeats × 5 members | 30 | 15–50 |
-| 1b other baselines | GRU, TCN, Linear-SGD × 3 seeds; ridge ×1; naive ×1 | 9 (+2 CPU) | 5–15 |
-| 1c MC dropout | LSTM-p0.2, MLP-p0.2 × 3 seeds | 6 | 3–10 |
-| 1d Gaussian | LSTM × 3 seeds (+ MLP × 3 if D3) | 3 (6) | 2–10 |
-| 2 evaluation | all methods, MC 200 passes over cal+test+OOD ≈ 240k windows | — | 5–10 |
-| **Total** | | **52 (55)** | **≈ 32–100 L40 GPU-h** |
+| Stage | Trainings |
+|---|---|
+| 0 feature ablation | 4 |
+| 0b repeat round (only if rule returns "repeat") | 8 |
+| 1a LSTM/MLP ensembles, 3 × 5 | 30 |
+| 1b GRU, TCN, Linear-SGD × 3 | 9 (+ ridge, naive on CPU) |
+| 1c MC dropout LSTM/MLP × 3 | 6 |
+| 1d LSTM Gaussian × 3 | 3 |
+| **1e MLP Gaussian × 3 (new, separate increment)** | **3** |
 
-Storage: float32 predictions ≈ 0.3–0.5 GB per evaluated method-run, so about 10–15 GB in total. Memory: under 8 GB host RAM per job. All jobs are single-GPU and independent (SLURM arrays).
+**Compute**, to be replaced by the pilot's measured projection. A local CPU benchmark (Apple laptop) gave about 1 min per LSTM epoch, about 1.4 s per MLP epoch, and about 240k windows/s from the loader, so data loading is not the bottleneck. As an upper bound, assume L40 ≥ laptop CPU speed. The 30 recurrent trainings (LSTM incl. stage 0b, GRU, LSTM-dropout, LSTM-Gaussian) plus 3 TCN runs (assumed no slower) then need at most 33 × 100 epochs × 1 min ≈ 55 GPU-h worst case, about 22 GPU-h at 40 epochs. The feed-forward trainings are negligible and evaluation is a few GPU-h. **Increment for the MLP Gaussian (stage 1e):** 3 runs × ≤ 100 epochs of an MLP-size model plus 3 evaluations, ≤ 1 GPU-h; the pilot measures it directly (task 6).
+
+## 7a. Timing pilot (awaiting authorisation)
+- **Jobs:** `scripts/slurm/v3/pilot_train.sh` (array 1–7, `pilot_runs.tsv`) then `pilot_eval.sh` (`--dependency=afterok`).
+  - Training: LSTM seeds 9001/9002, MLP, LSTM-dropout 0.2, LSTM-Gaussian, MLP-Gaussian and TCN on the full data, 3 epochs each, early stopping off.
+  - Evaluation: point (LSTM, MLP), a 2-member LSTM ensemble, MC dropout with 200 passes, LSTM- and MLP-Gaussian, ridge fit, bootstrap, `scripts/pilot_report.py`.
+  - The evaluations score the **validation split only** (`--eval_splits val`), so no test/OOD number is produced.
+- **Maximum GPU-hours (SLURM hard limits):** 7 × 0.5 h + 1 × 2 h = **5.5 GPU-h**. Expected ≈ 1–2 GPU-h.
+- **Expected outputs:**
+  - per-run `train_log.json` (s/epoch, windows/s, peak GPU memory, peak RSS);
+  - per-eval `metrics.json` (inference seconds per split, GPU memory, member validation);
+  - `bootstrap/summary_val.csv` and `paired_val.csv`;
+  - `pilot_report.json` with every check and the projected full-plan GPU-hours per config.
+- **Pass criteria (mechanical, `pilot_report.py`):**
+  - all jobs exit 0 within limits;
+  - every run has 3 finite epochs, and train loss decreases from epoch 1 to 3;
+  - GPU memory < 40 GB and host RSS < 14 GB;
+  - identical split hash across runs;
+  - every evaluation has no NaN in coverage/width/score, scored val only, used exactly the manifest's calibration recordings, and wrote < 1 GB;
+  - the bootstrap output exists;
+  - projected full plan ≤ 40 GPU-h at 40 epochs and ≤ 100 GPU-h at 100 epochs;
+  - every planned config has a timing proxy.
+- **On failure:** stop, report, and revise before any stage-0/1 submission. Pilot checkpoints are not reused as benchmark runs.
+- The chain was dry-run end-to-end on trimmed recordings (CPU, 2026-09-28) and all checks passed. That only shows the scripts work; the dry-run numbers are meaningless.
 
 ## 8. Selection hygiene
-No hyperparameter, seed, calibration setting, floor, or example window is chosen from ID-test or OOD results. Example trajectories for figures are chosen by a fixed rule (median per-window RMSE of the primary model, same window across methods), and their window IDs are reported.
+No hyperparameter, seed, calibration setting, floor, feature set or example window is chosen from ID-test or OOD results. The pilot never scores test/OOD. Example trajectories are chosen by a fixed rule (median per-window RMSE of the primary model, same window across methods) and their IDs are reported.

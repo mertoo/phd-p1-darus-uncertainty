@@ -10,6 +10,7 @@ from src.models.linear import LinearBaseline
 from src.models.lstm import LSTMSeq2Seq
 from src.models.lstm_gaussian import LSTMGaussianSeq2Seq
 from src.models.mlp import MLP
+from src.models.mlp_gaussian import MLPGaussian
 from src.models.naive import NaiveBaseline
 from src.models.tcn import TCN
 
@@ -20,6 +21,7 @@ _SPECS = {
     "gru": {"hidden_dim": 128, "num_layers": 2, "dropout": 0.0},
     "lstm_gaussian": {"hidden_dim": 128, "num_layers": 2, "dropout": 0.0},
     "mlp": {"hidden_dim": 256, "num_layers": 3, "dropout": 0.0},
+    "mlp_gaussian": {"hidden_dim": 256, "num_layers": 3, "dropout": 0.0},
     "tcn": {"num_channels": [64, 64, 64], "kernel_size": 3, "dropout": 0.1},
     "linear": {},
     "naive": {},
@@ -59,6 +61,10 @@ def build_model(model_cfg, input_dim, target_dim, history, horizon):
         return MLP(input_dim=input_dim, history=history, horizon=horizon,
                    output_dim=target_dim, hidden_dim=kw["hidden_dim"],
                    num_layers=kw["num_layers"], dropout=float(kw["dropout"]))
+    if mtype == "mlp_gaussian":
+        return MLPGaussian(input_dim=input_dim, history=history, horizon=horizon,
+                           output_dim=target_dim, hidden_dim=kw["hidden_dim"],
+                           num_layers=kw["num_layers"], dropout=float(kw["dropout"]))
     if mtype == "tcn":
         return TCN(input_dim=input_dim, target_dim=target_dim, history=history,
                    horizon=horizon, num_channels=list(kw["num_channels"]),
@@ -69,6 +75,10 @@ def build_model(model_cfg, input_dim, target_dim, history, horizon):
     if mtype == "naive":
         return NaiveBaseline(output_dim=target_dim, horizon=horizon)
     raise AssertionError(mtype)
+
+
+def is_gaussian(model_cfg):
+    return model_cfg["type"].lower() in ("lstm_gaussian", "mlp_gaussian")
 
 
 def count_parameters(model):

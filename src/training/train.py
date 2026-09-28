@@ -17,6 +17,8 @@ import math
 import os
 import platform
 import random
+import resource
+import sys
 import subprocess
 import time
 
@@ -26,7 +28,7 @@ import torch.nn as nn
 import yaml
 
 from src.data_loading.darus_dataset import build_datasets, make_loader
-from src.models.factory import build_model, count_parameters
+from src.models.factory import build_model, count_parameters, is_gaussian
 
 DEFAULT_TRAINING = {"epochs": 20, "lr": 1e-3, "batch_size": 256, "weight_decay": 0.0,
                     "patience": None, "device": "auto", "deterministic": False}
@@ -52,13 +54,18 @@ def git_state():
         return {"commit": None, "dirty": None}
 
 
+def peak_rss_gb():
+    r = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+    return r / 1e9 if sys.platform == "darwin" else r / 1e6   # bytes on macOS, KiB on Linux
+
+
 def gaussian_nll(mu, logvar, y):
     """Mean elementwise Gaussian NLL including the 0.5*log(2*pi) constant."""
     return 0.5 * (math.log(2 * math.pi) + logvar + (y - mu) ** 2 * torch.exp(-logvar)).mean()
 
 
-def loss_fn(model_type):
-    if model_type == "lstm_gaussian":
+def loss_fn(model_cfg):
+    if is_gaussian(model_cfg):
         return lambda out, y: gaussian_nll(out[0], out[1], y)
     mse = nn.MSELoss()
     return lambda out, y: mse(out, y)
@@ -81,7 +88,7 @@ def run_epoch(model, loader, criterion, device, optimizer=None):
     return total / count
 
 
-def resolve_config(config, seed=None, run_name=None):
+def resolve_config(config, seed=None, run_name=None, epochs=None, patience="keep"):
     cfg = copy.deepcopy(config)
     tr = {**DEFAULT_TRAINING, **cfg.get("training", {})}
     # batch_size historically lived under data: or training:; accept either, not both
@@ -92,6 +99,10 @@ def resolve_config(config, seed=None, run_name=None):
     cfg["data"].pop("batch_size", None)
     if seed is not None:
         tr["seed"] = int(seed)
+    if epochs is not None:
+        tr["epochs"] = int(epochs)
+    if patience != "keep":
+        tr["patience"] = patience
     if "seed" not in tr:
         raise ValueError("training.seed must be set in the config or via --seed")
     unknown = set(tr) - set(DEFAULT_TRAINING) - {"seed"}
@@ -145,7 +156,7 @@ def train(config, overwrite=False):
     g = tr["seed"]
     train_loader = make_loader(train_ds, tr["batch_size"], shuffle=True, seed=g)
     val_loader = make_loader(datasets["val"], tr["batch_size"])
-    criterion = loss_fn(model_type)
+    criterion = loss_fn(config["model"])
     optimizer = torch.optim.Adam(model.parameters(), lr=float(tr["lr"]),
                                  weight_decay=float(tr["weight_decay"]))
 
@@ -155,7 +166,11 @@ def train(config, overwrite=False):
         train_loss = run_epoch(model, train_loader, criterion, device, optimizer)
         val_loss = run_epoch(model, val_loader, criterion, device)
         log.append({"epoch": epoch, "train_loss": train_loss, "val_loss": val_loss,
-                    "elapsed_s": time.time() - t0})
+                    "elapsed_s": time.time() - t0,
+                    "gpu_max_mem_gb": (torch.cuda.max_memory_allocated() / 1e9) if device == "cuda" else None,
+                    "peak_rss_gb": peak_rss_gb()})
+        if not (math.isfinite(train_loss) and math.isfinite(val_loss)):
+            raise FloatingPointError(f"non-finite loss at epoch {epoch}: train {train_loss}, val {val_loss}")
         print(f"Epoch {epoch}/{tr['epochs']}  train {train_loss:.6f}  val {val_loss:.6f}", flush=True)
         if val_loss < best_val:
             best_val, best_epoch, since_best = val_loss, epoch, 0
@@ -169,7 +184,11 @@ def train(config, overwrite=False):
 
     stopped = "early_stopping" if (tr["patience"] and since_best >= int(tr["patience"])) else "epoch_budget"
     with open(os.path.join(out_dir, "train_log.json"), "w") as f:
+        n_ep = len(log)
         json.dump({"epochs": log, "best_epoch": best_epoch, "best_val_loss": best_val,
+                   "n_train_windows": len(train_ds), "n_val_windows": len(datasets["val"]),
+                   "sec_per_epoch": log[-1]["elapsed_s"] / n_ep if n_ep else None,
+                   "train_windows_per_sec": len(train_ds) * n_ep / log[-1]["elapsed_s"] if n_ep else None,
                    "stopped_by": stopped, "seed": tr["seed"],
                    "split_hash": data_state["split_hash"], "git": meta["git"]}, f, indent=2)
     print(f"Best val loss {best_val:.6f} at epoch {best_epoch} ({stopped}); saved {ckpt_path}")
@@ -181,11 +200,15 @@ def main():
     ap.add_argument("--config", required=True)
     ap.add_argument("--seed", type=int, default=None)
     ap.add_argument("--run_name", default=None)
+    ap.add_argument("--epochs", type=int, default=None, help="override training.epochs (timing pilot)")
+    ap.add_argument("--no_patience", action="store_true", help="disable early stopping (timing pilot)")
     ap.add_argument("--overwrite", action="store_true")
     args = ap.parse_args()
     with open(args.config) as f:
         config = yaml.safe_load(f)
-    train(resolve_config(config, args.seed, args.run_name), overwrite=args.overwrite)
+    cfg = resolve_config(config, args.seed, args.run_name, args.epochs,
+                         None if args.no_patience else "keep")
+    train(cfg, overwrite=args.overwrite)
 
 
 if __name__ == "__main__":

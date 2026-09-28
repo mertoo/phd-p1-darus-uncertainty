@@ -1,8 +1,14 @@
 # Revision tracker — UQ benchmark (manuscript baseline `main v2.2.tex`)
 
-Last updated: 2026-09-28. Branch `revision/v2.3` (local only, not pushed), created from `origin/main` = `9419c66` (the audited snapshot).
+Last updated: 2026-09-28 (pre-run corrections round). Branch `revision/v2.3` (pushed; PR mertoo/phd-p1-darus-uncertainty#2), created from `origin/main` = `9419c66` (the audited snapshot).
 
 Status vocabulary: **confirmed** (verified against source/log/data), **contradicted**, **modified** (true in part), **unverified**. Work status: `open`, `implemented – awaiting experiments`, `verified complete`, `blocked`, `deferred`.
+
+**Completion levels** (the summary table below uses these four columns, each yes/no/n.a.):
+1. **Code**: implemented in the repository.
+2. **Tests**: targeted synthetic unit tests pass (`pytest tests`, 54 tests on 2026-09-28).
+3. **E2E**: connected end-to-end and exercised by a CLI run on trimmed *real* recordings (2 to 3 epochs, 3 recordings per split). This shows the pipeline runs; it produces no scientific result.
+4. **Full**: the corrected full-data experiment has finished and its outputs have been checked. **Nothing is at level 4 yet.**
 Evidence types: *src* = source read, *log* = committed historical log, *data* = computed on the local DaRUS files, *test* = synthetic unit test. A passing test is never a paper result.
 
 ---
@@ -53,6 +59,46 @@ Evidence types: *src* = source read, *log* = committed historical log, *data* = 
 
 ---
 
+## Completion summary (four levels)
+
+| Item | Code | Tests | E2E | Full | Notes |
+|---|---|---|---|---|---|
+| R1 recording-aware windows, correct counts | yes | yes | yes | no | |
+| R2 splits/roles: calibration hold-out (D1), train-only scaling (D2) | yes | yes | yes | no | D1/D2 preferred; calibration selection provisional (C1) |
+| R2 calibration representativeness check | yes | n.a. | yes (full training data) | n.a. | predeclared criterion failed for both draws; criterion mis-specified (§ P5) |
+| R3 named interval variants, one object per result | yes | yes | yes | no | |
+| R3b finite-sample order statistic, legitimate +inf | yes | yes | yes | no | |
+| R4 regenerate tables from structured records | no | no | no | no | needs R10 |
+| R5 feature set (`time`) rule + selection script | yes | yes | no (needs ablation runs) | no | rule in protocol §3 |
+| R5 standardised loss/metrics | yes | yes | yes | no | |
+| R6 raw vs calibrated UQ at common levels | yes | yes | yes | no | |
+| R6 zero/near-zero spread floor, NaN policy | yes | yes | yes | no | P1 |
+| R7 ddof=1, count-weighted metrics, RMSE conventions | yes | yes | yes | no | |
+| R8 seeds, provenance, no-overwrite, strict configs | yes | yes | yes | no | |
+| R8 all-member provenance validation | yes | yes | yes | no | P2 |
+| R9 ridge sanity baseline | yes | n.a. | yes | no | |
+| R9 MLP Gaussian (backbone pairing) | yes | yes | yes | no | P6 |
+| R11 bootstrap CIs + paired differences entry point | yes | yes | yes | no | P4 |
+| R11 channel/horizon/level analyses | yes (metrics) | yes | yes | no | table/figure scripts not yet written |
+| Timing pilot (jobs, report, pass/fail) | yes | n.a. | yes (dry run) | no | awaiting compute authorisation |
+| R10, R12–R14 | no | no | no | no | after pilot and full runs |
+
+## Pre-run corrections round (2026-09-28, author request)
+
+| ID | Request | What was done | Evidence |
+|---|---|---|---|
+| P1 | Zero-spread calibration produced NaN | The floor is now `1e-3 × max(mean calibration spread, SD of calibration targets)` per channel, strictly positive and scale-aware. A degenerate channel (constant target and zero spread) raises `DegenerateSpreadError`. Non-finite inputs raise; NaN bounds are rejected by `Intervals`; ±inf bounds (k > n) remain legitimate and are reported via `frac_infinite`. Floored fractions are recorded per channel. | `tests/test_intervals.py` (zero-spread channel, near-zero spread, degenerate channel, NaN in μ/s/y, NaN bounds, infinite conformal and spread-normalised intervals) |
+| P2 | Validate every ensemble member | `src/evaluation/provenance.py` checks all members: declared size (`--n_members`, now required for ensembles), distinct checkpoint SHA-256 and seeds, identical model config and parameter shapes, identical data state (features, target order, split files/hash, scalers); mixed legacy sets are rejected. The rebuilt data state is checked against **every** member. `--method gaussian` is checked against the model type. | `tests/test_provenance.py`; smoke: wrong size and wrong method correctly refused |
+| P3 | Time-feature rule | Protocol §3 and `scripts/select_features.py` (validation losses only). Both backbones must agree for `legacy`; borderline or disagreement means one repeat round (stage 0b, seeds 2 and 3), then default `no_time`; common feature set for all models. | `tests/test_select_features.py` |
+| P4 | Bootstrap entry point | `python -m src.analysis.bootstrap --spec … --out …`: recording-level cluster bootstrap with draws shared across methods, CIs, paired differences, and between-seed SD reported separately. Refuses unpaired windows or mismatched scales. The helper in `uq_metrics` was removed (single implementation). | `tests/test_bootstrap.py`; smoke run on 4 methods |
+| P5 | D1/D2 preferred; document and check calibration recordings | `scripts/check_calibration_split.py` produces the documented list and SMD table. The predeclared criterion failed for the random draw (max \|SMD\| 0.84) **and** the stratified fallback (0.83). A diagnostic added afterwards shows the criterion passes only 7.1% of random draws, and both selections are typical (≈67th percentile). `stratified_n` is adopted provisionally; the author decides (C1). | `experiments/manifests/calibration_selection.json`, `calibration_representativeness.csv`; loader reproduces the documented list |
+| P6 | MLP Gaussian | `src/models/mlp_gaussian.py`, factory entry, config `v3/mlp_gaussian.yaml`, run-list stage 1e (3 seeds). Increment ≤ 1 GPU-h (to be measured by the pilot). | `tests/test_models.py` (NLL constant, learns heteroscedastic scale, logvar clamp); smoke train + eval |
+| P7 | Timing pilot | `scripts/slurm/v3/pilot_{train,eval}.sh`, `pilot_runs.tsv`, `scripts/pilot_report.py`. 7 trainings × 3 epochs + evaluation on the validation split only; hard cap 5.5 GPU-h; mechanical pass/fail. | full chain dry-run on trimmed data: all checks pass (numbers meaningless) |
+
+## Separate track: historical checkpoint recovery (not part of the new benchmark)
+Purpose: an old-vs-new comparison for RESULTS_CHANGELOG.md only. Requires the April 2026 HPC checkpoints and logs (author question 1). If recovered, they are evaluated with `benchmark_eval --legacy_config` (recording-aware windows, validation calibration, flagged `legacy_checkpoint: true`). They are never mixed into benchmark tables. Status: **blocked** (artifacts not local).
+
+
 ## Findings
 
 | ID | Finding | Evidence | Verdict | Imp. | Diff. | Dep. | Work status | Files changed | Validation | Remaining |
@@ -80,13 +126,13 @@ Evidence types: *src* = source read, *log* = committed historical log, *data* = 
 | R8e | Checkpoints lack provenance | *src* | confirmed | 4 | 2 | — | implemented: config, seed, split files+hash, scalers, git commit/dirty, versions, best epoch | `train.py` | — | — |
 | R9a | MC dropout "disabled" accusation | *src*: `model.train()` keeps dropout on | contradicted (dropout is active); but note: `nn.LSTM` dropout acts **only between stacked layers** (encoder/decoder layer-1 outputs), not on inputs or recurrent connections | 3 | 1 | — | documented | — | `test_mc_dropout_varies_and_eval_is_deterministic` | describe placement in paper |
 | R9b | Decoder is zero-input, non-autoregressive | *src* | confirmed; the hidden-state script contradicts it (feedback) | 4 | 1 | — | documented | — | `test_lstm_decoder_input_is_zero_not_feedback` | rewrite §2.2/§3.1 text |
-| R9c | Gaussian still improving at epoch 20 (best val NLL −3.2197 at epoch 20/20) | *log* 918306 | confirmed | 4 | 2 | R8 | implemented: epochs 100 + patience 10 for all trainable models; NLL now includes 0.5·log 2π in training and evaluation | `train.py` | — | reruns |
+| R9c | Gaussian training may have been stopped by the epoch budget: best val NLL −3.2197 occurred at the final epoch (20/20). This is consistent with, but not proof of, non-convergence. | *log* 918306 | confirmed (as a budget-limited run, not as proven non-convergence) | 4 | 2 | R8 | implemented: epochs 100 + patience 10 for all trainable models; `stopped_by` recorded; NLL includes 0.5·log 2π in training and evaluation | `train.py` | — | reruns |
 | R9d | Historical per-DoF temperature grid tops out at 1.0; `u` and `φ` were assigned T=1.0 (grid edge) | *src*, *log* 918386 | confirmed | 3 | 1 | — | superseded (spread-normalised calibration has no grid) | — | — | — |
 | R9e | Linear baseline poorly optimised? | RESULTS: Linear 1.79 RMSE vs naive 0.17 | plausible, unverified | 4 | 2 | R2 | implemented: closed-form ridge with validation-selected penalty | `src/training/fit_ridge.py` | smoke test (pending) | run on full data |
 | R9f | Manuscript GRU "330K" parameters | *test*: implementation has 305,157 (LSTM 407K, MLP 197K, TCN 353K match) | contradicted | 2 | 1 | — | open (manuscript) | — | `test_historical_parameter_counts` | — |
-| R10 | Rerun core benchmark | — | — | 5 | 4 | R1–R9 | blocked on compute authorisation and protocol sign-off | — | — | see EXPERIMENT_PROTOCOL.md |
-| R11 | Channel/horizon/nominal-level/interval-score/recording-bootstrap analyses | — | — | 4 | 3 | R10 | implemented (metrics + per-window files + `recording_bootstrap`) – awaiting experiments | `uq_metrics.py` | — | analysis scripts for tables/figures |
-| R12 | Independent shift confirmation / MLP Gaussian & MLP dropout | — | — | 4–5 | 4 | R10 | `mlp_dropout` config added; MLP Gaussian head not implemented (decision Q3) | configs | — | — |
+| R10 | Rerun core benchmark | — | — | 5 | 4 | R1–R9 | blocked: timing pilot awaits authorisation; full run list only after the pilot passes | — | — | see EXPERIMENT_PROTOCOL.md |
+| R11 | Channel/horizon/nominal-level/interval-score/recording-bootstrap analyses | — | — | 4 | 3 | R10 | implemented (metrics + per-window files + `src/analysis/bootstrap.py` entry point) – awaiting experiments | `uq_metrics.py`, `src/analysis/bootstrap.py` | — | analysis scripts for tables/figures |
+| R12 | Independent shift confirmation / MLP Gaussian & MLP dropout | — | — | 4–5 | 4 | R10 | MLP dropout and MLP Gaussian implemented (stages 1c/1e); no untouched OOD set known, so OOD stays exploratory | configs, `mlp_gaussian.py` | tests + smoke | runs |
 | R13 | Align figures/claims | see claim list below | — | 4 | 2–3 | R10 | open | — | — | after R10 |
 | R14 | Packaging | — | — | 4 | 2–3 | all | open | — | — | — |
 | R15 | Transformer/adaptive/full-scale | — | — | 2–4 | 4–5 | core | deferred (brief §2) | — | — | — |
@@ -116,4 +162,6 @@ Evidence types: *src* = source read, *log* = committed historical log, *data* = 
 1. **HPC artifacts:** do `~/phd-p1-darus-uncertainty/experiments/results/` and `logs/slurm/` still exist on the TalTech cluster (April 2026 checkpoints, logs 918426/918432/918441/918445/918450/918411)? They are needed only for the old-versus-new comparison (evaluate the historical checkpoints with corrected windows/intervals via `benchmark_eval --legacy_config`). They are not needed for the new benchmark.
 2. **Dataset provenance:** the DaRUS DOI(s)/versions of the routine and OOD deposits, and any documented simulation settings (Hs, Tp, wave direction, speed/propeller set-points). The processed files contain no sea-state parameters; without them the shift must be called a *combined operating-condition shift*.
 3. **Compute authorisation and protocol sign-off:** see EXPERIMENT_PROTOCOL.md (≈45–100 L40 GPU-hours). Also: add an MLP Gaussian head to complete the pairing (R12), or narrow the backbone claim to ensembles/conformal/dropout?
-4. **Confirmation data:** all 29 OOD recordings already informed backbone selection. Is any other DaRUS patrol-vessel condition available as an untouched confirmation set? If not, the OOD results must be reported as exploratory.
+4. **Confirmation data:** all 29 OOD recordings already informed backbone selection. Is any other DaRUS patrol-vessel condition available as an untouched confirmation set? If not, the OOD results are reported as exploratory (current default).
+5. **C1 (calibration recordings):** accept the provisional `stratified_n` selection, or replace the mis-specified representativeness criterion with the chance-referenced one (both selections pass it); either choice is disclosed.
+6. **Pilot authorisation:** submit the timing pilot (hard cap 5.5 L40 GPU-h)?

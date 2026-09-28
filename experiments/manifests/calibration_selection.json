@@ -1,0 +1,52 @@
+{
+  "seed": 20261001,
+  "n_recordings": 9,
+  "criterion": "|SMD| <= 0.5 for all per-recording mean/SD variables and cal u/n means within fit range",
+  "random": {
+    "files": [
+      "20190805-100228.csv",
+      "20190805-100852.csv",
+      "20190805-101342.csv",
+      "20190805-102826.csv",
+      "20190805-104006.csv",
+      "20190805-104246.csv",
+      "20190805-104247.csv",
+      "20190805-105120.csv",
+      "20190805-110729.csv"
+    ],
+    "passed": false,
+    "u_n_in_range": true,
+    "max_abs_smd": 0.8420834795316161,
+    "worst_variable": "deltal_std",
+    "max_abs_smd_chance_percentile": 67.54
+  },
+  "stratified_n": {
+    "files": [
+      "20190805-095929.csv",
+      "20190805-100322.csv",
+      "20190805-100351.csv",
+      "20190805-101342.csv",
+      "20190805-101925.csv",
+      "20190805-102210.csv",
+      "20190805-102939.csv",
+      "20190805-104006.csv",
+      "20190805-104542.csv"
+    ],
+    "passed": false,
+    "u_n_in_range": true,
+    "max_abs_smd": 0.8328160433235231,
+    "worst_variable": "Vw_mean",
+    "max_abs_smd_chance_percentile": 66.24
+  },
+  "selected_method": "stratified_n",
+  "chance_reference": {
+    "note": "diagnostic, added after the first check: max|SMD| over 5000 random draws",
+    "p_criterion_passes_by_chance": 0.0706,
+    "max_abs_smd_quantiles_5_50_95": [
+      0.472,
+      0.749,
+      1.139
+    ]
+  },
+  "status": "criterion mis-specified (passes by chance in ~7% of draws); neither selection passes; stratified_n adopted provisionally as the predeclared fallback pending author decision"
+}

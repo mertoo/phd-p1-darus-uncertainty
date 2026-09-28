@@ -11,15 +11,17 @@ data:
     seed: 20261001
 
 model:
-  type: "naive"
-
+  type: "mlp_gaussian"
+  hidden_dim: 256
+  num_layers: 3
+  dropout: 0.0
 training:
-  epochs: 1
-  patience: 0
+  epochs: 100
+  patience: 10
   lr: 0.001
   batch_size: 256
   weight_decay: 0.0
   device: "auto"
 logging:
   save_dir: "experiments/runs/v3"
-  run_name: "naive"
+  run_name: "mlp_gaussian"

@@ -119,22 +119,3 @@ def per_window_frame(y, yhat, iv: Intervals | None, meta):
     df = pd.DataFrame(cols)
     df["n_steps"] = y.shape[1]
     return pd.concat([meta.reset_index(drop=True), df], axis=1)
-
-
-def recording_bootstrap(frame, stat_fn, n_boot=2000, seed=0, ci=0.95):
-    """
-    Cluster bootstrap over recordings: resample whole recordings with
-    replacement and recompute `stat_fn(frame_subset)`. Overlapping windows
-    within a recording are never treated as independent draws.
-    Returns (point estimate, lower, upper, n_recordings).
-    """
-    groups = [g for _, g in frame.groupby("recording", sort=True)]
-    rng = np.random.default_rng(seed)
-    import pandas as pd
-    est = stat_fn(frame)
-    boots = []
-    for _ in range(n_boot):
-        pick = rng.integers(0, len(groups), size=len(groups))
-        boots.append(stat_fn(pd.concat([groups[i] for i in pick], ignore_index=True)))
-    lo, hi = np.quantile(boots, [(1 - ci) / 2, 1 - (1 - ci) / 2], axis=0)
-    return est, lo, hi, len(groups)

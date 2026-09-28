@@ -5,7 +5,8 @@ data:
   stride: 1
   features: "no_time"      # PROVISIONAL: frozen after the validation-only time-feature ablation (EXPERIMENT_PROTOCOL.md §3)
   normalize: true          # train-only standardisation of inputs and targets
-  calibration:             # 9 training recordings held out for calibration only
+  calibration:             # 9 training recordings held out for calibration only (D1)
+    method: "stratified_n" # PROVISIONAL: see experiments/manifests/calibration_selection.json
     n_recordings: 9
     seed: 20261001
 

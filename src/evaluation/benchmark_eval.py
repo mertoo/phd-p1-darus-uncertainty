@@ -22,14 +22,16 @@ import argparse
 import glob
 import json
 import os
+import time
 
 import numpy as np
 import torch
 import yaml
 
 from src.data_loading.darus_dataset import Standardizer, build_datasets, make_loader
+from src.evaluation.provenance import member_record, validate_members
 from src.evaluation.uq_metrics import interval_metrics, per_window_frame, point_metrics
-from src.models.factory import build_model
+from src.models.factory import build_model, is_gaussian
 from src.uncertainty.intervals import (VARIANTS, conformal_intervals,
                                        raw_gaussian_intervals, scaled_spread_intervals)
 
@@ -133,13 +135,19 @@ def main():
     ap.add_argument("--runs", nargs="+", required=True, help="run dir(s); globs allowed")
     ap.add_argument("--out", required=True)
     ap.add_argument("--legacy_config", default=None)
+    ap.add_argument("--n_members", type=int, default=None,
+                    help="intended ensemble size (required for --method ensemble)")
     ap.add_argument("--passes", type=int, default=200)
     ap.add_argument("--mc_seed", type=int, default=0)
     ap.add_argument("--batch_size", type=int, default=512)
     ap.add_argument("--floor_rel", type=float, default=1e-3)
     ap.add_argument("--levels", type=float, nargs="+", default=list(LEVELS))
+    ap.add_argument("--eval_splits", nargs="+", default=list(EVAL_SPLITS),
+                    choices=["val", "test", "ood_test"],
+                    help="splits to score; the timing pilot uses 'val' only so test/OOD stay untouched")
     ap.add_argument("--overwrite", action="store_true")
     args = ap.parse_args()
+    eval_splits = tuple(args.eval_splits)
 
     if os.path.exists(os.path.join(args.out, "metrics.json")) and not args.overwrite:
         raise FileExistsError(f"{args.out}/metrics.json exists; use a new --out or --overwrite")
@@ -149,33 +157,49 @@ def main():
     run_dirs = sorted({d for pat in args.runs for d in glob.glob(pat)})
     if not run_dirs:
         raise FileNotFoundError(args.runs)
-    if args.method == "ensemble" and len(run_dirs) < 2:
-        raise ValueError("ensemble needs >= 2 member runs")
+    if args.method == "ensemble" and args.n_members is None:
+        raise ValueError("--n_members is required for --method ensemble")
     if args.method != "ensemble" and len(run_dirs) != 1:
         raise ValueError(f"{args.method} takes exactly one run dir")
 
-    first = load_run(run_dirs[0], args.legacy_config, device)
-    _, cfg0, data_cfg, ds_state0, legacy = first
+    # Load every member and validate provenance before touching data.
+    loaded = [load_run(rd, args.legacy_config, device) for rd in run_dirs]
+    records = [member_record(rd, os.path.join(rd, "best_model.pt"), ckpt, cfg)
+               for rd, (ckpt, cfg, _, _, _) in zip(run_dirs, loaded)]
+    provenance = validate_members(records, args.n_members if args.method == "ensemble" else 1,
+                                  method=args.method)
+    for rd, (_, cfg, _, _, _) in zip(run_dirs, loaded):
+        if is_gaussian(cfg["model"]) != (args.method == "gaussian"):
+            raise ValueError(f"{rd}: model type '{cfg['model']['type']}' is incompatible with --method {args.method}")
+    data_cfgs = [dc for _, _, dc, _, _ in loaded]
+    if any(dc != data_cfgs[0] for dc in data_cfgs):
+        raise RuntimeError("data configs differ between members")
+    data_cfg, legacy = data_cfgs[0], loaded[0][4]
+
     datasets, new_state = build_datasets(data_cfg)
-    if ds_state0 is not None:
-        check_scalers(new_state, ds_state0)
+    for rd, (_, _, _, st, _) in zip(run_dirs, loaded):
+        if st is not None:
+            try:
+                check_scalers(new_state, st)
+            except (AssertionError, RuntimeError) as e:
+                raise RuntimeError(f"{rd}: rebuilt data state does not match checkpoint: {e}")
     y_scaler = Standardizer.from_dict(new_state["y_scaler"]) if new_state["y_scaler"] else None
     cal_split = "cal" if "cal" in datasets else "val"
-    splits = (cal_split,) + EVAL_SPLITS
+    if cal_split in eval_splits:
+        raise ValueError(f"cannot evaluate on the calibration split '{cal_split}'")
+    splits = (cal_split,) + eval_splits
     H, T = new_state["history"], new_state["horizon"]
     mode = {"point": "point", "ensemble": "point", "mc_dropout": "mc_dropout", "gaussian": "gaussian"}[args.method]
 
     members = []
-    for rd in run_dirs:
-        ckpt, cfg, dcfg, st, _ = load_run(rd, args.legacy_config, device)
-        if dcfg != data_cfg:
-            raise RuntimeError(f"{rd}: data config differs from {run_dirs[0]}")
+    for rd, (ckpt, cfg, _, _, _), rec in zip(run_dirs, loaded, records):
         members.append({"dir": rd, "model": instantiate(ckpt, cfg, datasets["train"], H, T, device),
-                        "seed": ckpt.get("seed"), "best_epoch": ckpt.get("best_epoch"),
-                        "git": ckpt.get("git")})
+                        "seed": rec["seed"], "sha256": rec["sha256"],
+                        "best_epoch": rec["best_epoch"], "git": rec["git"]})
 
-    preds = {}
+    preds, timing = {}, {}
     for sp in splits:
+        t_split = time.time()
         loader = make_loader(datasets[sp], args.batch_size)
         y = datasets[sp].targets_physical()
         if args.method == "ensemble":
@@ -191,6 +215,7 @@ def main():
         np.savez_compressed(os.path.join(args.out, f"predictions_{sp}.npz"),
                             **{k: v.astype(np.float32) for k, v in arrays.items()})
         datasets[sp].meta.to_csv(os.path.join(args.out, f"windows_{sp}.csv"))
+        timing[sp] = {"n_windows": len(datasets[sp]), "inference_s": time.time() - t_split}
 
     scale = y_scaler.std if y_scaler is not None else None
     if scale is None:  # dimensionless reference for legacy runs: train-target std
@@ -199,11 +224,11 @@ def main():
 
     cal = preds[cal_split]
     results = {"point": {}, "intervals": []}
-    for sp in EVAL_SPLITS:
+    for sp in eval_splits:
         results["point"][sp] = point_metrics(preds[sp]["y"], preds[sp]["mean"], scale=scale)
 
     for level in args.levels:
-        for sp in EVAL_SPLITS:
+        for sp in eval_splits:
             p = preds[sp]
             ivs = []
             if args.method in ("point",):
@@ -231,6 +256,7 @@ def main():
         "method": args.method,
         "runs": [{k: v for k, v in m.items() if k != "model"} for m in members],
         "legacy_checkpoint": legacy,
+        "member_validation": provenance,
         "calibration_split": cal_split,
         "calibration_note": ("validation split reused for model selection and calibration"
                              if cal_split == "val" else "held-out calibration recordings"),
@@ -240,6 +266,9 @@ def main():
         "mc_seed": args.mc_seed if args.method == "mc_dropout" else None,
         "spread_convention": "sample std, ddof=1" if args.method in ("ensemble", "mc_dropout") else None,
         "floor_rel": args.floor_rel,
+        "eval_splits": list(eval_splits),
+        "timing": timing,
+        "gpu_max_mem_gb": (torch.cuda.max_memory_allocated() / 1e9) if device == "cuda" else None,
         "scale_for_normalised_metrics": np.asarray(scale).tolist(),
     }
     with open(os.path.join(args.out, "metrics.json"), "w") as f:

@@ -1,8 +1,16 @@
 stage	config	seed	run_name	features_override
-0	lstm	1	ablation/lstm_legacy	legacy
-0	lstm	1	ablation/lstm_no_time	no_time
-0	mlp	1	ablation/mlp_legacy	legacy
-0	mlp	1	ablation/mlp_no_time	no_time
+0	lstm	1	ablation/lstm_legacy/seed1	legacy
+0	lstm	1	ablation/lstm_no_time/seed1	no_time
+0	mlp	1	ablation/mlp_legacy/seed1	legacy
+0	mlp	1	ablation/mlp_no_time/seed1	no_time
+0b	lstm	2	ablation/lstm_legacy/seed2	legacy
+0b	lstm	2	ablation/lstm_no_time/seed2	no_time
+0b	mlp	2	ablation/mlp_legacy/seed2	legacy
+0b	mlp	2	ablation/mlp_no_time/seed2	no_time
+0b	lstm	3	ablation/lstm_legacy/seed3	legacy
+0b	lstm	3	ablation/lstm_no_time/seed3	no_time
+0b	mlp	3	ablation/mlp_legacy/seed3	legacy
+0b	mlp	3	ablation/mlp_no_time/seed3	no_time
 1a	lstm	1000	lstm_ens/rep0/model_0	
 1a	lstm	1001	lstm_ens/rep0/model_1	
 1a	lstm	1002	lstm_ens/rep0/model_2	
@@ -51,3 +59,6 @@ stage	config	seed	run_name	features_override
 1d	lstm_gaussian	4000	lstm_gaussian/rep0	
 1d	lstm_gaussian	4001	lstm_gaussian/rep1	
 1d	lstm_gaussian	4002	lstm_gaussian/rep2	
+1e	mlp_gaussian	5000	mlp_gaussian/rep0	
+1e	mlp_gaussian	5001	mlp_gaussian/rep1	
+1e	mlp_gaussian	5002	mlp_gaussian/rep2	

@@ -55,3 +55,42 @@ def test_lstm_decoder_input_is_zero_not_feedback():
         _, (h, c) = m.encoder(x)
         dec, _ = m.decoder(torch.zeros(2, 30, 5), (h, c))
         torch.testing.assert_close(m.fc(dec), m(x))
+
+
+def test_gaussian_nll_includes_constant():
+    import math
+    from src.training.train import gaussian_nll
+    z = torch.zeros(1, 1, 1)
+    assert gaussian_nll(z, z, z).item() == pytest.approx(0.5 * math.log(2 * math.pi))
+
+
+def test_mlp_gaussian_learns_heteroscedastic_scale():
+    # noise sd depends on the sign of the last input value; the head must learn it
+    from src.training.train import gaussian_nll
+    torch.manual_seed(0)
+    m = build_model({"type": "mlp_gaussian", "hidden_dim": 32, "num_layers": 3}, 2, 1, 4, 3)
+    opt = torch.optim.Adam(m.parameters(), lr=1e-2)
+    x = torch.randn(2048, 4, 2)
+    sd = torch.where(x[:, -1, :1] > 0, 1.0, 0.1).unsqueeze(1).expand(-1, 3, 1)
+    y = sd * torch.randn(2048, 3, 1)
+    first = None
+    for _ in range(300):
+        mu, logvar = m(x)
+        loss = gaussian_nll(mu, logvar, y)
+        first = first if first is not None else loss.item()
+        opt.zero_grad(); loss.backward(); opt.step()
+    assert loss.item() < first
+    with torch.no_grad():
+        _, logvar = m(x)
+    s = torch.exp(0.5 * logvar)
+    hi, lo = s[sd > 0.5].mean(), s[sd < 0.5].mean()
+    assert hi / lo > 4                                     # true ratio is 10
+
+
+def test_logvar_clamped():
+    m = build_model({"type": "mlp_gaussian"}, 3, 5, 30, 30)
+    with torch.no_grad():
+        for p in m.parameters():
+            p.fill_(10.0)
+        _, logvar = m(torch.ones(2, 30, 3))
+    assert logvar.max() <= 5.0 and logvar.min() >= -10.0

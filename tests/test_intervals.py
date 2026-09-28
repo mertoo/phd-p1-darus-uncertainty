@@ -109,3 +109,85 @@ def test_ensemble_std_uses_n_minus_1():
     mean, std = predict_ensemble([Const(v) for v in vals], torch.zeros(2, 1), "cpu")
     assert mean[0, 0, 0] == pytest.approx(3.0)
     assert std[0, 0, 0] == pytest.approx(np.std(vals, ddof=1))
+
+
+# ---- zero / near-zero spread, NaN inputs, legitimate infinite intervals ----
+from src.uncertainty.intervals import DegenerateSpreadError, spread_floor
+
+
+def _cal_setup(seed=4, N=500, T=3, D=2):
+    rng = np.random.default_rng(seed)
+    y_cal = rng.normal(size=(N, T, D))
+    y = rng.normal(size=(N, T, D))
+    return y_cal, y, np.zeros((N, T, D))
+
+
+def test_zero_spread_channel_gets_positive_scale_aware_floor():
+    y_cal, y, mu = _cal_setup()
+    s = np.ones_like(y_cal)
+    s[..., 1] = 0.0                                        # a method reporting no spread on channel 1
+    floor = spread_floor(s, y_cal)
+    assert np.all(floor > 0)
+    assert floor[0, 0, 1] == pytest.approx(1e-3 * y_cal[..., 1].std())
+    s_eval = np.ones_like(y)
+    s_eval[..., 1] = 0.0                                   # same behaviour at evaluation time
+    iv = scaled_spread_intervals(mu, s, y_cal, mu, s_eval, 0.9, "channel", "ens")
+    assert np.all(np.isfinite(iv.lower)) and np.all(np.isfinite(iv.upper))
+    cov = interval_metrics(y, iv)["coverage_channel"]
+    assert np.all(np.abs(cov - 0.9) < 0.04)                # floored score still calibrates
+    assert iv.info["frac_floored_cal"][1] == 1.0 and iv.info["frac_floored_cal"][0] == 0.0
+
+
+def test_near_zero_spread_is_floored_not_exploded():
+    y_cal, y, mu = _cal_setup()
+    s = np.full_like(y_cal, 1e-300)
+    iv = scaled_spread_intervals(mu, s, y_cal, mu, s[: len(y)], 0.9, "horizon_channel", "mcd")
+    assert np.all(np.isfinite(iv.upper - iv.lower))
+    assert np.all(iv.info["frac_floored_cal"] == 1.0)
+
+
+def test_degenerate_channel_raises():
+    y_cal, y, mu = _cal_setup()
+    y_cal[..., 0] = 3.0                                    # constant target ...
+    s = np.ones_like(y_cal)
+    s[..., 0] = 0.0                                        # ... and zero spread
+    with pytest.raises(DegenerateSpreadError):
+        scaled_spread_intervals(mu, s, y_cal, mu, s[: len(y)], 0.9, "channel", "ens")
+
+
+@pytest.mark.parametrize("which", ["mu", "s", "y_cal"])
+def test_nan_inputs_raise(which):
+    y_cal, y, mu = _cal_setup()
+    args = {"mu": mu.copy(), "s": np.ones_like(y_cal), "y_cal": y_cal.copy()}
+    args[which][0, 0, 0] = np.nan
+    with pytest.raises(ValueError, match="non-finite"):
+        scaled_spread_intervals(args["mu"], args["s"], args["y_cal"], mu, np.ones_like(y), 0.9, "channel", "x")
+    if which != "s":                                       # conformal takes no spread
+        with pytest.raises(ValueError, match="non-finite"):
+            conformal_intervals(args["mu"], args["y_cal"], mu, 0.9, "channel")
+
+
+def test_nan_bounds_rejected():
+    z = np.zeros((2, 2, 1))
+    with pytest.raises(ValueError, match="NaN"):
+        Intervals(z, np.full_like(z, np.nan), "x", "v", 0.9)
+
+
+def test_infinite_conformal_interval_is_legitimate_and_reported():
+    # n = 5 calibration windows, level 0.95 -> k = ceil(6*0.95) = 6 > 5 -> unbounded
+    y_cal, y, _ = _cal_setup(N=5)
+    for variant in ("channel", "horizon_channel"):
+        n_cal = 5 if variant == "horizon_channel" else 5 * 3
+        iv = conformal_intervals(np.zeros_like(y_cal), y_cal, np.zeros((7, 3, 2)), 0.95, variant)
+        m = interval_metrics(np.zeros((7, 3, 2)), iv)
+        if variant == "horizon_channel":
+            assert np.all(np.isinf(iv.upper)) and m["frac_infinite"] == 1.0
+            assert m["coverage"] == 1.0 and np.all(np.isinf(m["width_channel"]))
+            assert not np.isnan(m["interval_score_channel"]).any()
+        else:                                              # 15 pooled scores: k = 16 > 15 too
+            assert n_cal == 15 and m["frac_infinite"] == 1.0
+    # spread-normalised: inf threshold times a positive floored spread stays inf, never NaN
+    s = np.zeros_like(y_cal)
+    iv = scaled_spread_intervals(np.zeros_like(y_cal), s, y_cal, np.zeros((7, 3, 2)),
+                                 np.zeros((7, 3, 2)), 0.95, "horizon_channel", "ens")
+    assert np.all(np.isinf(iv.upper)) and not np.isnan(iv.upper).any()
