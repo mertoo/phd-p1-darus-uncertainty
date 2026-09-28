@@ -8,7 +8,7 @@ Status vocabulary: **confirmed** (verified against source/log/data), **contradic
 1. **Code**: implemented in the repository.
 2. **Tests**: targeted synthetic unit tests pass (`pytest tests`, 54 tests on 2026-09-28).
 3. **E2E**: connected end-to-end and exercised by a CLI run on trimmed *real* recordings (2 to 3 epochs, 3 recordings per split). This shows the pipeline runs; it produces no scientific result.
-4. **Full**: the corrected full-data experiment has finished and its outputs have been checked. **Nothing is at level 4 yet.**
+4. **Full**: the corrected full-data experiment has finished and its outputs have been checked. As of 2026-09-28 (Stages A–D, commit `83585da`), items marked `yes` in the Full column have reached this level. This does not by itself establish the manuscript's final conclusions (see RESULTS_CHANGELOG.md).
 Evidence types: *src* = source read, *log* = committed historical log, *data* = computed on the local DaRUS files, *test* = synthetic unit test. A passing test is never a paper result.
 
 ---
@@ -63,25 +63,28 @@ Evidence types: *src* = source read, *log* = committed historical log, *data* = 
 
 | Item | Code | Tests | E2E | Full | Notes |
 |---|---|---|---|---|---|
-| R1 recording-aware windows, correct counts | yes | yes | yes | no | |
+| R1 recording-aware windows, correct counts | yes | yes | yes | yes | Stages A–D |
 | R2 splits/roles: calibration hold-out (D1), train-only scaling (D2) | yes | yes | yes | no | D1/D2 adopted; primary calibration = fixed-seed random draw (author decision) |
 | R2 calibration representativeness check | yes | n.a. | yes (full training data) | n.a. | predeclared criterion failed for both draws; reported descriptively, no post-hoc threshold; stratified draw kept as optional sensitivity |
-| R3 named interval variants, one object per result | yes | yes | yes | no | |
-| R3b finite-sample order statistic, legitimate +inf | yes | yes | yes | no | |
-| R4 regenerate tables from structured records | no | no | no | no | needs R10 |
-| R5 feature set (`time`) rule + selection script | yes | yes | no (needs ablation runs) | no | rule in protocol §3 |
-| R5 standardised loss/metrics | yes | yes | yes | no | |
-| R6 raw vs calibrated UQ at common levels | yes | yes | yes | no | |
-| R6 zero/near-zero spread floor, NaN policy | yes | yes | yes | no | P1 |
-| R7 ddof=1, count-weighted metrics, RMSE conventions | yes | yes | yes | no | |
-| R8 seeds, provenance, no-overwrite, strict configs | yes | yes | yes | no | |
-| R8 all-member provenance validation | yes | yes | yes | no | P2 |
-| R9 ridge sanity baseline | yes | n.a. | yes | no | |
-| R9 MLP Gaussian (backbone pairing) | yes | yes | yes | no | P6 |
-| R11 bootstrap CIs + paired differences entry point | yes | yes | yes | no | P4 |
-| R11 channel/horizon/level analyses | yes (metrics) | yes | yes | no | table/figure scripts not yet written |
+| R3 named interval variants, one object per result | yes | yes | yes | yes | |
+| R3b finite-sample order statistic, legitimate +inf | yes | yes | yes | yes | no infinite bounds occurred (n = 31,878 calibration windows) |
+| R4 regenerate tables from structured records | yes | yes | yes | yes | `experiments/analysis/v3/report/` (manuscript not yet edited) |
+| R5 feature set (`time`) rule + selection script | yes | yes | yes | yes | Stage A: `no_time` |
+| R5 standardised loss/metrics | yes | yes | yes | yes | |
+| R6 raw vs calibrated UQ at common levels | yes | yes | yes | yes | |
+| R6 zero/near-zero spread floor, NaN policy | yes | yes | yes | yes | P1; floor inactive at full scale (P10) |
+| R7 ddof=1, count-weighted metrics, RMSE conventions | yes | yes | yes | yes | |
+| R8 seeds, provenance, no-overwrite, strict configs | yes | yes | yes | yes | |
+| R8 all-member provenance validation | yes | yes | yes | yes | Stage C: 35/35 validated |
+| R9 ridge sanity baseline | yes | n.a. | yes | yes | ridge ≈ networks; the v2.2 linear failure did not reproduce |
+| R9 MLP Gaussian (backbone pairing) | yes | yes | yes | yes | |
+| R11 bootstrap CIs + paired differences entry point | yes | yes | yes | yes | Stage D |
+| R11 channel/horizon/level analyses | yes | yes | yes | yes | Stage D report |
 | Timing pilot (preflight, jobs, report) | yes | yes (`test_pilot_report.py`) | yes (HPC, full data, 3 epochs) | pilot complete — PASS | 0.075 GPU-h billed; validation split only; not a benchmark result |
-| R10, R12–R14 | no | no | no | no | after pilot and full runs |
+| R10 core benchmark rerun | yes | yes | yes | yes | Stages A–D; 3 repeats |
+| R12 backbone pairings complete; OOD confirmation | yes | yes | yes | partial | all 4 UQ families × LSTM/MLP done; no untouched OOD set, so OOD stays exploratory |
+| R13 manuscript alignment | no | no | no | no | pending author review of RESULTS_CHANGELOG.md |
+| R14 packaging / release | no | no | no | no | |
 
 ## Pre-run corrections round (2026-09-28, author request)
 
@@ -112,6 +115,12 @@ Evidence types: *src* = source read, *log* = committed historical log, *data* = 
 - ~~Before stage B: feature decision~~ recorded: `no_time` (Stage A).
 - ~~Before stage D: floor-sensitivity script and table/figure generators~~ written, tested on smoke data, rules frozen (protocol §10).
 - **Open, not blocking:** P10 (floor activation); GRU, linear-SGD and MLP-dropout epoch times are proxies; the ridge pilot selected alpha_rel = 0 (the unpenalised end of the grid), to be checked in stage B; no untouched OOD data, so OOD stays exploratory.
+
+| P15 | **Stages B–D executed** (commit `83585da`) | **B:** preflights 5/5; arrays 984258–984262 (51 × 1 L40, 15 min) + CPU 984263 (ridge, naive); 52/52 completed; **0.772 GPU-h**; gate PASS; every run early-stopped (best epochs: recurrent/TCN 2–5, MLP 3–9, MLP-dropout 16–32, linear-SGD 22–49); ridge alpha_rel = 0. **C:** preflight (commit, clean tree, checkpoint counts, no earlier outputs, cap 0.828 + 8.75 ≤ 21.56) OK; array 984312 (35 × 1 L40); 35/35 completed; **0.717 GPU-h**; gate PASS; P10 floor activation ≤ 0.001%. **D:** CPU job 984348 (1 core = 2 threads, 2 h limit), 41 min 57 s = 1.40 thread-hours; bootstrap (19 methods; 30 ID / 29 OOD recordings), report (11 outputs), floor sensitivity (18 evaluations, not triggered). Cumulative benchmark allocation **1.546 GPU-h of 21.56**. | `experiments/manifests/stageB_2026-09-28/`, `stageC_2026-09-28/` (metrics, gate, sacct), `experiments/analysis/v3/`, `gpu_ledger.tsv` |
+| P16 | Old-vs-new comparison | `RESULTS_CHANGELOG.md` + `scripts/results_changelog.py`: v2.2 values quoted, v3 values generated; claim-by-claim status (supported / weakened / contradicted / untested). Manuscript unchanged. | `experiments/analysis/v3/results_changelog_values.csv` |
+| P10 (update) | Floor activation | At full scale (5-member ensembles, MC dropout, Gaussian; 3 repeats), at most 0.001% of calibration spreads are floored. floor_rel 1e-2 changes coverage by ≤ 0.25 pp and normalised width by ≤ 0.05. **Evidence supports closing P10 for the reported models; closure left to the author.** The pilot's 2-member p/φ excess remains unexplained and is pilot-specific. | `experiments/analysis/v3/floor_sensitivity.csv` |
+| O1 | **New open item: ID over-coverage** | Every calibrated method over-covers ID test (≈ 92.6–93.5% at 90%; 60.5–65.5% at 50%), concentrated in u (94–96%) and v (98.5–99%); p, r, φ ≈ 90%. The calibration recordings were descriptively slower (SMD −0.52 on u). Cause not tested; no post-hoc change to calibration was made. | tab `uq_channels`, figure `coverage_vs_level` |
+| O2 | Presentation | The `coverage_vs_level` legend (14 series) is crowded; any layout change will be logged as a deviation from the frozen analysis rules (numbers unchanged). | figure |
 
 ## Separate track: historical checkpoint recovery (not part of the new benchmark)
 Purpose: an old-vs-new comparison for RESULTS_CHANGELOG.md only. Requires the April 2026 HPC checkpoints and logs (author question 1). If recovered, they are evaluated with `benchmark_eval --legacy_config` (recording-aware windows, validation calibration, flagged `legacy_checkpoint: true`). They are never mixed into benchmark tables. Status: **unblocked, not started.** The April artifacts exist on the cluster (`~/phd-p1-darus-uncertainty/experiments/results/`: baselines, Gaussian, LSTM/MLP ensembles, MC dropout; 106 logs in `logs/slurm/`, including jobs missing from GitHub such as 918426). Left untouched.

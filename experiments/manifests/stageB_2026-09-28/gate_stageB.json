@@ -1,0 +1,14 @@
+{
+  "stages": [
+    "1a",
+    "1b",
+    "1c",
+    "1d",
+    "1e"
+  ],
+  "evals": false,
+  "status": "PASS",
+  "failures": [],
+  "diagnostics": [],
+  "floor_activation": []
+}

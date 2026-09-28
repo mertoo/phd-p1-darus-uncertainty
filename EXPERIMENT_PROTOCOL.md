@@ -1,4 +1,4 @@
-# Experiment protocol v3.0 (frozen 2026-09-28 for the full benchmark, pending author approval of §9)
+# Experiment protocol v3.0 (frozen 2026-09-28; Stages A–D executed at commit 83585da)
 
 Status (2026-09-28): **nothing run on the full data yet.**
 - D1 and D2 are the protocol; the primary calibration split is fixed (§1).
