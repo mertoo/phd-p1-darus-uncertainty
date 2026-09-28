@@ -1,0 +1,20 @@
+         JobID                JobName      State    Elapsed ElapsedRaw NodeList                                          AllocTRES 
+-------------- ---------------------- ---------- ---------- ---------- -------- -------------------------------------------------- 
+        984251    darus_v3_preflightA  COMPLETED   00:00:06          6  green24                 billing=133332,cpu=2,mem=2G,node=1 
+ 984251.extern                 extern  COMPLETED   00:00:06          6  green24                 billing=133332,cpu=2,mem=2G,node=1 
+      984251.0    darus_v3_preflightA  COMPLETED   00:00:06          6  green24                                cpu=2,mem=2G,node=1 
+      984252_1         darus_v3_train  COMPLETED   00:00:54         54     ada1   billing=10333333,cpu=4,gres/gpu=1,mem=16G,node=1 
+984252_1.batch                  batch  COMPLETED   00:00:54         54     ada1                    cpu=4,gres/gpu=1,mem=16G,node=1 
+984252_1.exte+                 extern  COMPLETED   00:00:54         54     ada1   billing=10333333,cpu=4,gres/gpu=1,mem=16G,node=1 
+      984252_2         darus_v3_train  COMPLETED   00:00:55         55     ada1   billing=10333333,cpu=4,gres/gpu=1,mem=16G,node=1 
+984252_2.batch                  batch  COMPLETED   00:00:55         55     ada1                    cpu=4,gres/gpu=1,mem=16G,node=1 
+984252_2.exte+                 extern  COMPLETED   00:00:55         55     ada1   billing=10333333,cpu=4,gres/gpu=1,mem=16G,node=1 
+      984252_3         darus_v3_train  COMPLETED   00:00:41         41     ada1   billing=10333333,cpu=4,gres/gpu=1,mem=16G,node=1 
+984252_3.batch                  batch  COMPLETED   00:00:41         41     ada1                    cpu=4,gres/gpu=1,mem=16G,node=1 
+984252_3.exte+                 extern  COMPLETED   00:00:41         41     ada1   billing=10333333,cpu=4,gres/gpu=1,mem=16G,node=1 
+      984252_4         darus_v3_train  COMPLETED   00:00:53         53     ada1   billing=10333333,cpu=4,gres/gpu=1,mem=16G,node=1 
+984252_4.batch                  batch  COMPLETED   00:00:53         53     ada1                    cpu=4,gres/gpu=1,mem=16G,node=1 
+984252_4.exte+                 extern  COMPLETED   00:00:53         53     ada1   billing=10333333,cpu=4,gres/gpu=1,mem=16G,node=1 
+        984256         darus_v3_gateA  COMPLETED   00:00:00          0  green24                 billing=133332,cpu=2,mem=2G,node=1 
+ 984256.extern                 extern  COMPLETED   00:00:00          0  green24                 billing=133332,cpu=2,mem=2G,node=1 
+      984256.0         darus_v3_gateA  COMPLETED   00:00:00          0  green24                                cpu=1,mem=2G,node=1 

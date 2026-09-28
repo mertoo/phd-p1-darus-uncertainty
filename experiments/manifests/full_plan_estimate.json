@@ -1,0 +1,36 @@
+{
+  "basis": "pilot jobs 984243/984244 (L40, ada1), commit 54a69d5; max epoch budget, no early stopping assumed",
+  "sec_per_epoch_used": {
+    "lstm": 3.441577593485514,
+    "mlp": 2.434664805730184,
+    "lstm_dropout": 3.65673828125,
+    "lstm_gaussian": 3.4925856590270996,
+    "mlp_gaussian": 2.7658429940541587,
+    "tcn": 3.3963047663370767
+  },
+  "train_startup_overhead_s_used": 15.675275087356567,
+  "training_rows": 63,
+  "training_gpu_h_bound_by_stage": {
+    "0": 0.344,
+    "0b": 0.688,
+    "1a": 2.579,
+    "1b": 0.812,
+    "1c": 0.534,
+    "1d": 0.304,
+    "1e": 0.244
+  },
+  "training_gpu_h_bound": 5.504,
+  "training_rows_with_proxy_timing": [
+    "gru",
+    "linear",
+    "mlp_dropout"
+  ],
+  "evaluations": 35,
+  "eval_gpu_h": 1.093,
+  "gpu_h_without_contingency": 6.597,
+  "contingency_factor": 1.5,
+  "gpu_h_with_contingency": 9.895,
+  "cpu": "ridge fit + naive baseline + bootstrap + table/figure generation: < 1 CPU-h on partition `common`",
+  "storage_gb": 12.3,
+  "storage_note": "eval artifacts scale with window count (x3.78 from pilot); checkpoints ~1.6 MB each"
+}

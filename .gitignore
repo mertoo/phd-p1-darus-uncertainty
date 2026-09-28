@@ -368,3 +368,9 @@ marimo/_lsp/
 __marimo__/
 
 .DS_Store
+
+# v3 revision run outputs (large; tracked via run manifest instead)
+experiments/runs/
+experiments/eval/
+experiments/configs/v3/generated/
+.pytest_cache/

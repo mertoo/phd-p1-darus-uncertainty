@@ -36,6 +36,6 @@ def mc_dropout_predict(model, x, n_samples=200):
     preds = np.stack(preds, axis=0)
 
     mean = preds.mean(axis=0).squeeze(0)
-    std = preds.std(axis=0).squeeze(0)
+    std = preds.std(axis=0, ddof=1).squeeze(0)
 
     return mean, std, preds

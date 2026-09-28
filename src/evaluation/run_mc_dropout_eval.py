@@ -57,7 +57,7 @@ def evaluate_mc_dropout(model, loader, device, n_samples):
 
             batch_preds = np.stack(batch_preds, axis=0)   # (S, B, H, D)
             all_means.append(batch_preds.mean(axis=0))    # (B, H, D)
-            all_stds.append(batch_preds.std(axis=0))      # (B, H, D)
+            all_stds.append(batch_preds.std(axis=0, ddof=1))  # (B, H, D), sample std
             all_ys.append(y.numpy())                       # (B, H, D)
 
     means = np.concatenate(all_means, axis=0)  # (N, H, D)

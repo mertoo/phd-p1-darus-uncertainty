@@ -1,0 +1,51 @@
+# Predeclared analysis for the full benchmark (protocol v3.0), fixed 2026-09-28
+# before any full-benchmark result exists. Primary: level 0.90, horizon_channel.
+# Each entry pools the 3 repeats (between-seed SD reported separately).
+level: 90
+n_boot: 2000
+seed: 0
+ci: 0.95
+required_repeats: 3           # a missing or extra repeat blocks the analysis
+splits: [test, ood_test]
+methods:
+  # split conformal on single point models (member 0 of each ensemble repeat = single model)
+  conformal_lstm:   {tag: conformal_horizon_channel,  evals: ["experiments/eval/v3/lstm_single_rep*"]}
+  conformal_mlp:    {tag: conformal_horizon_channel,  evals: ["experiments/eval/v3/mlp_single_rep*"]}
+  conformal_gru:    {tag: conformal_horizon_channel,  evals: ["experiments/eval/v3/gru_rep*"]}
+  conformal_tcn:    {tag: conformal_horizon_channel,  evals: ["experiments/eval/v3/tcn_rep*"]}
+  conformal_linear: {tag: conformal_horizon_channel,  evals: ["experiments/eval/v3/linear_rep*"]}
+  conformal_ridge:  {tag: conformal_horizon_channel,  evals: ["experiments/eval/v3/ridge"], repeats: 1}
+  conformal_naive:  {tag: conformal_horizon_channel,  evals: ["experiments/eval/v3/naive"], repeats: 1}
+  # spread methods, calibrated (spread-normalised) and raw (Gaussian-reference) variants
+  ensemble_lstm:        {tag: ensemble_horizon_channel,   evals: ["experiments/eval/v3/lstm_ens_rep*"]}
+  ensemble_mlp:         {tag: ensemble_horizon_channel,   evals: ["experiments/eval/v3/mlp_ens_rep*"]}
+  ensemble_lstm_raw:    {tag: ensemble_raw_gaussian,      evals: ["experiments/eval/v3/lstm_ens_rep*"]}
+  ensemble_mlp_raw:     {tag: ensemble_raw_gaussian,      evals: ["experiments/eval/v3/mlp_ens_rep*"]}
+  mcd_lstm:             {tag: mc_dropout_horizon_channel, evals: ["experiments/eval/v3/lstm_mcd_rep*"]}
+  mcd_mlp:              {tag: mc_dropout_horizon_channel, evals: ["experiments/eval/v3/mlp_mcd_rep*"]}
+  mcd_lstm_raw:         {tag: mc_dropout_raw_gaussian,    evals: ["experiments/eval/v3/lstm_mcd_rep*"]}
+  mcd_mlp_raw:          {tag: mc_dropout_raw_gaussian,    evals: ["experiments/eval/v3/mlp_mcd_rep*"]}
+  gaussian_lstm:        {tag: gaussian_horizon_channel,   evals: ["experiments/eval/v3/lstm_gauss_rep*"]}
+  gaussian_mlp:         {tag: gaussian_horizon_channel,   evals: ["experiments/eval/v3/mlp_gauss_rep*"]}
+  gaussian_lstm_raw:    {tag: gaussian_raw_gaussian,      evals: ["experiments/eval/v3/lstm_gauss_rep*"]}
+  gaussian_mlp_raw:     {tag: gaussian_raw_gaussian,      evals: ["experiments/eval/v3/mlp_gauss_rep*"]}
+pairs:
+  # method vs conformal on the same backbone
+  - [ensemble_lstm, conformal_lstm]
+  - [ensemble_mlp, conformal_mlp]
+  - [mcd_lstm, conformal_lstm]
+  - [mcd_mlp, conformal_mlp]
+  - [gaussian_lstm, conformal_lstm]
+  - [gaussian_mlp, conformal_mlp]
+  # backbone effect within method
+  - [conformal_mlp, conformal_lstm]
+  - [ensemble_mlp, ensemble_lstm]
+  - [mcd_mlp, mcd_lstm]
+  - [gaussian_mlp, gaussian_lstm]
+  # effect of calibration within method
+  - [ensemble_lstm, ensemble_lstm_raw]
+  - [ensemble_mlp, ensemble_mlp_raw]
+  - [mcd_lstm, mcd_lstm_raw]
+  - [mcd_mlp, mcd_mlp_raw]
+  - [gaussian_lstm, gaussian_lstm_raw]
+  - [gaussian_mlp, gaussian_mlp_raw]

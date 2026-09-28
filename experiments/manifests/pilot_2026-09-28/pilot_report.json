@@ -1,0 +1,712 @@
+{
+  "status": "PASS",
+  "correctness": [
+    {
+      "check": "lstm_s9001: exactly 3 epochs",
+      "ok": true
+    },
+    {
+      "check": "lstm_s9001: all losses finite",
+      "ok": true
+    },
+    {
+      "check": "lstm_s9001: calibration recordings == primary manifest list",
+      "ok": true
+    },
+    {
+      "check": "lstm_s9001: training-only standardisation on",
+      "ok": true
+    },
+    {
+      "check": "lstm_s9002: exactly 3 epochs",
+      "ok": true
+    },
+    {
+      "check": "lstm_s9002: all losses finite",
+      "ok": true
+    },
+    {
+      "check": "lstm_s9002: calibration recordings == primary manifest list",
+      "ok": true
+    },
+    {
+      "check": "lstm_s9002: training-only standardisation on",
+      "ok": true
+    },
+    {
+      "check": "mlp_s9001: exactly 3 epochs",
+      "ok": true
+    },
+    {
+      "check": "mlp_s9001: all losses finite",
+      "ok": true
+    },
+    {
+      "check": "mlp_s9001: calibration recordings == primary manifest list",
+      "ok": true
+    },
+    {
+      "check": "mlp_s9001: training-only standardisation on",
+      "ok": true
+    },
+    {
+      "check": "lstm_dropout_s9001: exactly 3 epochs",
+      "ok": true
+    },
+    {
+      "check": "lstm_dropout_s9001: all losses finite",
+      "ok": true
+    },
+    {
+      "check": "lstm_dropout_s9001: calibration recordings == primary manifest list",
+      "ok": true
+    },
+    {
+      "check": "lstm_dropout_s9001: training-only standardisation on",
+      "ok": true
+    },
+    {
+      "check": "lstm_gaussian_s9001: exactly 3 epochs",
+      "ok": true
+    },
+    {
+      "check": "lstm_gaussian_s9001: all losses finite",
+      "ok": true
+    },
+    {
+      "check": "lstm_gaussian_s9001: calibration recordings == primary manifest list",
+      "ok": true
+    },
+    {
+      "check": "lstm_gaussian_s9001: training-only standardisation on",
+      "ok": true
+    },
+    {
+      "check": "mlp_gaussian_s9001: exactly 3 epochs",
+      "ok": true
+    },
+    {
+      "check": "mlp_gaussian_s9001: all losses finite",
+      "ok": true
+    },
+    {
+      "check": "mlp_gaussian_s9001: calibration recordings == primary manifest list",
+      "ok": true
+    },
+    {
+      "check": "mlp_gaussian_s9001: training-only standardisation on",
+      "ok": true
+    },
+    {
+      "check": "tcn_s9001: exactly 3 epochs",
+      "ok": true
+    },
+    {
+      "check": "tcn_s9001: all losses finite",
+      "ok": true
+    },
+    {
+      "check": "tcn_s9001: calibration recordings == primary manifest list",
+      "ok": true
+    },
+    {
+      "check": "tcn_s9001: training-only standardisation on",
+      "ok": true
+    },
+    {
+      "check": "identical split_hash across all pilot runs",
+      "ok": true
+    },
+    {
+      "check": "identical scaler_hash across all pilot runs",
+      "ok": true
+    },
+    {
+      "check": "identical feature list across all pilot runs",
+      "ok": true
+    },
+    {
+      "check": "eval point_lstm: no NaN coverage/width/score",
+      "ok": true
+    },
+    {
+      "check": "eval point_lstm: scored validation split only",
+      "ok": true
+    },
+    {
+      "check": "eval point_lstm: calibration split = primary manifest list",
+      "ok": true
+    },
+    {
+      "check": "eval point_lstm: member provenance validated",
+      "ok": true
+    },
+    {
+      "check": "eval point_mlp: no NaN coverage/width/score",
+      "ok": true
+    },
+    {
+      "check": "eval point_mlp: scored validation split only",
+      "ok": true
+    },
+    {
+      "check": "eval point_mlp: calibration split = primary manifest list",
+      "ok": true
+    },
+    {
+      "check": "eval point_mlp: member provenance validated",
+      "ok": true
+    },
+    {
+      "check": "eval ens_lstm: no NaN coverage/width/score",
+      "ok": true
+    },
+    {
+      "check": "eval ens_lstm: scored validation split only",
+      "ok": true
+    },
+    {
+      "check": "eval ens_lstm: calibration split = primary manifest list",
+      "ok": true
+    },
+    {
+      "check": "eval ens_lstm: member provenance validated",
+      "ok": true
+    },
+    {
+      "check": "eval mcd_lstm: no NaN coverage/width/score",
+      "ok": true
+    },
+    {
+      "check": "eval mcd_lstm: scored validation split only",
+      "ok": true
+    },
+    {
+      "check": "eval mcd_lstm: calibration split = primary manifest list",
+      "ok": true
+    },
+    {
+      "check": "eval mcd_lstm: member provenance validated",
+      "ok": true
+    },
+    {
+      "check": "eval gauss_lstm: no NaN coverage/width/score",
+      "ok": true
+    },
+    {
+      "check": "eval gauss_lstm: scored validation split only",
+      "ok": true
+    },
+    {
+      "check": "eval gauss_lstm: calibration split = primary manifest list",
+      "ok": true
+    },
+    {
+      "check": "eval gauss_lstm: member provenance validated",
+      "ok": true
+    },
+    {
+      "check": "eval gauss_mlp: no NaN coverage/width/score",
+      "ok": true
+    },
+    {
+      "check": "eval gauss_mlp: scored validation split only",
+      "ok": true
+    },
+    {
+      "check": "eval gauss_mlp: calibration split = primary manifest list",
+      "ok": true
+    },
+    {
+      "check": "eval gauss_mlp: member provenance validated",
+      "ok": true
+    },
+    {
+      "check": "bootstrap summary produced",
+      "ok": true
+    }
+  ],
+  "resources": [
+    {
+      "check": "lstm_s9001: peak GPU memory < 40.0 GB",
+      "ok": true
+    },
+    {
+      "check": "lstm_s9001: peak host RSS < 14.0 GB",
+      "ok": true
+    },
+    {
+      "check": "lstm_s9002: peak GPU memory < 40.0 GB",
+      "ok": true
+    },
+    {
+      "check": "lstm_s9002: peak host RSS < 14.0 GB",
+      "ok": true
+    },
+    {
+      "check": "mlp_s9001: peak GPU memory < 40.0 GB",
+      "ok": true
+    },
+    {
+      "check": "mlp_s9001: peak host RSS < 14.0 GB",
+      "ok": true
+    },
+    {
+      "check": "lstm_dropout_s9001: peak GPU memory < 40.0 GB",
+      "ok": true
+    },
+    {
+      "check": "lstm_dropout_s9001: peak host RSS < 14.0 GB",
+      "ok": true
+    },
+    {
+      "check": "lstm_gaussian_s9001: peak GPU memory < 40.0 GB",
+      "ok": true
+    },
+    {
+      "check": "lstm_gaussian_s9001: peak host RSS < 14.0 GB",
+      "ok": true
+    },
+    {
+      "check": "mlp_gaussian_s9001: peak GPU memory < 40.0 GB",
+      "ok": true
+    },
+    {
+      "check": "mlp_gaussian_s9001: peak host RSS < 14.0 GB",
+      "ok": true
+    },
+    {
+      "check": "tcn_s9001: peak GPU memory < 40.0 GB",
+      "ok": true
+    },
+    {
+      "check": "tcn_s9001: peak host RSS < 14.0 GB",
+      "ok": true
+    },
+    {
+      "check": "eval point_lstm: artifacts < 1 GB",
+      "ok": true
+    },
+    {
+      "check": "eval point_lstm: peak GPU memory < 40.0 GB",
+      "ok": true
+    },
+    {
+      "check": "eval point_mlp: artifacts < 1 GB",
+      "ok": true
+    },
+    {
+      "check": "eval point_mlp: peak GPU memory < 40.0 GB",
+      "ok": true
+    },
+    {
+      "check": "eval ens_lstm: artifacts < 1 GB",
+      "ok": true
+    },
+    {
+      "check": "eval ens_lstm: peak GPU memory < 40.0 GB",
+      "ok": true
+    },
+    {
+      "check": "eval mcd_lstm: artifacts < 1 GB",
+      "ok": true
+    },
+    {
+      "check": "eval mcd_lstm: peak GPU memory < 40.0 GB",
+      "ok": true
+    },
+    {
+      "check": "eval gauss_lstm: artifacts < 1 GB",
+      "ok": true
+    },
+    {
+      "check": "eval gauss_lstm: peak GPU memory < 40.0 GB",
+      "ok": true
+    },
+    {
+      "check": "eval gauss_mlp: artifacts < 1 GB",
+      "ok": true
+    },
+    {
+      "check": "eval gauss_mlp: peak GPU memory < 40.0 GB",
+      "ok": true
+    }
+  ],
+  "diagnostics": [
+    "tcn_s9001: val loss not monotonically decreasing over 3 epochs: [0.19263647151937396, 0.19114464202599984, 0.19191737817820653]",
+    "eval ens_lstm: ensemble/channel floors >1% of calibration spreads per channel [0.0112, 0.0125, 0.0151, 0.01, 0.0191]",
+    "eval ens_lstm: ensemble/horizon_channel floors >1% of calibration spreads per channel [0.0112, 0.0125, 0.0151, 0.01, 0.0191]"
+  ],
+  "failed": [],
+  "runs": {
+    "lstm_s9001": {
+      "kind": "lstm",
+      "sec_per_epoch": 3.441577593485514,
+      "train_windows_per_sec": 49400.60056231756,
+      "train_s": 10.324732780456543,
+      "gpu_mem_gb": 0.215568896,
+      "rss_gb": 0.973928,
+      "train_loss": [
+        0.2874427010969054,
+        0.21834923634359937,
+        0.20702203272449393
+      ],
+      "val_loss": [
+        0.21375978645585855,
+        0.1886309621866952,
+        0.18678365579055262
+      ],
+      "split_hash": "3b0f38b4bd3df279",
+      "scaler_hash": "f1cdc4a5442d50a6",
+      "features": [
+        "n",
+        "deltal",
+        "deltar",
+        "Vw",
+        "alpha_x",
+        "alpha_y",
+        "u",
+        "v",
+        "p",
+        "r",
+        "phi"
+      ]
+    },
+    "lstm_s9002": {
+      "kind": "lstm",
+      "sec_per_epoch": 3.441574970881144,
+      "train_windows_per_sec": 49400.63820735857,
+      "train_s": 10.324724912643433,
+      "gpu_mem_gb": 0.215568896,
+      "rss_gb": 0.975372,
+      "train_loss": [
+        0.2877486506783758,
+        0.21973219352905615,
+        0.20713325409976277
+      ],
+      "val_loss": [
+        0.21340112992070895,
+        0.19205572441759244,
+        0.1852181000302325
+      ],
+      "split_hash": "3b0f38b4bd3df279",
+      "scaler_hash": "f1cdc4a5442d50a6",
+      "features": [
+        "n",
+        "deltal",
+        "deltar",
+        "Vw",
+        "alpha_x",
+        "alpha_y",
+        "u",
+        "v",
+        "p",
+        "r",
+        "phi"
+      ]
+    },
+    "mlp_s9001": {
+      "kind": "mlp",
+      "sec_per_epoch": 2.434664805730184,
+      "train_windows_per_sec": 69831.37867679089,
+      "train_s": 7.303994417190552,
+      "gpu_mem_gb": 0.022437888,
+      "rss_gb": 0.914332,
+      "train_loss": [
+        0.23390456977176416,
+        0.2108946574927947,
+        0.2081560249800245
+      ],
+      "val_loss": [
+        0.18956041530048587,
+        0.18699670128467744,
+        0.18610933608126518
+      ],
+      "split_hash": "3b0f38b4bd3df279",
+      "scaler_hash": "f1cdc4a5442d50a6",
+      "features": [
+        "n",
+        "deltal",
+        "deltar",
+        "Vw",
+        "alpha_x",
+        "alpha_y",
+        "u",
+        "v",
+        "p",
+        "r",
+        "phi"
+      ]
+    },
+    "lstm_dropout_s9001": {
+      "kind": "lstm_dropout",
+      "sec_per_epoch": 3.65673828125,
+      "train_windows_per_sec": 46493.893443717454,
+      "train_s": 10.97021484375,
+      "gpu_mem_gb": 0.22435072,
+      "rss_gb": 0.991248,
+      "train_loss": [
+        0.28801903653095473,
+        0.22060446528959426,
+        0.20854720873795007
+      ],
+      "val_loss": [
+        0.21400679542163442,
+        0.18832164513877064,
+        0.1875902043409055
+      ],
+      "split_hash": "3b0f38b4bd3df279",
+      "scaler_hash": "f1cdc4a5442d50a6",
+      "features": [
+        "n",
+        "deltal",
+        "deltar",
+        "Vw",
+        "alpha_x",
+        "alpha_y",
+        "u",
+        "v",
+        "p",
+        "r",
+        "phi"
+      ]
+    },
+    "lstm_gaussian_s9001": {
+      "kind": "lstm_gaussian",
+      "sec_per_epoch": 3.4925856590270996,
+      "train_windows_per_sec": 48679.12102902007,
+      "train_s": 10.477756977081299,
+      "gpu_mem_gb": 0.215426048,
+      "rss_gb": 1.084072,
+      "train_loss": [
+        0.21457875010039004,
+        -0.03363730055968486,
+        -0.07071324041111154
+      ],
+      "val_loss": [
+        -0.03539519538759692,
+        -0.11475858560499369,
+        -0.17236231402169433
+      ],
+      "split_hash": "3b0f38b4bd3df279",
+      "scaler_hash": "f1cdc4a5442d50a6",
+      "features": [
+        "n",
+        "deltal",
+        "deltar",
+        "Vw",
+        "alpha_x",
+        "alpha_y",
+        "u",
+        "v",
+        "p",
+        "r",
+        "phi"
+      ]
+    },
+    "mlp_gaussian_s9001": {
+      "kind": "mlp_gaussian",
+      "sec_per_epoch": 2.7658429940541587,
+      "train_windows_per_sec": 61469.866643005436,
+      "train_s": 8.297528982162476,
+      "gpu_mem_gb": 0.023081472,
+      "rss_gb": 1.022704,
+      "train_loss": [
+        0.10359109087009105,
+        -0.04240432913130636,
+        -0.07363332533730699
+      ],
+      "val_loss": [
+        -0.07790707158751796,
+        -0.08956052698449737,
+        -0.12713412956208264
+      ],
+      "split_hash": "3b0f38b4bd3df279",
+      "scaler_hash": "f1cdc4a5442d50a6",
+      "features": [
+        "n",
+        "deltal",
+        "deltar",
+        "Vw",
+        "alpha_x",
+        "alpha_y",
+        "u",
+        "v",
+        "p",
+        "r",
+        "phi"
+      ]
+    },
+    "tcn_s9001": {
+      "kind": "tcn",
+      "sec_per_epoch": 3.3963047663370767,
+      "train_windows_per_sec": 50059.1117985453,
+      "train_s": 10.18891429901123,
+      "gpu_mem_gb": 0.061846016,
+      "rss_gb": 1.135332,
+      "train_loss": [
+        0.23135330956152284,
+        0.21071327139591736,
+        0.20551287846311256
+      ],
+      "val_loss": [
+        0.19263647151937396,
+        0.19114464202599984,
+        0.19191737817820653
+      ],
+      "split_hash": "3b0f38b4bd3df279",
+      "scaler_hash": "f1cdc4a5442d50a6",
+      "features": [
+        "n",
+        "deltal",
+        "deltar",
+        "Vw",
+        "alpha_x",
+        "alpha_y",
+        "u",
+        "v",
+        "p",
+        "r",
+        "phi"
+      ]
+    }
+  },
+  "evals": {
+    "point_lstm": {
+      "method": "point",
+      "timing": {
+        "cal": {
+          "n_windows": 31878,
+          "inference_s": 1.2208399772644043
+        },
+        "val": {
+          "n_windows": 31878,
+          "inference_s": 1.1889116764068604
+        }
+      },
+      "bytes": 61618312,
+      "gpu_mem_gb": 0.20134144
+    },
+    "point_mlp": {
+      "method": "point",
+      "timing": {
+        "cal": {
+          "n_windows": 31878,
+          "inference_s": 1.0769343376159668
+        },
+        "val": {
+          "n_windows": 31878,
+          "inference_s": 1.0561933517456055
+        }
+      },
+      "bytes": 61720031,
+      "gpu_mem_gb": 0.012806144
+    },
+    "ens_lstm": {
+      "method": "ensemble",
+      "timing": {
+        "cal": {
+          "n_windows": 31878,
+          "inference_s": 2.5492546558380127
+        },
+        "val": {
+          "n_windows": 31878,
+          "inference_s": 2.1657299995422363
+        }
+      },
+      "bytes": 130275265,
+      "gpu_mem_gb": 0.204591616
+    },
+    "mcd_lstm": {
+      "method": "mc_dropout",
+      "timing": {
+        "cal": {
+          "n_windows": 31878,
+          "inference_s": 23.092530012130737
+        },
+        "val": {
+          "n_windows": 31878,
+          "inference_s": 23.21117115020752
+        }
+      },
+      "bytes": 129903997,
+      "gpu_mem_gb": 0.362335232
+    },
+    "gauss_lstm": {
+      "method": "gaussian",
+      "timing": {
+        "cal": {
+          "n_windows": 31878,
+          "inference_s": 1.8505539894104004
+        },
+        "val": {
+          "n_windows": 31878,
+          "inference_s": 1.8323068618774414
+        }
+      },
+      "bytes": 129277189,
+      "gpu_mem_gb": 0.20226816
+    },
+    "gauss_mlp": {
+      "method": "gaussian",
+      "timing": {
+        "cal": {
+          "n_windows": 31878,
+          "inference_s": 1.7369468212127686
+        },
+        "val": {
+          "n_windows": 31878,
+          "inference_s": 1.6817660331726074
+        }
+      },
+      "bytes": 129676586,
+      "gpu_mem_gb": 0.01412608
+    }
+  },
+  "measured": {
+    "train_compute_s": 67.88786721229553,
+    "eval_inference_s": 62.66313886642456,
+    "note": "in-process compute only; billed GPU-hours come from sacct (see protocol \u00a77a)"
+  },
+  "planning": {
+    "sec_per_epoch": {
+      "lstm": 3.441576282183329,
+      "mlp": 2.434664805730184,
+      "lstm_dropout": 3.65673828125,
+      "lstm_gaussian": 3.4925856590270996,
+      "mlp_gaussian": 2.7658429940541587,
+      "tcn": 3.3963047663370767
+    },
+    "planned_trainings": {
+      "lstm": 21,
+      "mlp": 21,
+      "gru": 3,
+      "tcn": 3,
+      "linear": 3,
+      "lstm_dropout": 3,
+      "mlp_dropout": 3,
+      "lstm_gaussian": 3,
+      "mlp_gaussian": 3
+    },
+    "unprojected_configs": [],
+    "train_gpu_h": {
+      "typical": 2.091868840323554,
+      "worst": 5.229672100808886
+    },
+    "eval_gpu_h_per_method_full": {
+      "point_lstm": 0.002528751735334043,
+      "point_mlp": 0.0022384673283423907,
+      "ens_lstm": 0.004947823403794088,
+      "mcd_lstm": 0.04859030368887348,
+      "gauss_lstm": 0.0038647305229563772,
+      "gauss_mlp": 0.0035875381805278634
+    },
+    "eval_gpu_h_total": 0.19727284457948474,
+    "total_gpu_h": {
+      "typical": 2.289141684903039,
+      "worst": 5.42694494538837
+    },
+    "within_plan_budget": true,
+    "assumptions": "40 typical / 100 max epochs; GRU/linear timed by LSTM/MLP; includes all 63 run-list rows (incl. conditional stage 0b); excludes SLURM queue/startup overhead; ensemble eval scaled from a 2-member pilot"
+  }
+}

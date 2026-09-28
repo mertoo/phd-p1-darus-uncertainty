@@ -1,0 +1,64 @@
+stage	config	seed	run_name	features_override
+0	lstm	1	ablation/lstm_legacy/seed1	legacy
+0	lstm	1	ablation/lstm_no_time/seed1	no_time
+0	mlp	1	ablation/mlp_legacy/seed1	legacy
+0	mlp	1	ablation/mlp_no_time/seed1	no_time
+0b	lstm	2	ablation/lstm_legacy/seed2	legacy
+0b	lstm	2	ablation/lstm_no_time/seed2	no_time
+0b	mlp	2	ablation/mlp_legacy/seed2	legacy
+0b	mlp	2	ablation/mlp_no_time/seed2	no_time
+0b	lstm	3	ablation/lstm_legacy/seed3	legacy
+0b	lstm	3	ablation/lstm_no_time/seed3	no_time
+0b	mlp	3	ablation/mlp_legacy/seed3	legacy
+0b	mlp	3	ablation/mlp_no_time/seed3	no_time
+1a	lstm	1000	lstm_ens/rep0/model_0	
+1a	lstm	1001	lstm_ens/rep0/model_1	
+1a	lstm	1002	lstm_ens/rep0/model_2	
+1a	lstm	1003	lstm_ens/rep0/model_3	
+1a	lstm	1004	lstm_ens/rep0/model_4	
+1a	lstm	2000	lstm_ens/rep1/model_0	
+1a	lstm	2001	lstm_ens/rep1/model_1	
+1a	lstm	2002	lstm_ens/rep1/model_2	
+1a	lstm	2003	lstm_ens/rep1/model_3	
+1a	lstm	2004	lstm_ens/rep1/model_4	
+1a	lstm	3000	lstm_ens/rep2/model_0	
+1a	lstm	3001	lstm_ens/rep2/model_1	
+1a	lstm	3002	lstm_ens/rep2/model_2	
+1a	lstm	3003	lstm_ens/rep2/model_3	
+1a	lstm	3004	lstm_ens/rep2/model_4	
+1a	mlp	1000	mlp_ens/rep0/model_0	
+1a	mlp	1001	mlp_ens/rep0/model_1	
+1a	mlp	1002	mlp_ens/rep0/model_2	
+1a	mlp	1003	mlp_ens/rep0/model_3	
+1a	mlp	1004	mlp_ens/rep0/model_4	
+1a	mlp	2000	mlp_ens/rep1/model_0	
+1a	mlp	2001	mlp_ens/rep1/model_1	
+1a	mlp	2002	mlp_ens/rep1/model_2	
+1a	mlp	2003	mlp_ens/rep1/model_3	
+1a	mlp	2004	mlp_ens/rep1/model_4	
+1a	mlp	3000	mlp_ens/rep2/model_0	
+1a	mlp	3001	mlp_ens/rep2/model_1	
+1a	mlp	3002	mlp_ens/rep2/model_2	
+1a	mlp	3003	mlp_ens/rep2/model_3	
+1a	mlp	3004	mlp_ens/rep2/model_4	
+1b	gru	2000	gru/rep0	
+1b	gru	2001	gru/rep1	
+1b	gru	2002	gru/rep2	
+1b	tcn	2000	tcn/rep0	
+1b	tcn	2001	tcn/rep1	
+1b	tcn	2002	tcn/rep2	
+1b	linear	2000	linear/rep0	
+1b	linear	2001	linear/rep1	
+1b	linear	2002	linear/rep2	
+1c	lstm_dropout	3000	lstm_dropout/rep0	
+1c	lstm_dropout	3001	lstm_dropout/rep1	
+1c	lstm_dropout	3002	lstm_dropout/rep2	
+1c	mlp_dropout	3000	mlp_dropout/rep0	
+1c	mlp_dropout	3001	mlp_dropout/rep1	
+1c	mlp_dropout	3002	mlp_dropout/rep2	
+1d	lstm_gaussian	4000	lstm_gaussian/rep0	
+1d	lstm_gaussian	4001	lstm_gaussian/rep1	
+1d	lstm_gaussian	4002	lstm_gaussian/rep2	
+1e	mlp_gaussian	5000	mlp_gaussian/rep0	
+1e	mlp_gaussian	5001	mlp_gaussian/rep1	
+1e	mlp_gaussian	5002	mlp_gaussian/rep2	
