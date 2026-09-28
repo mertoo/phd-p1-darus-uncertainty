@@ -196,7 +196,7 @@ Purpose: an old-vs-new comparison for RESULTS_CHANGELOG.md only. Requires the Ap
 
 ## Manuscript integration (v3 manuscript, 2026-09-28)
 
-Manuscript-integration commit: `eaa44a6` (local; not pushed). Results archive: `630baad`. Benchmark code: Stage A `dde1848`, Stages B–D `83585da`.
+Manuscript-generation commits: `eaa44a6` (integration), `c1799e3` (round 3, current tables, figures and text). Results archive: `630baad`. Benchmark code: Stage A `dde1848`, Stages B–D `83585da`.
 
 Status levels: **code** = analysis/generation code exists and is tested; **experiments** = corrected benchmark outputs exist (Stages A–D); **manuscript** = integrated into `paper/revision_v3/main_v3.tex` and checked against the source outputs.
 
