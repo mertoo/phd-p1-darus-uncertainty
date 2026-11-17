@@ -6,7 +6,7 @@ Code, configuration, split manifests and analysis outputs for the benchmark in
 
 The benchmark compares seven point forecasters (persistence, ridge, linear model trained by SGD, MLP, LSTM, GRU, TCN) and four interval constructions on the public DaRUS patrol-vessel dataset. The constructions are absolute-residual split conformal (AR-SCP) and conformal intervals normalised by a deep-ensemble (EN-SCP), MC-dropout (DN-SCP) or Gaussian (GN-SCP) spread. Forecasts cover 30 s of five manoeuvring states (u, v, p, r, φ) from a 30-s history of 11 input channels. Coverage is evaluated in distribution (30 recordings) and under a shift to faster, harder-steered operation (29 recordings), with whole held-out recordings for calibration and recording-level bootstrap intervals.
 
-The per-window evaluation outputs (sufficient statistics for every coverage, width and bootstrap number in the paper) are archived on Zenodo: **DOI: to be added**.
+The per-window evaluation outputs (sufficient statistics for every coverage, width and bootstrap number in the paper) are archived on Zenodo: [doi:10.5281/zenodo.24326234](https://doi.org/10.5281/zenodo.24326234).
 
 ## Data
 
