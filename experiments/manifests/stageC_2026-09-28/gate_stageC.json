@@ -1,0 +1,479 @@
+{
+  "stages": [],
+  "evals": true,
+  "status": "PASS",
+  "failures": [],
+  "diagnostics": [
+    "P10 floor activation: no evaluation exceeds 1% (still reported)"
+  ],
+  "floor_activation": [
+    {
+      "tag": "lstm_ens_rep0",
+      "method": "ensemble",
+      "variant": "channel",
+      "frac_floored_cal": [
+        1.045653219566263e-06,
+        0.0,
+        6.2739193173975785e-06,
+        0.0,
+        0.0
+      ],
+      "exceeds_1pct": false
+    },
+    {
+      "tag": "lstm_ens_rep0",
+      "method": "ensemble",
+      "variant": "horizon_channel",
+      "frac_floored_cal": [
+        1.045653219566263e-06,
+        0.0,
+        6.2739193173975785e-06,
+        0.0,
+        0.0
+      ],
+      "exceeds_1pct": false
+    },
+    {
+      "tag": "mlp_ens_rep0",
+      "method": "ensemble",
+      "variant": "channel",
+      "frac_floored_cal": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "exceeds_1pct": false
+    },
+    {
+      "tag": "mlp_ens_rep0",
+      "method": "ensemble",
+      "variant": "horizon_channel",
+      "frac_floored_cal": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "exceeds_1pct": false
+    },
+    {
+      "tag": "lstm_mcd_rep0",
+      "method": "mc_dropout",
+      "variant": "channel",
+      "frac_floored_cal": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "exceeds_1pct": false
+    },
+    {
+      "tag": "lstm_mcd_rep0",
+      "method": "mc_dropout",
+      "variant": "horizon_channel",
+      "frac_floored_cal": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "exceeds_1pct": false
+    },
+    {
+      "tag": "mlp_mcd_rep0",
+      "method": "mc_dropout",
+      "variant": "channel",
+      "frac_floored_cal": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "exceeds_1pct": false
+    },
+    {
+      "tag": "mlp_mcd_rep0",
+      "method": "mc_dropout",
+      "variant": "horizon_channel",
+      "frac_floored_cal": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "exceeds_1pct": false
+    },
+    {
+      "tag": "lstm_gauss_rep0",
+      "method": "gaussian",
+      "variant": "channel",
+      "frac_floored_cal": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "exceeds_1pct": false
+    },
+    {
+      "tag": "lstm_gauss_rep0",
+      "method": "gaussian",
+      "variant": "horizon_channel",
+      "frac_floored_cal": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "exceeds_1pct": false
+    },
+    {
+      "tag": "mlp_gauss_rep0",
+      "method": "gaussian",
+      "variant": "channel",
+      "frac_floored_cal": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "exceeds_1pct": false
+    },
+    {
+      "tag": "mlp_gauss_rep0",
+      "method": "gaussian",
+      "variant": "horizon_channel",
+      "frac_floored_cal": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "exceeds_1pct": false
+    },
+    {
+      "tag": "lstm_ens_rep1",
+      "method": "ensemble",
+      "variant": "channel",
+      "frac_floored_cal": [
+        0.0,
+        1.045653219566263e-06,
+        1.045653219566263e-06,
+        0.0,
+        1.045653219566263e-06
+      ],
+      "exceeds_1pct": false
+    },
+    {
+      "tag": "lstm_ens_rep1",
+      "method": "ensemble",
+      "variant": "horizon_channel",
+      "frac_floored_cal": [
+        0.0,
+        1.045653219566263e-06,
+        1.045653219566263e-06,
+        0.0,
+        1.045653219566263e-06
+      ],
+      "exceeds_1pct": false
+    },
+    {
+      "tag": "mlp_ens_rep1",
+      "method": "ensemble",
+      "variant": "channel",
+      "frac_floored_cal": [
+        0.0,
+        2.091306439132526e-06,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "exceeds_1pct": false
+    },
+    {
+      "tag": "mlp_ens_rep1",
+      "method": "ensemble",
+      "variant": "horizon_channel",
+      "frac_floored_cal": [
+        0.0,
+        2.091306439132526e-06,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "exceeds_1pct": false
+    },
+    {
+      "tag": "lstm_mcd_rep1",
+      "method": "mc_dropout",
+      "variant": "channel",
+      "frac_floored_cal": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "exceeds_1pct": false
+    },
+    {
+      "tag": "lstm_mcd_rep1",
+      "method": "mc_dropout",
+      "variant": "horizon_channel",
+      "frac_floored_cal": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "exceeds_1pct": false
+    },
+    {
+      "tag": "mlp_mcd_rep1",
+      "method": "mc_dropout",
+      "variant": "channel",
+      "frac_floored_cal": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "exceeds_1pct": false
+    },
+    {
+      "tag": "mlp_mcd_rep1",
+      "method": "mc_dropout",
+      "variant": "horizon_channel",
+      "frac_floored_cal": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "exceeds_1pct": false
+    },
+    {
+      "tag": "lstm_gauss_rep1",
+      "method": "gaussian",
+      "variant": "channel",
+      "frac_floored_cal": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "exceeds_1pct": false
+    },
+    {
+      "tag": "lstm_gauss_rep1",
+      "method": "gaussian",
+      "variant": "horizon_channel",
+      "frac_floored_cal": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "exceeds_1pct": false
+    },
+    {
+      "tag": "mlp_gauss_rep1",
+      "method": "gaussian",
+      "variant": "channel",
+      "frac_floored_cal": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "exceeds_1pct": false
+    },
+    {
+      "tag": "mlp_gauss_rep1",
+      "method": "gaussian",
+      "variant": "horizon_channel",
+      "frac_floored_cal": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "exceeds_1pct": false
+    },
+    {
+      "tag": "lstm_ens_rep2",
+      "method": "ensemble",
+      "variant": "channel",
+      "frac_floored_cal": [
+        0.0,
+        0.0,
+        1.045653219566263e-06,
+        0.0,
+        0.0
+      ],
+      "exceeds_1pct": false
+    },
+    {
+      "tag": "lstm_ens_rep2",
+      "method": "ensemble",
+      "variant": "horizon_channel",
+      "frac_floored_cal": [
+        0.0,
+        0.0,
+        1.045653219566263e-06,
+        0.0,
+        0.0
+      ],
+      "exceeds_1pct": false
+    },
+    {
+      "tag": "mlp_ens_rep2",
+      "method": "ensemble",
+      "variant": "channel",
+      "frac_floored_cal": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "exceeds_1pct": false
+    },
+    {
+      "tag": "mlp_ens_rep2",
+      "method": "ensemble",
+      "variant": "horizon_channel",
+      "frac_floored_cal": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "exceeds_1pct": false
+    },
+    {
+      "tag": "lstm_mcd_rep2",
+      "method": "mc_dropout",
+      "variant": "channel",
+      "frac_floored_cal": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "exceeds_1pct": false
+    },
+    {
+      "tag": "lstm_mcd_rep2",
+      "method": "mc_dropout",
+      "variant": "horizon_channel",
+      "frac_floored_cal": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "exceeds_1pct": false
+    },
+    {
+      "tag": "mlp_mcd_rep2",
+      "method": "mc_dropout",
+      "variant": "channel",
+      "frac_floored_cal": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "exceeds_1pct": false
+    },
+    {
+      "tag": "mlp_mcd_rep2",
+      "method": "mc_dropout",
+      "variant": "horizon_channel",
+      "frac_floored_cal": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "exceeds_1pct": false
+    },
+    {
+      "tag": "lstm_gauss_rep2",
+      "method": "gaussian",
+      "variant": "channel",
+      "frac_floored_cal": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "exceeds_1pct": false
+    },
+    {
+      "tag": "lstm_gauss_rep2",
+      "method": "gaussian",
+      "variant": "horizon_channel",
+      "frac_floored_cal": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "exceeds_1pct": false
+    },
+    {
+      "tag": "mlp_gauss_rep2",
+      "method": "gaussian",
+      "variant": "channel",
+      "frac_floored_cal": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "exceeds_1pct": false
+    },
+    {
+      "tag": "mlp_gauss_rep2",
+      "method": "gaussian",
+      "variant": "horizon_channel",
+      "frac_floored_cal": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "exceeds_1pct": false
+    }
+  ]
+}

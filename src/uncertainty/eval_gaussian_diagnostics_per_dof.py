@@ -164,66 +164,35 @@ def evaluate_gaussian_intervals(
     temps_per_dof: np.ndarray,
 ) -> Metrics:
     z = _z_for_alpha(alpha)
-
-    all_err2 = []
-    all_nll = []
-    all_cover = []
-    all_width = []
-
-    # per dof accumulators
-    cover_d = {name: [] for name in TARGET_NAMES}
-    width_d = {name: [] for name in TARGET_NAMES}
-    rmse_d_err2 = {name: [] for name in TARGET_NAMES}
-
     temps_t = torch.tensor(temps_per_dof.reshape(1, 1, -1), device=device, dtype=torch.float32)
 
+    # Collect the full split first; metrics are then count-weighted over every
+    # scalar prediction (the previous per-batch averaging over-weighted the
+    # final, smaller batch).
+    mus, sigmas, ys = [], [], []
     for X, Y in loader:
-        X = X.to(device)
-        Y = Y.to(device)
+        mu, sigma = _predict_mu_sigma(model, X.to(device))
+        mus.append(mu.cpu())
+        sigmas.append((sigma * temps_t).cpu())
+        ys.append(Y.cpu())
+    mu, sigma_cal, Y = torch.cat(mus), torch.cat(sigmas), torch.cat(ys)
 
-        mu, sigma = _predict_mu_sigma(model, X)
+    lo = mu - z * sigma_cal
+    hi = mu + z * sigma_cal
+    inside = ((Y >= lo) & (Y <= hi)).float()
+    err2 = (mu - Y) ** 2
 
-        # apply per-dof temperature scaling
-        sigma_cal = sigma * temps_t
-
-        # intervals
-        lo = mu - z * sigma_cal
-        hi = mu + z * sigma_cal
-
-        # coverage
-        inside = (Y >= lo) & (Y <= hi)  # [B,T,D]
-        cover = inside.float().mean().item()
-        width = (hi - lo).mean().item()
-
-        # rmse
-        err2 = (mu - Y) ** 2
-        rmse = torch.sqrt(err2.mean()).item()
-
-        # nll
-        nll = _gaussian_nll(Y, mu, sigma_cal).mean().item()
-
-        all_cover.append(cover)
-        all_width.append(width)
-        all_err2.append(rmse ** 2)  # store squared to average properly-ish per batch
-        all_nll.append(nll)
-
-        # per dof
-        for j, name in enumerate(TARGET_NAMES):
-            cover_d[name].append(inside[..., j].float().mean().item())
-            width_d[name].append((hi[..., j] - lo[..., j]).mean().item())
-            rmse_d_err2[name].append(err2[..., j].mean().item())
-
-    overall_rmse = float(np.sqrt(np.mean(all_err2)))
-    avg_nll = float(np.mean(all_nll))
-    overall_cov = float(np.mean(all_cover))
-    overall_w = float(np.mean(all_width))
+    overall_rmse = float(torch.sqrt(err2.mean()))
+    avg_nll = float(_gaussian_nll(Y, mu, sigma_cal).mean())
+    overall_cov = float(inside.mean())
+    overall_w = float((hi - lo).mean())
 
     per_dof = {}
     for j, name in enumerate(TARGET_NAMES):
         per_dof[name] = {
-            "coverage": float(np.mean(cover_d[name])),
-            "width": float(np.mean(width_d[name])),
-            "rmse": float(np.sqrt(np.mean(rmse_d_err2[name]))),
+            "coverage": float(inside[..., j].mean()),
+            "width": float((hi[..., j] - lo[..., j]).mean()),
+            "rmse": float(torch.sqrt(err2[..., j].mean())),
             "sigma_temp": float(temps_per_dof[j]),
         }
 

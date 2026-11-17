@@ -1,0 +1,44 @@
+lstm rep0 cal: n=3188, rel. mean diff vs stored 0.0007
+lstm rep0 test: n=10626, rel. mean diff vs stored 0.0007
+lstm rep0 ood_test: n=10272, rel. mean diff vs stored 0.0007
+lstm rep1 cal: n=3188, rel. mean diff vs stored 0.0006
+lstm rep1 test: n=10626, rel. mean diff vs stored 0.0006
+lstm rep1 ood_test: n=10272, rel. mean diff vs stored 0.0007
+lstm rep2 cal: n=3188, rel. mean diff vs stored 0.0006
+lstm rep2 test: n=10626, rel. mean diff vs stored 0.0006
+lstm rep2 ood_test: n=10272, rel. mean diff vs stored 0.0006
+mlp rep0 cal: n=3188, rel. mean diff vs stored 0.0033
+mlp rep0 test: n=10626, rel. mean diff vs stored 0.0032
+mlp rep0 ood_test: n=10272, rel. mean diff vs stored 0.0041
+mlp rep1 cal: n=3188, rel. mean diff vs stored 0.0034
+mlp rep1 test: n=10626, rel. mean diff vs stored 0.0034
+mlp rep1 ood_test: n=10272, rel. mean diff vs stored 0.0042
+mlp rep2 cal: n=3188, rel. mean diff vs stored 0.0034
+mlp rep2 test: n=10626, rel. mean diff vs stored 0.0033
+mlp rep2 ood_test: n=10272, rel. mean diff vs stored 0.0042
+                                        coverage  width_norm  median_rel_spread_diff
+split    backbone passes                                                            
+test     LSTM     200 (stored, seed 0)    93.569       1.051                   0.000
+                  25 (seed 1)             93.533       1.075                   0.104
+                  50 (seed 1)             93.547       1.060                   0.077
+                  100 (seed 1)            93.568       1.054                   0.059
+                  200 (seed 1)            93.574       1.051                   0.048
+                  400 (seed 1)            93.572       1.050                   0.042
+ood_test LSTM     200 (stored, seed 0)    70.443       1.938                   0.000
+                  25 (seed 1)             70.847       1.983                   0.104
+                  50 (seed 1)             70.593       1.956                   0.077
+                  100 (seed 1)            70.474       1.944                   0.059
+                  200 (seed 1)            70.442       1.938                   0.048
+                  400 (seed 1)            70.424       1.936                   0.042
+test     MLP      200 (stored, seed 0)    93.214       1.032                   0.000
+                  25 (seed 1)             93.209       1.062                   0.105
+                  50 (seed 1)             93.235       1.046                   0.077
+                  100 (seed 1)            93.239       1.038                   0.060
+                  200 (seed 1)            93.221       1.033                   0.049
+                  400 (seed 1)            93.221       1.030                   0.042
+ood_test MLP      200 (stored, seed 0)    74.445       1.904                   0.000
+                  25 (seed 1)             74.951       1.958                   0.105
+                  50 (seed 1)             74.690       1.928                   0.078
+                  100 (seed 1)            74.552       1.913                   0.060
+                  200 (seed 1)            74.437       1.904                   0.049
+                  400 (seed 1)            74.399       1.900                   0.042

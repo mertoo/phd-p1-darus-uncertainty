@@ -1,0 +1,67 @@
+{
+ "tag": "linear_rep2",
+ "method": "point",
+ "n_val_windows": 31878,
+ "results": [
+  {
+   "calibration": "cal",
+   "split": "test",
+   "coverage": 0.928549595332204,
+   "coverage_channel": [
+    0.9550053328314198,
+    0.9805489679402722,
+    0.9042637555681033,
+    0.901352343308865,
+    0.9015775770123596
+   ],
+   "width_norm_mean": 1.033190653668122,
+   "interval_score_norm_mean": 1.6335123275451937
+  },
+  {
+   "calibration": "cal",
+   "split": "ood_test",
+   "coverage": 0.5031403778630166,
+   "coverage_channel": [
+    0.45285798659112003,
+    0.48256813151865624,
+    0.7351840313609429,
+    0.4025389902451372,
+    0.44255274959922636
+   ],
+   "width_norm_mean": 1.0331906536681434,
+   "interval_score_norm_mean": 7.992208529524206,
+   "coverage_noisy": 0.4665293785498389,
+   "coverage_clean": 0.5550059602233516
+  },
+  {
+   "calibration": "val",
+   "split": "test",
+   "coverage": 0.9089716418846854,
+   "coverage_channel": [
+    0.897029926595144,
+    0.9075622686492252,
+    0.9235303343998996,
+    0.9067686178555744,
+    0.9099670619235837
+   ],
+   "width_norm_mean": 0.9853743392982934,
+   "interval_score_norm_mean": 1.5752197808047743
+  },
+  {
+   "calibration": "val",
+   "split": "ood_test",
+   "coverage": 0.4435701629704628,
+   "coverage_channel": [
+    0.3169963719438982,
+    0.2518552412105636,
+    0.7778555527431089,
+    0.41294125664440506,
+    0.4582023923103383
+   ],
+   "width_norm_mean": 0.9853743392981652,
+   "interval_score_norm_mean": 8.463773832199488,
+   "coverage_noisy": 0.41639950841996876,
+   "coverage_clean": 0.48206192358366273
+  }
+ ]
+}

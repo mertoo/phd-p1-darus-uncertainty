@@ -1,0 +1,9 @@
+{
+ "n_fit_windows": 170016,
+ "p": 330,
+ "n_boot": 2000,
+ "seed": 20261116,
+ "level": 0.9,
+ "variant": "horizon_channel",
+ "floor_rel": 0.001
+}

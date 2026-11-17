@@ -1,0 +1,45 @@
+# Post hoc (internal review comments #2 and #12, 2026-11-16): recording-level intervals for the matched contrasts of
+# Table 8 and for ridge minus GRU / MLP point errors. Same tool and settings as the predeclared bootstrap
+# (experiments/analysis/v3/bootstrap/spec_used.yaml): 2000 recording resamples, seed 0, repeats averaged per draw.
+level: 90
+n_boot: 2000
+seed: 0
+ci: 0.95
+required_repeats: 3
+splits: [test, ood_test]
+methods:
+  single_ar_lstm: {tag: conformal_horizon_channel, evals: [experiments/eval/v3/lstm_single_rep*]}
+  single_ar_mlp:  {tag: conformal_horizon_channel, evals: [experiments/eval/v3/mlp_single_rep*]}
+  ens_norm_lstm:  {tag: ensemble_horizon_channel, evals: [experiments/eval/v3/lstm_ens_rep*]}
+  ens_ar_lstm:    {tag: ensemble_conformal_horizon_channel, evals: [experiments/eval/v3/lstm_ens_rep*]}
+  ens_norm_mlp:   {tag: ensemble_horizon_channel, evals: [experiments/eval/v3/mlp_ens_rep*]}
+  ens_ar_mlp:     {tag: ensemble_conformal_horizon_channel, evals: [experiments/eval/v3/mlp_ens_rep*]}
+  mcd_norm_lstm:  {tag: mc_dropout_horizon_channel, evals: [experiments/eval/v3/lstm_mcd_rep*]}
+  mcd_ar_lstm:    {tag: mc_dropout_conformal_horizon_channel, evals: [experiments/eval/v3/lstm_mcd_rep*]}
+  mcd_norm_mlp:   {tag: mc_dropout_horizon_channel, evals: [experiments/eval/v3/mlp_mcd_rep*]}
+  mcd_ar_mlp:     {tag: mc_dropout_conformal_horizon_channel, evals: [experiments/eval/v3/mlp_mcd_rep*]}
+  gauss_norm_lstm: {tag: gaussian_horizon_channel, evals: [experiments/eval/v3/lstm_gauss_rep*]}
+  gauss_ar_lstm:   {tag: gaussian_conformal_horizon_channel, evals: [experiments/eval/v3/lstm_gauss_rep*]}
+  gauss_norm_mlp:  {tag: gaussian_horizon_channel, evals: [experiments/eval/v3/mlp_gauss_rep*]}
+  gauss_ar_mlp:    {tag: gaussian_conformal_horizon_channel, evals: [experiments/eval/v3/mlp_gauss_rep*]}
+  ridge: {tag: conformal_horizon_channel, evals: [experiments/eval/v3/ridge], repeats: 1}
+  gru:   {tag: conformal_horizon_channel, evals: [experiments/eval/v3/gru_rep*]}
+  mlp:   {tag: conformal_horizon_channel, evals: [experiments/eval/v3/mlp_single_rep*]}
+pairs:
+  # same predictor, two scores
+  - [ens_norm_lstm, ens_ar_lstm]
+  - [ens_norm_mlp, ens_ar_mlp]
+  - [mcd_norm_lstm, mcd_ar_lstm]
+  - [mcd_norm_mlp, mcd_ar_mlp]
+  - [gauss_norm_lstm, gauss_ar_lstm]
+  - [gauss_norm_mlp, gauss_ar_mlp]
+  # same absolute-residual score, two predictors
+  - [ens_ar_lstm, single_ar_lstm]
+  - [ens_ar_mlp, single_ar_mlp]
+  - [mcd_ar_lstm, single_ar_lstm]
+  - [mcd_ar_mlp, single_ar_mlp]
+  - [gauss_ar_lstm, single_ar_lstm]
+  - [gauss_ar_mlp, single_ar_mlp]
+  # point errors: ridge minus networks
+  - [ridge, gru]
+  - [ridge, mlp]

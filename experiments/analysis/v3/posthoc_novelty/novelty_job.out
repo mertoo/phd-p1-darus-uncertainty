@@ -1,0 +1,106 @@
+cal: d median 15.2, 95% 26.8, leverage factor median 1.0007, max 1.006
+test: d median 9.3, 95% 22.8, leverage factor median 1.0003, max 1.010
+ood_test: d median 41.6, 95% 53.6, leverage factor median 1.0051, max 1.015
+ridge done
+lstm_single_rep0 done
+lstm_single_rep1 done
+lstm_single_rep2 done
+mlp_single_rep0 done
+mlp_single_rep1 done
+mlp_single_rep2 done
+gru_rep0 done
+gru_rep1 done
+gru_rep2 done
+tcn_rep0 done
+tcn_rep1 done
+tcn_rep2 done
+linear_rep0 done
+linear_rep1 done
+linear_rep2 done
+                                    coverage  width_norm  iscore_norm   cov_u   cov_v   cov_p   cov_r  cov_phi
+split    construction backbone                                                                                
+ood_test AR-SCP       GRU             51.700       0.975        7.324  39.910  50.977  75.724  40.372   51.519
+                      LSTM            51.514       1.009        7.457  38.974  51.285  75.121  41.851   50.336
+                      Linear (SGD)    50.360       1.036        7.973  45.408  48.337  73.421  40.130   44.506
+                      MLP             52.290       0.999        7.395  45.042  50.461  75.008  39.398   51.541
+                      Ridge           50.609       1.014        7.819  45.831  48.921  73.816  40.053   44.424
+                      TCN             50.018       1.015        7.746  40.532  49.848  74.231  38.900   46.581
+         DN-SCP       LSTM            70.365       1.934        5.688  54.605  71.789  86.445  62.231   76.753
+                      MLP             74.338       1.897        5.306  71.963  73.640  86.456  62.189   77.441
+         EN-SCP       LSTM            76.203       2.417        5.567  67.862  76.601  88.942  63.649   83.961
+                      MLP             77.732       2.256        5.219  73.339  80.877  88.589  66.045   79.810
+         NV-SCP (L)   GRU             51.820       0.978        7.312  40.036  51.101  75.848  40.471   51.645
+                      LSTM            51.634       1.013        7.444  39.095  51.413  75.247  41.952   50.464
+                      Linear (SGD)    50.483       1.040        7.959  45.540  48.465  73.553  40.234   44.624
+                      MLP             52.415       1.003        7.382  45.179  50.587  75.135  39.504   51.668
+                      Ridge           50.731       1.018        7.806  45.960  49.047  73.951  40.155   44.544
+                      TCN             50.140       1.019        7.732  40.663  49.978  74.358  38.999   46.704
+         NV-SCP (M)   GRU             78.069       2.191        5.240  75.083  83.334  93.042  61.762   77.127
+                      LSTM            78.055       2.271        5.246  73.389  83.697  92.812  64.152   76.225
+                      Linear (SGD)    77.899       2.317        5.508  79.691  81.835  92.272  63.539   72.158
+                      MLP             79.397       2.260        5.228  80.745  83.067  92.788  62.859   77.523
+                      Ridge           77.799       2.262        5.438  79.384  82.210  92.427  63.143   71.831
+                      TCN             77.558       2.277        5.437  76.823  83.054  92.513  61.819   73.582
+test     AR-SCP       GRU             93.029       0.975        1.553  95.024  98.673  90.401  90.534   90.513
+                      LSTM            92.805       1.009        1.594  94.148  98.503  90.434  90.724   90.218
+                      Linear (SGD)    92.800       1.036        1.637  95.112  98.053  90.437  90.208   90.190
+                      MLP             92.826       0.999        1.582  94.127  98.551  90.402  90.619   90.431
+                      Ridge           92.988       1.014        1.609  95.780  98.180  90.469  90.304   90.205
+                      TCN             92.812       1.015        1.602  94.213  98.452  90.396  90.615   90.384
+         DN-SCP       LSTM            93.514       1.048        1.538  96.035  98.893  90.372  91.348   90.922
+                      MLP             93.171       1.031        1.493  94.655  99.056  90.662  90.874   90.610
+         EN-SCP       LSTM            93.409       1.201        1.625  95.848  98.923  90.302  91.105   90.868
+                      MLP             93.410       1.165        1.612  95.734  99.037  90.492  91.121   90.664
+         NV-SCP (L)   GRU             93.024       0.974        1.553  95.021  98.673  90.394  90.529   90.504
+                      LSTM            92.800       1.008        1.594  94.142  98.503  90.428  90.719   90.210
+                      Linear (SGD)    92.795       1.036        1.636  95.108  98.053  90.431  90.202   90.181
+                      MLP             92.821       0.999        1.582  94.121  98.552  90.395  90.614   90.422
+                      Ridge           92.982       1.013        1.609  95.777  98.180  90.463  90.297   90.194
+                      TCN             92.807       1.014        1.602  94.208  98.452  90.390  90.610   90.375
+         NV-SCP (M)   GRU             83.880       0.646        1.477  85.633  97.560  79.406  80.864   75.938
+                      LSTM            82.343       0.669        1.536  79.583  96.852  79.553  80.435   75.294
+                      Linear (SGD)    83.791       0.683        1.569  88.904  96.578  79.282  79.420   74.773
+                      MLP             82.380       0.666        1.526  81.232  96.820  79.148  79.028   75.674
+                      Ridge           85.067       0.667        1.531  92.305  96.933  79.757  80.434   75.908
+                      TCN             82.435       0.671        1.542  82.789  96.596  79.062  79.174   74.554
+       split      backbone           a           b  delta_cov_pp  ci_low  ci_high
+0       test         Ridge  NV-SCP (L)      AR-SCP         -0.01   -0.01    -0.00
+1       test          LSTM  NV-SCP (L)      AR-SCP         -0.00   -0.01    -0.00
+2       test           MLP  NV-SCP (L)      AR-SCP         -0.01   -0.01    -0.00
+3       test           GRU  NV-SCP (L)      AR-SCP         -0.00   -0.01    -0.00
+4       test           TCN  NV-SCP (L)      AR-SCP         -0.01   -0.01    -0.00
+5       test  Linear (SGD)  NV-SCP (L)      AR-SCP         -0.01   -0.01    -0.00
+6       test         Ridge  NV-SCP (M)      AR-SCP         -7.92   -9.19    -6.43
+7       test          LSTM  NV-SCP (M)      AR-SCP        -10.46  -12.17    -8.54
+8       test           MLP  NV-SCP (M)      AR-SCP        -10.45  -12.11    -8.51
+9       test           GRU  NV-SCP (M)      AR-SCP         -9.15  -10.63    -7.39
+10      test           TCN  NV-SCP (M)      AR-SCP        -10.38  -12.01    -8.54
+11      test  Linear (SGD)  NV-SCP (M)      AR-SCP         -9.01  -10.40    -7.37
+12      test          LSTM      EN-SCP  NV-SCP (L)          0.61   -0.55     1.97
+13      test           MLP      EN-SCP  NV-SCP (L)          0.59   -0.44     1.78
+14      test          LSTM      EN-SCP  NV-SCP (M)         11.07   10.09    12.06
+15      test           MLP      EN-SCP  NV-SCP (M)         11.03    9.90    12.14
+16      test          LSTM      DN-SCP  NV-SCP (L)          0.71   -0.04     1.61
+17      test           MLP      DN-SCP  NV-SCP (L)          0.35   -0.54     1.35
+18      test          LSTM      DN-SCP  NV-SCP (M)         11.17    9.77    12.52
+19      test           MLP      DN-SCP  NV-SCP (M)         10.79    9.53    11.99
+20  ood_test         Ridge  NV-SCP (L)      AR-SCP          0.12    0.10     0.14
+21  ood_test          LSTM  NV-SCP (L)      AR-SCP          0.12    0.10     0.14
+22  ood_test           MLP  NV-SCP (L)      AR-SCP          0.12    0.10     0.15
+23  ood_test           GRU  NV-SCP (L)      AR-SCP          0.12    0.10     0.14
+24  ood_test           TCN  NV-SCP (L)      AR-SCP          0.12    0.10     0.14
+25  ood_test  Linear (SGD)  NV-SCP (L)      AR-SCP          0.12    0.10     0.14
+26  ood_test         Ridge  NV-SCP (M)      AR-SCP         27.19   23.45    30.81
+27  ood_test          LSTM  NV-SCP (M)      AR-SCP         26.54   22.93    29.99
+28  ood_test           MLP  NV-SCP (M)      AR-SCP         27.11   23.51    30.54
+29  ood_test           GRU  NV-SCP (M)      AR-SCP         26.37   22.76    29.80
+30  ood_test           TCN  NV-SCP (M)      AR-SCP         27.54   23.91    30.97
+31  ood_test  Linear (SGD)  NV-SCP (M)      AR-SCP         27.54   23.86    31.09
+32  ood_test          LSTM      EN-SCP  NV-SCP (L)         24.57   23.50    25.60
+33  ood_test           MLP      EN-SCP  NV-SCP (L)         25.32   24.29    26.26
+34  ood_test          LSTM      EN-SCP  NV-SCP (M)         -1.85   -4.85     1.27
+35  ood_test           MLP      EN-SCP  NV-SCP (M)         -1.66   -4.47     1.26
+36  ood_test          LSTM      DN-SCP  NV-SCP (L)         18.73   17.99    19.44
+37  ood_test           MLP      DN-SCP  NV-SCP (L)         21.92   20.90    22.84
+38  ood_test          LSTM      DN-SCP  NV-SCP (M)         -7.69  -10.79    -4.53
+39  ood_test           MLP      DN-SCP  NV-SCP (M)         -5.06   -8.17    -1.86

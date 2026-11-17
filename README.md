@@ -1,260 +1,106 @@
-# Uncertainty-Aware Multi-Step Prediction of Ship Motion Using the DaRUS Dataset
+# Uncertainty quantification for multi-step ship motion forecasting under an operating-condition shift
 
-This repository contains the implementation and analysis framework for Phase 1 (P1) of a broader research effort on uncertainty-aware forecasting of marine vessel dynamics. The primary objective of this phase is to establish deterministic baseline models for multi-step prediction of ship motion under environmental disturbances using the DaRUS (Dynamic Response of an Underactuated Ship) dataset. The baselines developed here form the foundation for subsequent work on probabilistic modeling and uncertainty quantification.
+Code, configuration, split manifests and analysis outputs for the benchmark in
 
-## Overview
+> V. M. Asan, M. Kõrgesaar, K. Tabri, F. Roshan. *A controlled benchmark of uncertainty quantification for multi-step ship motion forecasting under an operating-condition shift.* Submitted to Ocean Engineering.
 
-Reliable prediction of ship motion plays a crucial role in autonomous navigation, dynamic positioning, health monitoring, and risk-aware control. Traditional forecasting approaches provide point estimates without assessing the uncertainty associated with predictions, which limits their usefulness in safety-critical scenarios and under conditions not represented in training data.
+The benchmark compares seven point forecasters (persistence, ridge, linear model trained by SGD, MLP, LSTM, GRU, TCN) and four interval constructions on the public DaRUS patrol-vessel dataset. The constructions are absolute-residual split conformal (AR-SCP) and conformal intervals normalised by a deep-ensemble (EN-SCP), MC-dropout (DN-SCP) or Gaussian (GN-SCP) spread. Forecasts cover 30 s of five manoeuvring states (u, v, p, r, φ) from a 30-s history of 11 input channels. Coverage is evaluated in distribution (30 recordings) and under a shift to faster, harder-steered operation (29 recordings), with whole held-out recordings for calibration and recording-level bootstrap intervals.
 
-This repository provides:  
-1. A reproducible pipeline for model training and evaluation.  
-2. A set of deterministic baseline models implemented consistently within the same framework.  
-3. Tools for assessing performance in both in-distribution (ID) and out-of-distribution (OOD) sea-state regimes.  
-4. Visual and numerical outputs that will serve as benchmarks for future uncertainty-aware methods.
+The per-window evaluation outputs (sufficient statistics for every coverage, width and bootstrap number in the paper) are archived on Zenodo: **DOI: to be added**.
 
-## Repository Structure
+## Data
 
-```
-phd-p1-darus-uncertainty/
-│
-├── experiments/
-│   ├── configs/              # YAML configuration files
-│   │   └── uncertainty/      # P2 uncertainty method configs
-│   └── results/              # Saved checkpoints and evaluation plots
-│
-├── scripts/
-│   └── slurm/                # SLURM job scripts for HPC cluster
-│
-├── src/
-│   ├── data_loading/         # DaRUS dataset loader and parser
-│   ├── models/               # Baseline and probabilistic model architectures
-│   ├── training/             # Training script for deterministic baselines
-│   ├── evaluation/           # Evaluation, metrics, and plotting utilities
-│   └── uncertainty/          # P2: UQ training and evaluation pipelines
-│
-├── requirements.txt
-├── train_all.sh              # Sequential launcher for all P1 baselines
-└── README.md
-```
-
-## Dataset
-
-The DaRUS dataset provides multi-sensor measurements of vessel dynamics, environmental disturbances, and control inputs. The dataset includes several sea-state conditions, enabling a clear separation of ID and OOD scenarios.
-
-For this benchmark:
-
-- **Input sequence length:** 30 steps  
-- **Prediction horizon:** 30 steps  
-- **Target variables:** 5-DOF motion components  
-- **Evaluation:** performed on held-out ID and OOD subsets  
-
-## Baseline Models
-
-The following deterministic forecasting models are implemented:
-
-- LSTM Encoder–Decoder  
-- GRU Encoder–Decoder  
-- Temporal Convolutional Network (TCN)  
-- Multi-Layer Perceptron (MLP)  
-- Linear autoregressive baseline  
-- Naive last-value baseline  
-
-All models share a unified interface and are trained using a consistent protocol.
-
-## Training
-
-To train a model:
-
-```bash
-python3 -m src.training.train_baseline --config experiments/configs/<config>.yaml
-```
-
-To train all baseline models sequentially:
-
-```bash
-chmod +x train_all.sh
-./train_all.sh
-```
-
-Checkpoints and logs are written to:
-
-```
-experiments/results/<model_name>/
-```
-
-## Evaluation
-
-Each model can be evaluated using:
-
-```bash
-python3 -m src.evaluation.run_eval --model_dir experiments/results/<model_name>
-```
-
-The evaluation stage:
-
-- Computes RMSE for ID and OOD test sets  
-- Produces prediction–truth comparison plots  
-- Generates multi-horizon RMSE curves  
-- Saves outputs into `experiments/results/<model_name>/plots/`  
-
-## Baseline Performance Summary
-
-Verified on GPU (SLURM jobs 918426/918432), history=30, horizon=30.
-
-| Model  | Best Val Loss | Test RMSE | OOD RMSE |
-|--------|--------------|-----------|----------|
-| LSTM   | 0.01599      | 0.120     | 0.537    |
-| MLP    | 0.01561      | **0.121** | **0.330** |
-| GRU    | 0.01880      | 0.132     | 0.506    |
-| TCN    | 0.02480      | 0.155     | 0.347    |
-| Naive  | —            | 0.173     | 0.411    |
-| Linear | 3.291        | 1.791     | 2.297    |
-
-LSTM is best in-distribution; MLP generalises best OOD. Checkpoints saved to
-`experiments/results/p1_<model>_baseline/best_model.pt`.
-
-These values serve as deterministic reference points for uncertainty-aware modeling.
-
-## Phase 2: Uncertainty Quantification
-
-P2 extends the deterministic baselines with UQ methods. Results are in
-`experiments/results/RESULTS.md`. Quick summary (α=0.10, nominal 90% coverage):
-
-| Method | Backbone | Test RMSE | Test Coverage | OOD Coverage |
-|--------|----------|-----------|---------------|--------------|
-| Gaussian LSTM (calibrated) | LSTM | 0.133 | 89.9% ✅ | 44.6% |
-| Conformal Prediction | MLP  | 0.121 | 90.1% ✅ | **68.0%** |
-| Conformal Prediction | LSTM | 0.120 | 90.5% ✅ | 66.2% |
-| MLP Deep Ensemble ±2σ | MLP  | 0.123 | 81.3% | 57.4% |
-| LSTM Deep Ensemble ±2σ | LSTM | **0.111** | 75.8% | 49.0% |
-| MC Dropout ±2σ | LSTM | 0.123 | 35.7% | 16.5% |
-
-### Training UQ methods
-
-```bash
-# Gaussian LSTM
-python -m src.uncertainty.train_lstm_gaussian \
-    --config experiments/configs/uncertainty/p2_lstm_gaussian.yaml
-
-# Deep ensemble — 5 members via SLURM array (LSTM or MLP)
-sbatch scripts/slurm/train_ensemble.sh       # LSTM
-sbatch scripts/slurm/train_ensemble_mlp.sh   # MLP
-
-# MC Dropout — standard train_baseline with dropout=0.2
-sbatch scripts/slurm/train_eval_mc_dropout.sh
-```
-
-### Evaluating UQ methods
-
-```bash
-# Gaussian LSTM — NLL, RMSE, coverage/width per DoF with per-DoF calibration
-python -m src.uncertainty.eval_gaussian_per_dof \
-    --model_dir experiments/results/p2_lstm_gaussian \
-    --config experiments/configs/uncertainty/p2_lstm_gaussian.yaml \
-    --split test --calibrate_per_dof
-
-# Deep ensemble (works for any model type via config model.type)
-python -m src.uncertainty.eval_ensemble \
-    --ensemble_dir experiments/results/uncertainty/ensemble_mlp \
-    --config experiments/configs/uncertainty/p2_mlp_ensemble.yaml \
-    --split test
-
-# Conformal prediction (works for any model type)
-python -m src.uncertainty.eval_conformal_metrics \
-    --model_dir experiments/results/p1_mlp_baseline \
-    --config experiments/results/p1_mlp_baseline/config.yaml \
-    --alpha 0.10 --split test
-
-# MC Dropout
-python -m src.evaluation.run_mc_dropout_eval \
-    --model_dir experiments/results/uncertainty/mc_dropout_lstm \
-    --config experiments/results/uncertainty/mc_dropout_lstm/config.yaml \
-    --n_samples 200 --split test
-```
-
-## Running on an HPC Cluster (SLURM)
-
-### 1. Environment setup
-
-```bash
-# Clone and enter the repo
-git clone <repo-url>
-cd phd-p1-darus-uncertainty
-
-# Create a virtualenv (or use your site's conda/module environment)
-python -m venv venv
-source venv/bin/activate
-
-# Install PyTorch with the CUDA version matching your cluster, e.g. CUDA 12.1:
-pip install torch --index-url https://download.pytorch.org/whl/cu121
-
-# Install remaining dependencies
-pip install -r requirements.txt
-```
-
-> **Note:** If your cluster uses `module` commands, load Python and CUDA before creating the venv, e.g. `module load python/3.11 cuda/12.1`. Add the relevant `module load` lines inside the SLURM scripts under the `# Load any cluster modules` comment.
-
-### 2. Data
-
-Copy the processed DaRUS data to the cluster so the following structure is present:
+The data are the DaRUS deposit of Baier and Staab (2022), *A Simulated 4-DOF Ship Motion Dataset for System Identification under Environmental Disturbances*, [doi:10.18419/darus-2905](https://doi.org/10.18419/darus-2905). They are not redistributed here. Download the deposit and arrange the CSV files as
 
 ```
 data/processed/darus/
-    patrol_ship_routine/train/        # 57 CSV files
-    patrol_ship_routine/validation/   # 9 CSV files
-    patrol_ship_routine/test/         # 30 CSV files
-    patrol_ship_ood/test/             # 29 CSV files
+├── patrol_ship_routine/
+│   ├── train/        # 57 recordings (48 fitting + 9 calibration)
+│   ├── validation/   # 9 recordings
+│   └── test/         # 30 recordings (ID test)
+└── patrol_ship_ood/
+    └── test/         # 29 recordings (OOD test)
 ```
 
-### 3. Submit jobs
+that is, the `processed/<split>/` folders of the deposit without the `processed` level. The loader reads `.csv` and `.tab` files; the calibration recordings are listed by name (`.csv`) in `experiments/manifests/split_manifest.csv` and in the configs.
 
-All SLURM scripts live in `scripts/slurm/`. Edit the `--partition` line to match your cluster's GPU partition name before submitting.
+Note: the surge and sway velocities of all training recordings carry additive white noise of about 0.10 m/s, and those of 17 OOD recordings about 0.31 m/s, whereas the validation and ID test recordings carry none. The noise is present in the deposited files and is not described in the dataset documentation. `scripts/check_measurement_noise.py` reproduces the check.
 
-**Train the Gaussian LSTM (single GPU job):**
+## Environment
+
+Python 3.11 with the packages in `requirements.txt` (install the PyTorch build that matches your CUDA version first). `scripts/slurm/v3/setup_env.sh` builds the environment used for the paper on a Slurm cluster and runs the tests:
 
 ```bash
-sbatch scripts/slurm/train_gaussian_lstm.sh
+pip install -r requirements.txt
+PYTHONPATH=. pytest tests
 ```
 
-**Train all P1 baselines in parallel (job array, one GPU per model):**
+## Reproducing the results
 
-```bash
-sbatch scripts/slurm/train_baselines.sh       # array 0-5 defined inside the script
+All commands run from the repository root with `PYTHONPATH=.`.
+
+1. **Train** (GPU, Slurm array; one row of `scripts/slurm/v3/run_list.tsv` per task, stages `1a`–`1e`, `5a`, `5b`; stage `0`/`0b` is the predeclared input ablation):
+   ```bash
+   sbatch --array=1-30 scripts/slurm/v3/train_array.sh 1a
+   ```
+   Ridge regression and persistence run on CPU (`sbatch scripts/slurm/v3/cpu_baselines.sh`). Configurations are in `experiments/configs/v3/`; seeds and run names are in `run_list.tsv`.
+2. **Evaluate** every construction on the calibration, ID-test and OOD-test windows (`scripts/slurm/v3/eval_list.tsv`, one row per task):
+   ```bash
+   sbatch --array=1-35 scripts/slurm/v3/eval_array.sh
+   ```
+   This writes `experiments/eval/v3/<tag>/` with `metrics.json`, `predictions_<split>.npz`, `windows_<split>.csv` and `per_window_<split>_<method>_<variant>_90.csv`. The Zenodo archive holds the files of the primary variant (`horizon_channel`, 90%), the window metadata and the metrics.
+3. **Recording-level bootstrap and tables**:
+   ```bash
+   python -m src.analysis.bootstrap --spec experiments/configs/v3/bootstrap_full.yaml --out experiments/analysis/v3/bootstrap
+   python -m src.analysis.report_pub --eval_root experiments/eval/v3 --out experiments/analysis/v3/report_pub
+   ```
+4. **Post hoc analyses** (each script states its protocol in the docstring; outputs are already in `experiments/analysis/v3/`):
+   - `scripts/check_measurement_noise.py`, `scripts/noise_group_coverage.py`: measurement noise and coverage by noise group
+   - `scripts/posthoc_clean_calibration.py`, `scripts/summarise_clean_calibration.py`: recalibration on the clean validation recordings
+   - `scripts/per_split_scale_errors.py`: errors on each split's own scale
+   - `scripts/posthoc_novelty_normaliser.py`: non-learned novelty normaliser (NV-SCP)
+   - `scripts/posthoc_mc_passes.py`: stability of the MC-dropout spread with the number of passes
+   - `scripts/posthoc_v5.py`, `scripts/posthoc_v5_backbones.py`: width-matched contrasts and additional backbones
+
+   The post hoc scripts read `predictions_<split>.npz`, which are not in the Zenodo archive because of their size (about 12 GB); they are regenerated by step 2 or available from the authors on request.
+
+## Repository layout
+
+```
+src/
+  data_loading/   DaRUS parser, recording-aware windowing, standardisation, calibration draw
+  models/         LSTM/GRU seq2seq, TCN, MLP, linear, Gaussian heads, persistence
+  training/       training loop with early stopping; closed-form ridge
+  uncertainty/    conformal and spread-normalised intervals, MC dropout
+  evaluation/     benchmark evaluation, interval metrics, checkpoint provenance
+  analysis/       recording-level bootstrap, report and table generation
+scripts/          post hoc analyses, checks, Slurm job scripts (scripts/slurm/v3)
+experiments/
+  configs/v3/     model and analysis configurations
+  manifests/      split manifest, calibration draw, data audit, stage gates and training logs
+  analysis/v3/    bootstrap, report and post hoc outputs used in the paper
+tests/            unit tests
+EXPERIMENT_PROTOCOL.md   predeclared protocol
+RESULTS_CHANGELOG.md     comparison with an earlier version of the results
 ```
 
-**Train the deep ensemble in parallel (5 members simultaneously):**
+Legacy files from an earlier phase of the project (for example `experiments/configs/p1_*.yaml`, `src/evaluation/run_eval.py`, `train_all.sh`) are kept for provenance and are not used for the paper.
 
-```bash
-sbatch scripts/slurm/train_ensemble.sh        # LSTM ensemble (array 0-4)
-sbatch scripts/slurm/train_ensemble_mlp.sh    # MLP ensemble  (array 0-4)
+## Citation
+
+If you use this code, please cite the paper above and the DaRUS dataset:
+
+```bibtex
+@dataset{baier2022darus,
+  author    = {Baier, Alexandra and Staab, Steffen},
+  title     = {A Simulated 4-{DOF} Ship Motion Dataset for System Identification under Environmental Disturbances},
+  year      = {2022},
+  publisher = {DaRUS Data Repository, University of Stuttgart},
+  doi       = {10.18419/darus-2905}
+}
 ```
 
-### 4. Monitor and retrieve results
 
-```bash
-# Watch queue
-squeue -u $USER
+## Licence
 
-# Tail a running job's log
-tail -f logs/slurm/darus_gaussian_lstm_<JOBID>.out
-
-# Checkpoints are written to:
-#   experiments/results/<run_name>/best_model.pt
-```
-
-### Resource requirements
-
-| Job | GPUs | RAM | Typical wall time |
-|---|---|---|---|
-| Single baseline (20 epochs) | 1 | 16 GB | ~5 min (MLP) / ~10 min (LSTM) |
-| Ensemble member (20 epochs) | 1 | 16 GB | ~5–10 min |
-| Gaussian LSTM (20 epochs) | 1 | 16 GB | ~30 min |
-| Conformal / ensemble eval | 1 | 16 GB | < 2 min |
-| MC Dropout eval (200 samples) | 1 | 16 GB | ~5 min |
-
-## Contact
-
-**Vedat Mert Asan**  
-Naval Architecture and Hydrodynamics Research Group  
-TalTech – Kuressaare College  
-Email: mert.asan@taltech.ee
+Code: MIT (see `LICENSE`). Evaluation outputs archived on Zenodo: CC BY 4.0.

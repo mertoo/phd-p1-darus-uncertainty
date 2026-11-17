@@ -1,0 +1,35 @@
+quantity,model/method,split,v2.2 value,v2.2 source,v3 value (mean over repeats),v3 min,v3 max,v3 repeats,comparability
+pooled RMSE,LSTM seq2seq,test,0.12,tab:baseline-rmse,0.08659888758655991,0.08007970701451998,0.09650538619041972,3,"same definition (pooled over channels), new windows/scaling/splits"
+pooled RMSE,LSTM seq2seq,ood_test,0.537,tab:baseline-rmse,0.3586773998565626,0.34609117283040475,0.3796999878817117,3,"same definition (pooled over channels), new windows/scaling/splits"
+pooled RMSE,MLP,test,0.121,tab:baseline-rmse,0.07899145645442883,0.07630947945336433,0.08431396211258031,3,"same definition (pooled over channels), new windows/scaling/splits"
+pooled RMSE,MLP,ood_test,0.33,tab:baseline-rmse,0.31398978551980194,0.31056032296041164,0.3160122195650356,3,"same definition (pooled over channels), new windows/scaling/splits"
+pooled RMSE,GRU seq2seq,test,0.132,tab:baseline-rmse,0.06996446299931547,0.06935829796813228,0.07072060593670773,3,"same definition (pooled over channels), new windows/scaling/splits"
+pooled RMSE,GRU seq2seq,ood_test,0.506,tab:baseline-rmse,0.31368965089058487,0.3089338373202579,0.32279088438434406,3,"same definition (pooled over channels), new windows/scaling/splits"
+pooled RMSE,TCN,test,0.155,tab:baseline-rmse,0.08055994445468369,0.0782815221441037,0.08303929848375297,3,"same definition (pooled over channels), new windows/scaling/splits"
+pooled RMSE,TCN,ood_test,0.347,tab:baseline-rmse,0.32970865683465317,0.32596002230046245,0.3370781854665628,3,"same definition (pooled over channels), new windows/scaling/splits"
+pooled RMSE,Naive,test,0.173,tab:baseline-rmse,0.1493285333279246,0.1493285333279246,0.1493285333279246,1,"same definition (pooled over channels), new windows/scaling/splits"
+pooled RMSE,Naive,ood_test,0.411,tab:baseline-rmse,0.40569724041722477,0.40569724041722477,0.40569724041722477,1,"same definition (pooled over channels), new windows/scaling/splits"
+pooled RMSE,Linear,test,1.791,tab:baseline-rmse,0.0680123484176865,0.06697755230958247,0.06999764976592367,3,"same definition (pooled over channels), new windows/scaling/splits"
+pooled RMSE,Linear,ood_test,2.297,tab:baseline-rmse,0.30359508348492453,0.3035222503995042,0.30367129704731705,3,"same definition (pooled over channels), new windows/scaling/splits"
+pooled RMSE,"Linear (ridge, new)",test,,not in v2.2,0.05972204105667937,0.05972204105667937,0.05972204105667937,1,new sanity baseline
+pooled RMSE,"Linear (ridge, new)",ood_test,,not in v2.2,0.29162447018489596,0.29162447018489596,0.29162447018489596,1,new sanity baseline
+coverage,Deep ensemble LSTM (raw),test,0.758,tab:ensemble-metrics / tab:uq-summary,0.6452746303615869,0.6349331827592697,0.6606073781291173,3,"NOT like-for-like: historical +/-2 sigma (ddof=0, ~95.4%) vs v3 raw 95% band (ddof=1)"
+coverage,Deep ensemble LSTM (raw),ood_test,0.49,tab:ensemble-metrics / tab:uq-summary,0.36800006922945455,0.3578648987194714,0.3774127222103234,3,"NOT like-for-like: historical +/-2 sigma (ddof=0, ~95.4%) vs v3 raw 95% band (ddof=1)"
+coverage,Deep ensemble MLP (raw),test,0.813,tab:ensemble-metrics / tab:uq-summary,0.6604045214045214,0.6461065938892026,0.6692247945291424,3,"NOT like-for-like: historical +/-2 sigma (ddof=0, ~95.4%) vs v3 raw 95% band (ddof=1)"
+coverage,Deep ensemble MLP (raw),ood_test,0.574,tab:ensemble-metrics / tab:uq-summary,0.37775079992471294,0.3731651057588089,0.3803770841851801,3,"NOT like-for-like: historical +/-2 sigma (ddof=0, ~95.4%) vs v3 raw 95% band (ddof=1)"
+coverage,MC dropout LSTM (raw),test,0.357,tab:ensemble-metrics / tab:uq-summary,0.2996940418679549,0.2837523684045423,0.31981937386285214,3,"NOT like-for-like: historical +/-2 sigma (ddof=0, ~95.4%) vs v3 raw 95% band (ddof=1)"
+coverage,MC dropout LSTM (raw),ood_test,0.165,tab:ensemble-metrics / tab:uq-summary,0.14324614748902606,0.13857597175438255,0.1478549686195863,3,"NOT like-for-like: historical +/-2 sigma (ddof=0, ~95.4%) vs v3 raw 95% band (ddof=1)"
+pooled RMSE,Deep ensemble LSTM mean,test,0.111,tab:ensemble-metrics / tab:uq-summary,0.0676147072978176,0.06482916966242443,0.07104411612175231,3,same definition
+pooled RMSE,Deep ensemble LSTM mean,ood_test,0.492,tab:ensemble-metrics / tab:uq-summary,0.33750176579535723,0.333816195836467,0.34041683432294767,3,same definition
+pooled RMSE,Deep ensemble MLP mean,test,0.123,tab:ensemble-metrics / tab:uq-summary,0.06579026139963316,0.06534920004885973,0.06616484875558834,3,same definition
+pooled RMSE,Deep ensemble MLP mean,ood_test,0.324,tab:ensemble-metrics / tab:uq-summary,0.3055226752938603,0.3038284100900381,0.30641980466961627,3,same definition
+pooled RMSE,MC dropout LSTM mean,test,0.123,tab:ensemble-metrics / tab:uq-summary,0.08291838396561313,0.07757204023309602,0.08819541603294903,3,same definition
+pooled RMSE,MC dropout LSTM mean,ood_test,0.52,tab:ensemble-metrics / tab:uq-summary,0.3554509216132517,0.34938338457769186,0.36079481419561793,3,same definition
+pooled RMSE,Gaussian LSTM mean,test,0.133,tab:ensemble-metrics / tab:uq-summary,0.06854475854816573,0.06771466015902255,0.06993480698237464,3,same definition
+pooled RMSE,Gaussian LSTM mean,ood_test,0.55,tab:ensemble-metrics / tab:uq-summary,0.3534714160860477,0.34665328970091647,0.3571734290918252,3,same definition
+coverage,Gaussian LSTM (recalibrated),test,0.899,tab:gaussian-perdof,0.9272386808038982,0.9264914361001317,0.9279910282953762,3,closest: per-channel calibration; v3 uses a held-out calibration split
+coverage,Gaussian LSTM (recalibrated),ood_test,0.446,tab:gaussian-perdof,0.49955139313460145,0.4906954964076403,0.5125054355938914,3,closest: per-channel calibration; v3 uses a held-out calibration split
+coverage,Conformal LSTM,test,0.905,tab:conformal-backbone,0.9246660811008637,0.923309053265575,0.9269030679465462,3,"NOT like-for-like: v2.2 pooled-threshold 'overall' (validation calibration); v3 per-channel thresholds, held-out calibration"
+coverage,Conformal LSTM,ood_test,0.662,tab:conformal-backbone,0.528030140773769,0.5243585350182052,0.5312145226088255,3,"NOT like-for-like: v2.2 pooled-threshold 'overall' (validation calibration); v3 per-channel thresholds, held-out calibration"
+coverage,Conformal MLP,test,0.901,tab:conformal-backbone,0.9263021519543259,0.9254175293305729,0.9279732731037079,3,"NOT like-for-like: v2.2 pooled-threshold 'overall' (validation calibration); v3 per-channel thresholds, held-out calibration"
+coverage,Conformal MLP,ood_test,0.68,tab:conformal-backbone,0.5355068136927208,0.5327964589134004,0.5380357873011546,3,"NOT like-for-like: v2.2 pooled-threshold 'overall' (validation calibration); v3 per-channel thresholds, held-out calibration"

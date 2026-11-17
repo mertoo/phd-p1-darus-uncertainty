@@ -1,0 +1,58 @@
+# Analysis rules for manuscript tables/figures, protocol v3.0.
+# FROZEN 2026-09-28, before Stage C: no full-benchmark test/OOD result exists yet.
+# Changes after Stage C must be logged as deviations in REVISION_TRACKER.md.
+version: v3.0-analysis
+eval_root: experiments/eval/v3
+bootstrap_dir: experiments/analysis/v3/bootstrap        # output of src.analysis.bootstrap with bootstrap_full.yaml
+floor_sensitivity: experiments/analysis/v3/floor_sensitivity.csv
+out_dir: experiments/analysis/v3/report
+eval_list: scripts/slurm/v3/eval_list.tsv               # every row must have a metrics.json, else generation fails
+primary: {level: 0.9, variant: horizon_channel}
+levels: [0.5, 0.8, 0.9, 0.95]
+splits: [test, ood_test]
+split_labels: {test: "ID test", ood_test: "OOD test (exploratory)"}
+channels: [u, v, p, r, phi]
+units: {u: "m/s", v: "m/s", p: "rad/s", r: "rad/s", phi: "rad"}
+
+# Deterministic baselines: bootstrap method name -> label (conformal per-window files carry the point errors)
+baselines:
+  conformal_lstm: "LSTM seq2seq"
+  conformal_mlp: "MLP"
+  conformal_gru: "GRU seq2seq"
+  conformal_tcn: "TCN"
+  conformal_linear: "Linear (SGD)"
+  conformal_ridge: "Linear (ridge, closed form)"
+  conformal_naive: "Naive (last value)"
+
+# UQ rows: bootstrap method name -> (label, eval-dir glob, metrics.json method, variant or 'primary')
+uq_methods:
+  conformal_lstm:     {label: "Split conformal (LSTM)",        evals: "lstm_single_rep*", method: point,      variant: primary}
+  conformal_mlp:      {label: "Split conformal (MLP)",         evals: "mlp_single_rep*",  method: point,      variant: primary}
+  ensemble_lstm:      {label: "Deep ensemble, calibrated (LSTM)", evals: "lstm_ens_rep*", method: ensemble,   variant: primary}
+  ensemble_mlp:       {label: "Deep ensemble, calibrated (MLP)",  evals: "mlp_ens_rep*",  method: ensemble,   variant: primary}
+  ensemble_lstm_raw:  {label: "Deep ensemble, raw (LSTM)",     evals: "lstm_ens_rep*",    method: ensemble,   variant: raw_gaussian}
+  ensemble_mlp_raw:   {label: "Deep ensemble, raw (MLP)",      evals: "mlp_ens_rep*",     method: ensemble,   variant: raw_gaussian}
+  mcd_lstm:           {label: "MC dropout, calibrated (LSTM)", evals: "lstm_mcd_rep*",    method: mc_dropout, variant: primary}
+  mcd_mlp:            {label: "MC dropout, calibrated (MLP)",  evals: "mlp_mcd_rep*",     method: mc_dropout, variant: primary}
+  mcd_lstm_raw:       {label: "MC dropout, raw (LSTM)",        evals: "lstm_mcd_rep*",    method: mc_dropout, variant: raw_gaussian}
+  mcd_mlp_raw:        {label: "MC dropout, raw (MLP)",         evals: "mlp_mcd_rep*",     method: mc_dropout, variant: raw_gaussian}
+  gaussian_lstm:      {label: "Gaussian, calibrated (LSTM)",   evals: "lstm_gauss_rep*",  method: gaussian,   variant: primary}
+  gaussian_mlp:       {label: "Gaussian, calibrated (MLP)",    evals: "mlp_gauss_rep*",   method: gaussian,   variant: primary}
+  gaussian_lstm_raw:  {label: "Gaussian, raw (LSTM)",          evals: "lstm_gauss_rep*",  method: gaussian,   variant: raw_gaussian}
+  gaussian_mlp_raw:   {label: "Gaussian, raw (MLP)",           evals: "mlp_gauss_rep*",   method: gaussian,   variant: raw_gaussian}
+repeats: 3
+
+# Paired-difference table: statistics reported for every predeclared pair in bootstrap_full.yaml
+paired_statistics: [coverage, width_norm_mean, iscore_norm_mean, rmse_norm_mean]
+
+# Example trajectory figure (illustration only, never evidence of calibration)
+example_figure:
+  reference_eval: lstm_single_rep0      # primary reference model
+  split: test
+  rule: "window whose mean over channels of per-window RMSE / training-target SD is the median over all windows of the split; ties -> smallest window_id"
+  panels:                               # same window for every panel
+    - {eval: lstm_single_rep0, kind: conformal, label: "Split conformal (LSTM)"}
+    - {eval: lstm_ens_rep0,    kind: spread,    label: "Deep ensemble, calibrated (LSTM)"}
+    - {eval: lstm_mcd_rep0,    kind: spread,    label: "MC dropout, calibrated (LSTM)"}
+    - {eval: lstm_gauss_rep0,  kind: spread,    label: "Gaussian, calibrated (LSTM)"}
+  history_steps: 30

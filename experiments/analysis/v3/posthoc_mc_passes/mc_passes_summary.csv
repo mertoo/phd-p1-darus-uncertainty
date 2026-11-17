@@ -1,0 +1,25 @@
+split,backbone,passes,coverage,width_norm,median_rel_spread_diff
+test,LSTM,"200 (stored, seed 0)",93.569,1.051,0.0
+test,LSTM,25 (seed 1),93.533,1.075,0.104
+test,LSTM,50 (seed 1),93.547,1.06,0.077
+test,LSTM,100 (seed 1),93.568,1.054,0.059
+test,LSTM,200 (seed 1),93.574,1.051,0.048
+test,LSTM,400 (seed 1),93.572,1.05,0.042
+ood_test,LSTM,"200 (stored, seed 0)",70.443,1.938,0.0
+ood_test,LSTM,25 (seed 1),70.847,1.983,0.104
+ood_test,LSTM,50 (seed 1),70.593,1.956,0.077
+ood_test,LSTM,100 (seed 1),70.474,1.944,0.059
+ood_test,LSTM,200 (seed 1),70.442,1.938,0.048
+ood_test,LSTM,400 (seed 1),70.424,1.936,0.042
+test,MLP,"200 (stored, seed 0)",93.214,1.032,0.0
+test,MLP,25 (seed 1),93.209,1.062,0.105
+test,MLP,50 (seed 1),93.235,1.046,0.077
+test,MLP,100 (seed 1),93.239,1.038,0.06
+test,MLP,200 (seed 1),93.221,1.033,0.049
+test,MLP,400 (seed 1),93.221,1.03,0.042
+ood_test,MLP,"200 (stored, seed 0)",74.445,1.904,0.0
+ood_test,MLP,25 (seed 1),74.951,1.958,0.105
+ood_test,MLP,50 (seed 1),74.69,1.928,0.078
+ood_test,MLP,100 (seed 1),74.552,1.913,0.06
+ood_test,MLP,200 (seed 1),74.437,1.904,0.049
+ood_test,MLP,400 (seed 1),74.399,1.9,0.042

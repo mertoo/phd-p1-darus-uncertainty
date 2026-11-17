@@ -1,0 +1,115 @@
+stage	config	seed	run_name	features_override
+0	lstm	1	ablation/lstm_legacy/seed1	legacy
+0	lstm	1	ablation/lstm_no_time/seed1	no_time
+0	mlp	1	ablation/mlp_legacy/seed1	legacy
+0	mlp	1	ablation/mlp_no_time/seed1	no_time
+0b	lstm	2	ablation/lstm_legacy/seed2	legacy
+0b	lstm	2	ablation/lstm_no_time/seed2	no_time
+0b	mlp	2	ablation/mlp_legacy/seed2	legacy
+0b	mlp	2	ablation/mlp_no_time/seed2	no_time
+0b	lstm	3	ablation/lstm_legacy/seed3	legacy
+0b	lstm	3	ablation/lstm_no_time/seed3	no_time
+0b	mlp	3	ablation/mlp_legacy/seed3	legacy
+0b	mlp	3	ablation/mlp_no_time/seed3	no_time
+1a	lstm	1000	lstm_ens/rep0/model_0	
+1a	lstm	1001	lstm_ens/rep0/model_1	
+1a	lstm	1002	lstm_ens/rep0/model_2	
+1a	lstm	1003	lstm_ens/rep0/model_3	
+1a	lstm	1004	lstm_ens/rep0/model_4	
+1a	lstm	2000	lstm_ens/rep1/model_0	
+1a	lstm	2001	lstm_ens/rep1/model_1	
+1a	lstm	2002	lstm_ens/rep1/model_2	
+1a	lstm	2003	lstm_ens/rep1/model_3	
+1a	lstm	2004	lstm_ens/rep1/model_4	
+1a	lstm	3000	lstm_ens/rep2/model_0	
+1a	lstm	3001	lstm_ens/rep2/model_1	
+1a	lstm	3002	lstm_ens/rep2/model_2	
+1a	lstm	3003	lstm_ens/rep2/model_3	
+1a	lstm	3004	lstm_ens/rep2/model_4	
+1a	mlp	1000	mlp_ens/rep0/model_0	
+1a	mlp	1001	mlp_ens/rep0/model_1	
+1a	mlp	1002	mlp_ens/rep0/model_2	
+1a	mlp	1003	mlp_ens/rep0/model_3	
+1a	mlp	1004	mlp_ens/rep0/model_4	
+1a	mlp	2000	mlp_ens/rep1/model_0	
+1a	mlp	2001	mlp_ens/rep1/model_1	
+1a	mlp	2002	mlp_ens/rep1/model_2	
+1a	mlp	2003	mlp_ens/rep1/model_3	
+1a	mlp	2004	mlp_ens/rep1/model_4	
+1a	mlp	3000	mlp_ens/rep2/model_0	
+1a	mlp	3001	mlp_ens/rep2/model_1	
+1a	mlp	3002	mlp_ens/rep2/model_2	
+1a	mlp	3003	mlp_ens/rep2/model_3	
+1a	mlp	3004	mlp_ens/rep2/model_4	
+1b	gru	2000	gru/rep0	
+1b	gru	2001	gru/rep1	
+1b	gru	2002	gru/rep2	
+1b	tcn	2000	tcn/rep0	
+1b	tcn	2001	tcn/rep1	
+1b	tcn	2002	tcn/rep2	
+1b	linear	2000	linear/rep0	
+1b	linear	2001	linear/rep1	
+1b	linear	2002	linear/rep2	
+1c	lstm_dropout	3000	lstm_dropout/rep0	
+1c	lstm_dropout	3001	lstm_dropout/rep1	
+1c	lstm_dropout	3002	lstm_dropout/rep2	
+1c	mlp_dropout	3000	mlp_dropout/rep0	
+1c	mlp_dropout	3001	mlp_dropout/rep1	
+1c	mlp_dropout	3002	mlp_dropout/rep2	
+1d	lstm_gaussian	4000	lstm_gaussian/rep0	
+1d	lstm_gaussian	4001	lstm_gaussian/rep1	
+1d	lstm_gaussian	4002	lstm_gaussian/rep2	
+1e	mlp_gaussian	5000	mlp_gaussian/rep0	
+1e	mlp_gaussian	5001	mlp_gaussian/rep1	
+1e	mlp_gaussian	5002	mlp_gaussian/rep2	
+5a	gru	6000	gru_ens/rep0/model_0	
+5a	gru	6001	gru_ens/rep0/model_1	
+5a	gru	6002	gru_ens/rep0/model_2	
+5a	gru	6003	gru_ens/rep0/model_3	
+5a	gru	6004	gru_ens/rep0/model_4	
+5a	gru	6100	gru_ens/rep1/model_0	
+5a	gru	6101	gru_ens/rep1/model_1	
+5a	gru	6102	gru_ens/rep1/model_2	
+5a	gru	6103	gru_ens/rep1/model_3	
+5a	gru	6104	gru_ens/rep1/model_4	
+5a	gru	6200	gru_ens/rep2/model_0	
+5a	gru	6201	gru_ens/rep2/model_1	
+5a	gru	6202	gru_ens/rep2/model_2	
+5a	gru	6203	gru_ens/rep2/model_3	
+5a	gru	6204	gru_ens/rep2/model_4	
+5a	tcn	6000	tcn_ens/rep0/model_0	
+5a	tcn	6001	tcn_ens/rep0/model_1	
+5a	tcn	6002	tcn_ens/rep0/model_2	
+5a	tcn	6003	tcn_ens/rep0/model_3	
+5a	tcn	6004	tcn_ens/rep0/model_4	
+5a	tcn	6100	tcn_ens/rep1/model_0	
+5a	tcn	6101	tcn_ens/rep1/model_1	
+5a	tcn	6102	tcn_ens/rep1/model_2	
+5a	tcn	6103	tcn_ens/rep1/model_3	
+5a	tcn	6104	tcn_ens/rep1/model_4	
+5a	tcn	6200	tcn_ens/rep2/model_0	
+5a	tcn	6201	tcn_ens/rep2/model_1	
+5a	tcn	6202	tcn_ens/rep2/model_2	
+5a	tcn	6203	tcn_ens/rep2/model_3	
+5a	tcn	6204	tcn_ens/rep2/model_4	
+5a	linear	6000	linear_ens/rep0/model_0	
+5a	linear	6001	linear_ens/rep0/model_1	
+5a	linear	6002	linear_ens/rep0/model_2	
+5a	linear	6003	linear_ens/rep0/model_3	
+5a	linear	6004	linear_ens/rep0/model_4	
+5a	linear	6100	linear_ens/rep1/model_0	
+5a	linear	6101	linear_ens/rep1/model_1	
+5a	linear	6102	linear_ens/rep1/model_2	
+5a	linear	6103	linear_ens/rep1/model_3	
+5a	linear	6104	linear_ens/rep1/model_4	
+5a	linear	6200	linear_ens/rep2/model_0	
+5a	linear	6201	linear_ens/rep2/model_1	
+5a	linear	6202	linear_ens/rep2/model_2	
+5a	linear	6203	linear_ens/rep2/model_3	
+5a	linear	6204	linear_ens/rep2/model_4	
+5b	gru_dropout	6500	gru_dropout/rep0	
+5b	gru_dropout	6501	gru_dropout/rep1	
+5b	gru_dropout	6502	gru_dropout/rep2	
+5b	tcn_dropout	6500	tcn_dropout/rep0	
+5b	tcn_dropout	6501	tcn_dropout/rep1	
+5b	tcn_dropout	6502	tcn_dropout/rep2	

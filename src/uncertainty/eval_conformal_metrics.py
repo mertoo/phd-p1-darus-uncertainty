@@ -1,3 +1,9 @@
+"""DEPRECATED (kept to reproduce historical logs). The "overall" numbers here
+use a single threshold pooled across channels (q_all), which is a different
+interval from the per-channel bands reported per DoF. Use
+src.evaluation.benchmark_eval for all new results.
+"""
+
 import argparse
 import os
 
@@ -288,10 +294,10 @@ def main():
     print(f"Alpha:            {alpha:.3f}")
     print(f"Nominal coverage: {nominal_coverage:.3f}")
     print()
-    print(f"Overall coverage: {coverage_all:.3f}")
-    print(f"Overall width:    {width_all:.3f}")
+    print(f"Pooled-threshold coverage (single q across channels): {coverage_all:.3f}")
+    print(f"Pooled-threshold width:    {width_all:.3f}")
     print("------------------------------------------")
-    print("Per-DoF coverage and width:")
+    print("Per-DoF coverage and width (per-channel thresholds q_per_dim):")
     for name, cov, width in zip(dof_names, coverage_per_dim, width_per_dim):
         print(f"  {name:4s}  coverage: {cov:.3f}   width: {width:.3f}")
     print("==========================================\n")

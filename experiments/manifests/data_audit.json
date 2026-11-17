@@ -1,0 +1,152 @@
+{
+  "train": {
+    "n_recordings": 57,
+    "n_rows": 205257,
+    "duration_s": 205200.0,
+    "valid_windows": 201894,
+    "legacy_windows": 205197,
+    "legacy_boundary_crossing_windows": 3304,
+    "legacy_boundary_crossing_fraction": 0.01610159992592484,
+    "dt_values": [
+      1.0
+    ],
+    "all_regular": true,
+    "total_missing": 0,
+    "time_starts_at_zero": true,
+    "u_range": [
+      0.945531754060244,
+      9.25492330026324
+    ],
+    "v_range": [
+      -1.84476241123047,
+      1.73663940033766
+    ],
+    "p_range": [
+      -0.0979782207717564,
+      0.0973165461794106
+    ],
+    "r_range": [
+      -0.0573385514261167,
+      0.0571592619228528
+    ],
+    "phi_range": [
+      -0.140316529564385,
+      0.159991156115138
+    ]
+  },
+  "val": {
+    "n_recordings": 9,
+    "n_rows": 32409,
+    "duration_s": 32400.0,
+    "valid_windows": 31878,
+    "legacy_windows": 32349,
+    "legacy_boundary_crossing_windows": 472,
+    "legacy_boundary_crossing_fraction": 0.014590868342143497,
+    "dt_values": [
+      1.0
+    ],
+    "all_regular": true,
+    "total_missing": 0,
+    "time_starts_at_zero": true,
+    "u_range": [
+      2.34800313810548,
+      8.99265260888106
+    ],
+    "v_range": [
+      -1.38031730047575,
+      1.33063999060613
+    ],
+    "p_range": [
+      -0.0856448118942374,
+      0.0758848392119911
+    ],
+    "r_range": [
+      -0.0560182149948206,
+      0.0535569361567445
+    ],
+    "phi_range": [
+      -0.136420987959579,
+      0.119388134894773
+    ]
+  },
+  "test": {
+    "n_recordings": 30,
+    "n_rows": 108030,
+    "duration_s": 108000.0,
+    "valid_windows": 106260,
+    "legacy_windows": 107970,
+    "legacy_boundary_crossing_windows": 1711,
+    "legacy_boundary_crossing_fraction": 0.015846994535519125,
+    "dt_values": [
+      1.0
+    ],
+    "all_regular": true,
+    "total_missing": 0,
+    "time_starts_at_zero": true,
+    "u_range": [
+      1.23241001562226,
+      8.90409948153009
+    ],
+    "v_range": [
+      -1.5272843445435802,
+      1.6504567546951898
+    ],
+    "p_range": [
+      -0.114182570140955,
+      0.110220911812262
+    ],
+    "r_range": [
+      -0.0583362956656041,
+      0.056774965113268
+    ],
+    "phi_range": [
+      -0.151491810464838,
+      0.149948940942271
+    ]
+  },
+  "ood_test": {
+    "n_recordings": 29,
+    "n_rows": 104429,
+    "duration_s": 104400.0,
+    "valid_windows": 102718,
+    "legacy_windows": 104369,
+    "legacy_boundary_crossing_windows": 1652,
+    "legacy_boundary_crossing_fraction": 0.015828454809378265,
+    "dt_values": [
+      1.0
+    ],
+    "all_regular": true,
+    "total_missing": 0,
+    "time_starts_at_zero": true,
+    "u_range": [
+      3.45031212411965,
+      13.4393662509021
+    ],
+    "v_range": [
+      -2.5223767404874797,
+      2.42028354396117
+    ],
+    "p_range": [
+      -0.0684826553186274,
+      0.0648284211293519
+    ],
+    "r_range": [
+      -0.0704915094023998,
+      0.0700914176764505
+    ],
+    "phi_range": [
+      -0.230477309016617,
+      0.233581728812876
+    ]
+  },
+  "cross_checks": {
+    "duplicate_file_names": [],
+    "duplicate_contents": [],
+    "all_columns_ok": true
+  },
+  "params": {
+    "history": 30,
+    "horizon": 30,
+    "base": "data/processed/darus"
+  }
+}
